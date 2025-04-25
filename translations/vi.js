@@ -11,8 +11,9 @@ export default {
 	useCurrentLocation: "Sử dụng vị trí hiện tại",
 	gettingLocation: "Đang lấy vị trí...",
 	province: "Tỉnh/thành phố",
-	district: "Quận/huyện",
-	ward: "Phường/xã",
+	district: "Quận/huyện/thị xã",
+	suburb: "Thành phố/huyện/thị xã",
+	quarter: "Phường/xã",
 	address: "Địa chỉ",
 	addressPlaceholder: "123 đường ABC...",
 	addressName: "Tên địa chỉ",
@@ -28,8 +29,11 @@ export default {
 	gpsCoordinates: "Tọa độ GPS:",
 	nearLocation: "Gần vị trí hiện tại",
 	locationWithCoordinates: "Vị trí với tọa độ",
-	locationFound: "Đã tìm thấy vị trí! Vui lòng điền đầy đủ thông tin địa chỉ.",
+	locationFound:
+		"Đã tìm thấy vị trí! Vui lòng kiểm tra lại thông tin địa chỉ.",
 	pleaseCompleteAddress: "Vui lòng điền đầy đủ địa chỉ",
+	saveAddress: "Lưu địa chỉ",
+	requiredFields: "Thông tin bắt buộc",
 
 	// Form validation
 	pleaseEnterAddress: "Vui lòng nhập đầy đủ thông tin địa chỉ",
@@ -43,5 +47,4 @@ export default {
 	errorLoadingWards: "Lỗi khi tải danh sách phường/xã",
 
 	// Other screens can be added here as your app grows
-	
 };
