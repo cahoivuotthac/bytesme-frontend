@@ -3,27 +3,25 @@ import {
 	SafeAreaView,
 	View,
 	ScrollView,
-	// Text,
 	Image,
 	TouchableOpacity,
 	StyleSheet,
+	Platform,
+	Dimensions,
 } from 'react-native'
-import {
-	Provider as PaperProvider,
-	Button,
-	Dialog,
-	Portal,
-	Text,
-	IconButton,
-} from 'react-native-paper'
+import { Provider as PaperProvider, Text } from 'react-native-paper'
 import { router } from 'expo-router'
 import { useState, useEffect } from 'react'
 import { useLocalSearchParams } from 'expo-router'
 import { APIClient } from '@/utils/api'
+import { LinearGradient } from 'expo-linear-gradient'
+import DishDecoration from '@/components/shared/DishDecoration'
 import OTPInput from '@/components/OTPInput'
 import NavButton from '@/components/shared/NavButton'
 
-export default (props: any) => {
+const { width, height } = Dimensions.get('window')
+
+export default () => {
 	const phoneNumber = useLocalSearchParams().phoneNumber as string
 	const [countdown, setCountdown] = useState(30)
 	const [canResend, setCanResend] = useState(false)
@@ -43,119 +41,266 @@ export default (props: any) => {
 	}, [countdown])
 
 	const handleNextPage = async () => {
+		if (!code || code.length !== 4) {
+			alert('Vui lòng nhập mã OTP')
+			return
+		}
+
 		setIsLoading(true)
-		APIClient.post('/auth/otp/verify', {
-			phone_number: phoneNumber,
-			code: code,
-		})
-			.then((response) => {
-				console.log('OTP verified successfully: ', response.data)
-				router.push({
-					pathname: '/(auth)/signup',
-					params: {
-						phoneNumber: phoneNumber,
-					},
-				})
+		try {
+			const response = await APIClient.post('/auth/otp/verify', {
+				phone_number: phoneNumber,
+				code: code,
 			})
-			.catch((error) => {
-				console.error('Error verifying OTP: ', error)
+
+			console.log('OTP verified successfully: ', response.data)
+			router.push({
+				pathname: '/(auth)/signup',
+				params: {
+					phoneNumber: phoneNumber,
+				},
+			})
+		} catch (error: any) {
+			console.error('Error verifying OTP: ', error)
+
+			const errorMessage = error?.reponse?.data?.message
+			if (errorMessage) {
+				const errorMessage = Object
+				alert(`Xác thực thất bại: ${errorMessage}`)
+			} else {
 				alert('Có lỗi xảy ra, vui lòng thử lại: ' + error.message)
+			}
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const handleResendOTP = async () => {
+		if (!canResend) return
+
+		setIsLoading(true)
+		try {
+			await APIClient.post('/auth/otp/gen', {
+				phone_number: phoneNumber,
 			})
-			.finally(() => setIsLoading(false))
+
+			setCountdown(30)
+			setCanResend(false)
+		} catch (error) {
+			console.error('Error resending OTP: ', error)
+			alert('Không thể gửi lại mã OTP. Vui lòng thử lại sau.')
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	return (
 		<PaperProvider>
-			<ScrollView style={styles.scrollView}>
-				<Image
-					source={{
-						uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/irayyo74_expires_30_days.png',
-					}}
-					resizeMode={'stretch'}
-					style={styles.image4}
-				/>
-				<Text style={styles.text2}>{'Nhập mã OTP'}</Text>
-				<Text style={styles.text3}>{'Mã 4 chữ số '}</Text>
+			<SafeAreaView style={styles.container}>
+				{/* Background decoration at the top */}
+				<View style={styles.backgroundDecoration}>
+					{/* Pink border outline */}
+					<View style={styles.pinkOutline} />
 
-				<OTPInput
-					onCodedFilled={(code) => {
-						console.log('Code filled: ' + code)
-						setCode(code)
-					}}
-				/>
+					{/* Brown gradient background */}
+					<LinearGradient
+						colors={['#EDE9E0', '#C67C4E']}
+						style={styles.bgGradient}
+						start={{ x: 0.5, y: 0 }}
+						end={{ x: 0.5, y: 1 }}
+					/>
 
-				<View
-					style={{
-						flex: 1,
-						alignSelf: 'center',
-						flexDirection: 'row',
-						justifyContent: 'space-between',
-						width: '80%',
-					}}
-				>
-					<Text style={styles.resendText}>
-						<Text
-							style={{
-								color: canResend ? '#C67C4E' : '#7C7C7C',
-								opacity: canResend ? 1 : 0.8,
-							}}
-						>
-							Gửi lại mã &nbsp;&nbsp;
-						</Text>
-						{countdown}
-					</Text>
-					<NavButton
-						onPress={handleNextPage}
-						direction="next"
-						disabled={phoneNumber.length !== 10 || isLoading}
-						size={36}
+					{/* Cake images */}
+					<Image
+						source={require('@/assets/signin-decorations/cake-1.png')}
+						style={styles.cake1Image}
+						resizeMode="cover"
+					/>
+
+					<Image
+						source={require('@/assets/signin-decorations/cake-2.png')}
+						style={styles.cake2Image}
+						resizeMode="cover"
 					/>
 				</View>
-			</ScrollView>
+
+				{/* Cake-3 outside the background decoration */}
+				<View style={styles.cake3Container}>
+					<DishDecoration
+						imageSource={require('@/assets/signin-decorations/cake-3.png')}
+						size={width * 0.5}
+					/>
+				</View>
+
+				{/* Spacer to prevent content overlap */}
+				<View style={styles.cake3Spacer} />
+
+				<ScrollView
+					style={styles.scrollView}
+					contentContainerStyle={styles.contentContainer}
+					bounces={false}
+				>
+					{/* Back button */}
+					<View style={styles.backButtonContainer}>
+						<NavButton
+							onPress={() => {
+								router.back()
+							}}
+							direction="back"
+							size={36}
+						/>
+					</View>
+
+					{/* Heading */}
+					<Text style={styles.heading}>Nhập mã OTP</Text>
+					<Text style={styles.subheading}>
+						Mã 4 chữ số được gửi đến {phoneNumber}
+					</Text>
+
+					{/* OTP input */}
+					<View style={styles.otpContainer}>
+						<OTPInput
+							onCodedFilled={(code) => {
+								console.log('Code filled: ' + code)
+								setCode(code)
+							}}
+						/>
+					</View>
+
+					{/* Resend code and next button */}
+					<View style={styles.actionContainer}>
+						<TouchableOpacity
+							onPress={handleResendOTP}
+							disabled={!canResend || isLoading}
+						>
+							<Text
+								style={[
+									styles.resendText,
+									{
+										color: canResend ? '#C67C4E' : '#7C7C7C',
+										opacity: canResend ? 1 : 0.8,
+									},
+								]}
+							>
+								Gửi lại mã {countdown > 0 ? `(${countdown}s)` : ''}
+							</Text>
+						</TouchableOpacity>
+
+						<NavButton
+							onPress={handleNextPage}
+							direction="next"
+							disabled={code.length !== 4 || isLoading}
+							size={48}
+						/>
+					</View>
+				</ScrollView>
+			</SafeAreaView>
 		</PaperProvider>
 	)
 }
+
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#FFFFFF',
 	},
-	image4: {
-		width: 10,
-		height: 18,
-		marginBottom: 65,
-		marginLeft: 25,
+	// Background decoration styling
+	backgroundDecoration: {
+		position: 'absolute',
+		width: width,
+		height: height * 0.4,
+		zIndex: 0,
+	},
+	pinkOutline: {
+		position: 'absolute',
+		width: '100%',
+		height: '100%',
+		borderBottomLeftRadius: 80,
+		borderBottomRightRadius: 80,
+		borderWidth: 3,
+		borderColor: '#EDC8C9',
+		zIndex: 1,
+	},
+	bgGradient: {
+		position: 'absolute',
+		width: '100%',
+		height: '100%',
+		borderBottomLeftRadius: 80,
+		borderBottomRightRadius: 80,
+	},
+	cake1Image: {
+		position: 'absolute',
+		width: '50%',
+		height: '50%',
+		top: height * 0.01,
+		left: width * 0.02,
+		zIndex: 2,
+	},
+	cake2Image: {
+		position: 'absolute',
+		width: '50%',
+		height: '50%',
+		top: height * 0.1,
+		right: width * 0.03,
+		zIndex: 2,
+	},
+	cake3Container: {
+		position: 'absolute',
+		width: '50%',
+		height: '50%',
+		top: height * 0.25,
+		alignSelf: 'center',
+		zIndex: 10,
+		backgroundColor: 'transparent',
+		borderColor: 'transparent',
+		shadowOpacity: 0,
+	},
+	cake3Spacer: {
+		height: 70,
+		width: '100%',
+		marginTop: height * 0.4,
 	},
 	scrollView: {
 		flex: 1,
-		backgroundColor: '#F8F8F8',
+		zIndex: 1,
 	},
-	text2: {
-		color: '#181725',
+	contentContainer: {
+		paddingBottom: 50,
+		paddingTop: 80,
+	},
+	backButtonContainer: {
+		marginLeft: 25,
+		marginBottom: 20,
+	},
+	heading: {
 		fontSize: 26,
 		fontWeight: 'bold',
-		marginBottom: 27,
-		marginLeft: 25,
+		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+		color: '#030303',
+		marginBottom: 15,
+		paddingHorizontal: 25,
 	},
-	text3: {
-		color: '#7C7C7C',
+	subheading: {
 		fontSize: 16,
-		fontWeight: 'bold',
-		// marginBottom: 9,
-		marginLeft: 24,
-		width: 'auto',
+		color: '#7C7C7C',
+		paddingHorizontal: 25,
+		fontFamily: 'Inter-Regular',
+		marginBottom: 30,
+	},
+	otpContainer: {
+		marginHorizontal: 25,
+		marginBottom: 30,
+	},
+	actionContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		paddingHorizontal: 25,
+		marginTop: 20,
 	},
 	resendText: {
-		fontSize: 14,
-		color: '#C67C4E',
-		fontWeight: 'medium',
-		alignItems: 'flex-start',
-	},
-	countdownText: {
-		marginLeft: 10,
-		color: '#C67C4E',
-		fontSize: 14,
-		opacity: 0.8,
-		fontWeight: 'regular',
+		fontSize: 16,
+		fontWeight: '500',
+		fontFamily: 'Roboto Condensed',
 	},
 })

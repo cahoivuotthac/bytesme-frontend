@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
 	SafeAreaView,
 	View,
@@ -7,215 +7,324 @@ import {
 	Text,
 	TouchableOpacity,
 	StyleSheet,
+	TextInput,
+	Platform,
+	Dimensions,
+	StatusBar,
 } from 'react-native'
+import { router, useLocalSearchParams } from 'expo-router'
+import DishDecoration from '@/components/shared/DishDecoration'
+import NavButton from '@/components/shared/NavButton'
+import EyeIcon from '@/components/shared/EyeIcon'
+import { APIClient } from '@/utils/api'
+import { useAlert } from '@/hooks/useAlert'
+import * as Font from 'expo-font'
 
-export default (props) => {
+const { width, height } = Dimensions.get('window')
+
+export default function SignupScreen() {
+	const { phoneNumber } = useLocalSearchParams()
+	const [email, setEmail] = useState('')
+	const [password, setPassword] = useState('')
+	const [confirmPassword, setConfirmPassword] = useState('')
+	const [passwordVisible, setPasswordVisible] = useState(false)
+	const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
+	const [isLoading, setIsLoading] = useState(false)
+	const { AlertComponent, showAlert, showError, showSuccess } = useAlert()
+	const [fontsLoaded] = Font.useFonts({
+		'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
+	})
+
+	const handleSignUp = async () => {
+		// Validation
+		if (!email || !password || !confirmPassword) {
+			showError('Vui lòng điền đầy đủ thông tin')
+			return
+		}
+
+		if (password !== confirmPassword) {
+			showError('Mật khẩu không khớp')
+			return
+		}
+
+		// Basic email validation
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+		if (!emailRegex.test(email)) {
+			showError('Email không hợp lệ')
+			return
+		}
+
+		setIsLoading(true)
+
+		try {
+			const response = await APIClient.post('/auth/signup', {
+				phone_number: phoneNumber,
+				email,
+				password,
+				password_confirmation: confirmPassword,
+			})
+
+			console.log('Sign up successful:', response.data)
+			showSuccess('Đăng ký thành công!', () => {
+				// router.replace('/(auth)/') // TODO: implement this
+			})
+		} catch (error: any) {
+			console.error('Error during signup:', error)
+
+			// Show more detailed error messages
+			const errorMessage = error?.response?.data?.message
+			if (errorMessage) {
+				showError(`Đăng ký thất bại: ${errorMessage}`)
+			} else {
+				showError('Có lỗi xảy ra, vui lòng thử lại')
+			}
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	return (
 		<SafeAreaView style={styles.container}>
-			<ScrollView style={styles.scrollView}>
-				<View style={styles.column}>
-					<Image
-						source={{
-							uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/jlkf6qgn_expires_30_days.png',
-						}}
-						resizeMode={'stretch'}
-						style={styles.image}
-					/>
-					<Text style={styles.text}>{'Đăng ký'}</Text>
-				</View>
-				<Text style={styles.text2}>{'Nhập thông tin của bạn để tiếp tục'}</Text>
-				<View style={styles.column2}>
-					<Text style={styles.text3}>{'Email'}</Text>
-					<Text style={styles.text4}>{'imshuvo97@gmail.com'}</Text>
-				</View>
+			{/* Include the AlertComponent in the render */}
+			{AlertComponent}
+
+			<StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+
+			{/* Header decoration */}
+			<View style={styles.headerDecoration}>
 				<Image
-					source={{
-						uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/7d201iyb_expires_30_days.png',
-					}}
-					resizeMode={'stretch'}
-					style={styles.image2}
+					source={require('@/assets/signin-decorations/cake-2.png')}
+					style={styles.headerImage}
+					resizeMode="cover"
 				/>
-				<View style={styles.row}>
-					<View>
-						<Text style={styles.text5}>{'Mật khẩu'}</Text>
-						<Image
-							source={{
-								uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/0a987hlb_expires_30_days.png',
-							}}
-							resizeMode={'stretch'}
-							style={styles.image3}
-						/>
-					</View>
-					<View style={styles.box}></View>
-					<Image
-						source={{
-							uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/u5eurslz_expires_30_days.png',
-						}}
-						resizeMode={'stretch'}
-						style={styles.image4}
-					/>
-					<Image
-						source={{
-							uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/8r718wmy_expires_30_days.png',
-						}}
-						resizeMode={'stretch'}
-						style={styles.image5}
+			</View>
+
+			<ScrollView
+				style={styles.scrollView}
+				contentContainerStyle={styles.contentContainer}
+				bounces={false}
+			>
+				{/* Back button */}
+				<View style={styles.backButtonContainer}>
+					<NavButton
+						onPress={() => router.navigate('/(auth)/input-phone')}
+						direction="back"
+						size={36}
+						// backgroundColor="#F7F8FB"
 					/>
 				</View>
-				<Image
-					source={{
-						uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/7c9h4pcq_expires_30_days.png',
-					}}
-					resizeMode={'stretch'}
-					style={styles.image6}
-				/>
-				<View style={styles.row}>
-					<View style={styles.column3}>
-						<Text style={styles.text5}>{'Xác nhận mật khẩu'}</Text>
-						<Image
-							source={{
-								uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/oovi03hr_expires_30_days.png',
-							}}
-							resizeMode={'stretch'}
-							style={styles.image7}
-						/>
-					</View>
-					<View style={styles.box}></View>
-					<Image
-						source={{
-							uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/1fdl2fmb_expires_30_days.png',
-						}}
-						resizeMode={'stretch'}
-						style={styles.image4}
-					/>
-					<Image
-						source={{
-							uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/103dv5lr_expires_30_days.png',
-						}}
-						resizeMode={'stretch'}
-						style={styles.image5}
-					/>
-				</View>
-				<Image
-					source={{
-						uri: 'https://storage.googleapis.com/tagjs-prod.appspot.com/v1/5CiFLE6MMk/bewj1zuc_expires_30_days.png',
-					}}
-					resizeMode={'stretch'}
-					style={styles.image8}
-				/>
-				<Text style={styles.text6}>
-					{
-						'By continuing you agree to our Terms of Service\nand Privacy Policy.'
-					}
+
+				{/* Heading */}
+				<Text style={styles.heading}>Đăng ký</Text>
+				<Text style={styles.subheading}>
+					Nhập thông tin của bạn để tiếp tục
 				</Text>
+
+				{/* Registration form container with subtle shadow */}
+				<View style={styles.formContainer}>
+					{/* Email input */}
+					<View style={styles.formGroup}>
+						<Text style={styles.label}>Email</Text>
+						<View style={styles.inputContainer}>
+							<TextInput
+								style={styles.input}
+								placeholder="example@email.com"
+								placeholderTextColor="#999"
+								keyboardType="email-address"
+								autoCapitalize="none"
+								value={email}
+								onChangeText={setEmail}
+							/>
+						</View>
+					</View>
+
+					{/* Password input */}
+					<View style={styles.formGroup}>
+						<Text style={styles.label}>Mật khẩu</Text>
+						<View style={styles.inputContainer}>
+							<TextInput
+								style={styles.input}
+								placeholder="••••••••"
+								placeholderTextColor="#999"
+								secureTextEntry={!passwordVisible}
+								value={password}
+								onChangeText={setPassword}
+							/>
+							<EyeIcon
+								isVisible={passwordVisible}
+								onToggle={() => setPasswordVisible(!passwordVisible)}
+							/>
+						</View>
+					</View>
+
+					{/* Confirm Password input */}
+					<View style={styles.formGroup}>
+						<Text style={styles.label}>Xác nhận mật khẩu</Text>
+						<View style={styles.inputContainer}>
+							<TextInput
+								style={styles.input}
+								placeholder="••••••••"
+								placeholderTextColor="#999"
+								secureTextEntry={!confirmPasswordVisible}
+								value={confirmPassword}
+								onChangeText={setConfirmPassword}
+							/>
+							<EyeIcon
+								isVisible={confirmPasswordVisible}
+								onToggle={() =>
+									setConfirmPasswordVisible(!confirmPasswordVisible)
+								}
+							/>
+						</View>
+					</View>
+				</View>
+
+				{/* Terms and Conditions */}
+				<Text style={styles.termsText}>
+					By continuing you agree to our{' '}
+					<Text style={{ color: '#00AA00' }}>Terms of Service</Text>
+					{'\n'}
+					and <Text style={{ color: '#00AA00' }}>Privacy Policy</Text>.
+				</Text>
+
+				{/* Sign Up Button */}
 				<TouchableOpacity
-					style={styles.button}
-					onPress={() => alert('Pressed!')}
+					style={styles.signupButton}
+					onPress={handleSignUp}
+					disabled={isLoading}
 				>
-					<Text style={styles.text7}>{'Tạo tài khoản'}</Text>
+					<Text style={styles.signupButtonText}>
+						{isLoading ? 'Đang xử lý...' : 'Tạo tài khoản'}
+					</Text>
 				</TouchableOpacity>
+
+				{/* Decorative dish at bottom */}
+				<View style={styles.bottomDecoration}>
+					<DishDecoration
+						imageSource={require('@/assets/signin-decorations/cake-3.png')}
+						size={80}
+					/>
+				</View>
 			</ScrollView>
 		</SafeAreaView>
 	)
 }
+
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#FFFFFF',
 	},
-	box: {
-		flex: 1,
+	headerDecoration: {
+		position: 'absolute',
+		top: 0,
+		right: 0,
+		width: width * 0.4,
+		height: height * 0.15,
+		overflow: 'hidden',
+		opacity: 0.8,
 	},
-	button: {
-		alignItems: 'center',
-		backgroundColor: '#FB0050CC',
-		borderRadius: 100,
-		paddingVertical: 24,
-		marginBottom: 91,
-		marginHorizontal: 25,
-	},
-	column: {
-		marginTop: 35,
-		marginBottom: 15,
-		marginLeft: 25,
-	},
-	column2: {
-		marginHorizontal: 25,
-	},
-	column3: {
-		alignItems: 'center',
-	},
-	image: {
-		width: 199,
-		height: 199,
-		marginLeft: 78,
-	},
-	image2: {
-		height: 1,
-		marginBottom: 22,
-		marginHorizontal: 25,
-	},
-	image3: {
-		width: 114,
-		height: 7,
-		marginHorizontal: 3,
-	},
-	image4: {
-		width: 62,
-		height: 62,
-		marginBottom: 16,
-	},
-	image5: {
-		width: 19,
-		height: 18,
-		marginTop: 44,
-	},
-	image6: {
-		height: 1,
-		marginBottom: 18,
-		marginHorizontal: 25,
-	},
-	image7: {
-		width: 114,
-		height: 7,
-	},
-	image8: {
-		height: 1,
-		marginBottom: 60,
-		marginHorizontal: 25,
-	},
-	row: {
-		flexDirection: 'row',
-		alignItems: 'flex-start',
-		marginHorizontal: 25,
+	headerImage: {
+		width: '100%',
+		height: '100%',
 	},
 	scrollView: {
 		flex: 1,
-		backgroundColor: '#F8F8F8',
 	},
-	text: {
-		color: '#030303',
+	contentContainer: {
+		paddingBottom: 70,
+		paddingTop: 20,
+	},
+	backButtonContainer: {
+		marginLeft: 25,
+		marginBottom: 20,
+	},
+	heading: {
 		fontSize: 26,
 		fontWeight: 'bold',
+		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+		color: '#030303',
+		marginBottom: 15,
+		paddingHorizontal: 25,
 	},
-	text2: {
+	subheading: {
+		fontSize: 16,
+		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto Condensed',
+		color: '#7C7C7C',
+		paddingHorizontal: 25,
+		marginBottom: 30,
+	},
+	formContainer: {
+		backgroundColor: '#FFFFFF',
+		borderRadius: 16,
+		marginHorizontal: 20,
+		padding: 20,
+		shadowColor: '#000',
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.06,
+		shadowRadius: 10,
+		elevation: 2,
+	},
+	formGroup: {
+		marginBottom: 20,
+	},
+	label: {
 		color: '#7C7C7C',
 		fontSize: 16,
-		marginBottom: 50,
-		marginLeft: 25,
-	},
-	text3: {
-		color: '#7C7C7C',
-		fontSize: 16,
+		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto Condensed',
 		marginBottom: 10,
 	},
-	text4: {
+	inputContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		borderBottomWidth: 1,
+		borderBottomColor: '#E2E2E2',
+		paddingBottom: 10,
+	},
+	input: {
+		flex: 1,
+		fontSize: 18,
+		fontFamily: 'Inter-Regular',
+		fontWeight: '500',
 		color: '#030303',
+	},
+	termsText: {
+		marginTop: 30,
+		marginBottom: 30,
+		fontSize: 14,
+		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto Condensed',
+		lineHeight: 18,
+		color: '#030303',
+		paddingHorizontal: 25,
+		textAlign: 'center',
+	},
+	signupButton: {
+		backgroundColor: 'rgba(251, 0, 80, 0.8)',
+		borderRadius: 100,
+		paddingVertical: 15,
+		marginHorizontal: 25,
+		alignItems: 'center',
+		justifyContent: 'center',
+		shadowColor: '#FB0050',
+		shadowOffset: {
+			width: 0,
+			height: 4,
+		},
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	signupButtonText: {
+		color: '#FFFFFF',
 		fontSize: 18,
 		fontWeight: 'bold',
-		marginBottom: 10,
 	},
-	text5: {},
-	text6: {},
-	text7: {},
+	bottomDecoration: {
+		alignSelf: 'center',
+		marginTop: 40,
+		opacity: 0.8,
+	},
 })

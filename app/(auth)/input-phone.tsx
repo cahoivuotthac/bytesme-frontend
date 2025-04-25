@@ -13,7 +13,6 @@ import {
 	Dimensions,
 } from 'react-native'
 import { router } from 'expo-router'
-import URLs from '@/constants/URLs'
 import { APIClient } from '@/utils/api'
 import { LinearGradient } from 'expo-linear-gradient'
 import DishDecoration from '@/components/shared/DishDecoration'
@@ -119,10 +118,8 @@ export default function InputPhoneScreen() {
 				{/* <View style={styles.backButtonContainer}>
 					<BackIcon onPress={() => router.back()} />
 				</View> */}
-
 				{/* Heading */}
 				<Text style={styles.heading}>Nhập số điện thoại</Text>
-
 				{/* Phone input field */}
 				<View style={styles.inputContainer}>
 					<Image
@@ -148,7 +145,7 @@ export default function InputPhoneScreen() {
 				</View>
 
 				{/* Optional divider line */}
-				<View style={styles.divider} />
+				{/* <View style={styles.divider} /> */}
 
 				{/* Login with password */}
 				<TouchableOpacity
@@ -158,12 +155,12 @@ export default function InputPhoneScreen() {
 					<Text style={styles.passwordLoginText}>Đăng nhập bằng mật khẩu</Text>
 				</TouchableOpacity>
 
-				{/* Or divider
+				{/* Or divider */}
 				<View style={styles.orContainer}>
 					<View style={styles.orDivider} />
 					<Text style={styles.orText}>Hoặc</Text>
 					<View style={styles.orDivider} />
-				</View> */}
+				</View>
 
 				{/* Google login button */}
 				<TouchableOpacity
@@ -177,7 +174,6 @@ export default function InputPhoneScreen() {
 					/>
 					<Text style={styles.socialButtonText}>Đăng nhập với Google</Text>
 				</TouchableOpacity>
-
 				{/* Facebook login button */}
 				<TouchableOpacity
 					style={[styles.socialButton, styles.facebookButton]}
@@ -300,6 +296,7 @@ const styles = StyleSheet.create({
 	},
 	input: {
 		flex: 1,
+		fontFamily: 'Inter-Regular',
 		fontSize: 16,
 		color: '#030303',
 		marginRight: 10,
@@ -317,7 +314,8 @@ const styles = StyleSheet.create({
 	},
 	passwordLoginText: {
 		color: '#C67C4E',
-		fontSize: 15,
+		fontSize: 16,
+		marginRight: 25,
 		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto Condensed',
 	},
 	orContainer: {
