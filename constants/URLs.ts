@@ -1,3 +1,6 @@
+// import Config from './Config';
+
 export default {
-	serverUrl: "http://localhost:8080",
+	serverAddress: process.env.SERVER_ADDRESS || "http://127.0.0.1:8000",
+	// apiUrl: Config.apiUrl,
 };
