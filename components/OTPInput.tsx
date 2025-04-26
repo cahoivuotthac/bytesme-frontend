@@ -2,9 +2,37 @@ import React, { useRef, useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
 
-const OTPInput = (props: { onCodedFilled: (code: string) => any }) => {
+type OTPInputProps = {
+	onCodedFilled: (code: string) => any
+	containerStyle?: Record<string, any>
+	codeInputFieldStyle?: Record<string, any>
+	codeInputHighlightStyle?: Record<string, any>
+	autoFocusOnLoad?: boolean
+}
+
+const OTPInput = ({
+	onCodedFilled,
+	codeInputFieldStyle,
+	codeInputHighlightStyle,
+	containerStyle,
+}: OTPInputProps) => {
 	const otpRef = useRef(null)
 	const [countdown, setCountdown] = useState(30)
+
+	if (!containerStyle || Object.keys(containerStyle).length === 0) {
+		containerStyle = styles.otpContainer
+	}
+
+	if (!codeInputFieldStyle || Object.keys(codeInputFieldStyle).length === 0) {
+		codeInputFieldStyle = styles.underlineStyleBase
+	}
+
+	if (
+		!codeInputHighlightStyle ||
+		Object.keys(codeInputHighlightStyle).length === 0
+	) {
+		codeInputHighlightStyle = styles.underlineStyleHighLighted
+	}
 
 	return (
 		<View style={styles.container}>
@@ -15,7 +43,7 @@ const OTPInput = (props: { onCodedFilled: (code: string) => any }) => {
 				autoFocusOnLoad
 				codeInputFieldStyle={styles.underlineStyleBase}
 				codeInputHighlightStyle={styles.underlineStyleHighLighted}
-				onCodeFilled={props.onCodedFilled}
+				onCodeFilled={onCodedFilled}
 			/>
 		</View>
 	)
