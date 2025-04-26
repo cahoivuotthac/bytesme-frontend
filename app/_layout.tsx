@@ -12,8 +12,8 @@ import 'react-native-reanimated'
 import { ActivityIndicator, View } from 'react-native'
 
 import { useColorScheme } from '@/components/useColorScheme'
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'
-import { LocaleProvider } from '@/providers/i18n'
+import { AuthProvider, useAuth } from '@/providers/auth'
+import { LocaleProvider } from '@/providers/locale'
 
 export {
 	// Catch any errors thrown by the Layout component.
@@ -65,35 +65,22 @@ export default function RootLayout() {
 function RootLayoutNav() {
 	const colorScheme = useColorScheme()
 	const { authState } = useAuth()
-	const { isLoading, isAuthenticated } = authState
 
 	// Show a loading indicator while checking authentication status
-	if (isLoading) {
+	if (authState.isLoading) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-				<ActivityIndicator size="large" color="#0000ff" />
+				<ActivityIndicator size="large" color="#FF6B35" />
 			</View>
 		)
 	}
 
 	return (
 		<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-			<Stack>
-				{isAuthenticated ? (
-					<></>
-				) : (
-					<>
-						<Stack.Screen name="(auth)" options={{ headerShown: false }} />
-						{/* Redirect to sign in if not on an auth screen */}
-						{/* <Stack.Screen
-							name="(tabs)"
-							redirect={true}
-							options={{
-								headerShown: false,
-							}} */}
-						{/* /> */}
-					</>
-				)}
+			<Stack screenOptions={{ headerShown: false }}>
+				<Stack.Screen name="(auth)" />
+				<Stack.Screen name="(welcome)" />
+				<Stack.Screen name="(app)" />
 			</Stack>
 		</ThemeProvider>
 	)
