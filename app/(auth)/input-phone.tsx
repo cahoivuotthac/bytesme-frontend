@@ -64,9 +64,12 @@ export default function InputPhoneScreen() {
 		alert('Facebook login not implemented yet')
 	}
 
-	const handlePasswordLogin = () => {
+	const handlePasswordSignin = () => {
 		// Navigate to password login screen
-		alert('Password login not implemented yet')
+		console.log('Navigating to password login screen')
+		router.push({
+			pathname: '/(auth)/signin',
+		})
 	}
 
 	return (
@@ -114,10 +117,6 @@ export default function InputPhoneScreen() {
 				contentContainerStyle={styles.contentContainer}
 				bounces={false} // Prevent bouncing to avoid overlap
 			>
-				{/* Back button (uncomment if needed) */}
-				{/* <View style={styles.backButtonContainer}>
-					<BackIcon onPress={() => router.back()} />
-				</View> */}
 				{/* Heading */}
 				<Text style={styles.heading}>Nhập số điện thoại</Text>
 				{/* Phone input field */}
@@ -150,7 +149,7 @@ export default function InputPhoneScreen() {
 				{/* Login with password */}
 				<TouchableOpacity
 					style={styles.passwordLoginButton}
-					onPress={handlePasswordLogin}
+					onPress={handlePasswordSignin}
 				>
 					<Text style={styles.passwordLoginText}>Đăng nhập bằng mật khẩu</Text>
 				</TouchableOpacity>

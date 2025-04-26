@@ -18,6 +18,8 @@ import NavButton from '@/components/shared/NavButton'
 import EyeIcon from '@/components/shared/EyeIcon'
 import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
+import { useAuth } from '@/providers/auth'
+import { useTranslation } from '@/providers/locale'
 import * as Font from 'expo-font'
 
 const { width, height } = Dimensions.get('window')
@@ -34,6 +36,8 @@ export default function SignupScreen() {
 	const [fontsLoaded] = Font.useFonts({
 		'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
 	})
+	const { refreshUser, signup: register } = useAuth()
+	const { t } = useTranslation()
 
 	const handleSignUp = async () => {
 		// Validation
@@ -57,26 +61,21 @@ export default function SignupScreen() {
 		setIsLoading(true)
 
 		try {
-			const response = await APIClient.post('/auth/signup', {
+			await register({
 				phone_number: phoneNumber,
 				email,
 				password,
 				password_confirmation: confirmPassword,
 			})
-
-			console.log('Sign up successful:', response.data)
-			showSuccess('Đăng ký thành công!', () => {
-				// router.replace('/(auth)/') // TODO: implement this
-			})
 		} catch (error: any) {
 			console.error('Error during signup:', error)
 
 			// Show more detailed error messages
-			const errorMessage = error?.response?.data?.message
+			const errorMessage = error.message
 			if (errorMessage) {
 				showError(`Đăng ký thất bại: ${errorMessage}`)
 			} else {
-				showError('Có lỗi xảy ra, vui lòng thử lại')
+				showError(t('errorRetry'))
 			}
 		} finally {
 			setIsLoading(false)

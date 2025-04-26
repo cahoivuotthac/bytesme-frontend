@@ -15,18 +15,34 @@ import { useState, useEffect } from 'react'
 import { useLocalSearchParams } from 'expo-router'
 import { APIClient } from '@/utils/api'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useAuth } from '@/providers/auth'
+import { useAlert } from '@/hooks/useAlert'
+import { useTranslation } from '@/providers/locale'
 import DishDecoration from '@/components/shared/DishDecoration'
 import OTPInput from '@/components/OTPInput'
 import NavButton from '@/components/shared/NavButton'
+import AlertDialog from '@/components/shared/AlertDialog'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const { width, height } = Dimensions.get('window')
 
+export type Intent = 'signin' | 'signup' | 'reset-password'
+
 export default () => {
-	const phoneNumber = useLocalSearchParams().phoneNumber as string
+	const {
+		phoneNumber,
+		intent,
+	}: {
+		phoneNumber: string
+		intent: Intent
+	} = useLocalSearchParams()
 	const [countdown, setCountdown] = useState(30)
 	const [canResend, setCanResend] = useState(false)
 	const [code, setCode] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+	const { verifyPhone, authState } = useAuth()
+	const { showError, AlertComponent } = useAlert()
+	const { t } = useTranslation()
 
 	useEffect(() => {
 		let timer: NodeJS.Timeout
@@ -40,7 +56,7 @@ export default () => {
 		return () => clearInterval(timer)
 	}, [countdown])
 
-	const handleNextPage = async () => {
+	const handleSendOTP = async () => {
 		if (!code || code.length !== 4) {
 			alert('Vui lòng nhập mã OTP')
 			return
@@ -48,28 +64,21 @@ export default () => {
 
 		setIsLoading(true)
 		try {
-			const response = await APIClient.post('/auth/otp/verify', {
-				phone_number: phoneNumber,
-				code: code,
-			})
-
-			console.log('OTP verified successfully: ', response.data)
-			router.push({
-				pathname: '/(auth)/signup',
-				params: {
-					phoneNumber: phoneNumber,
-				},
-			})
-		} catch (error: any) {
-			console.error('Error verifying OTP: ', error)
-
-			const errorMessage = error?.reponse?.data?.message
-			if (errorMessage) {
-				const errorMessage = Object
-				alert(`Xác thực thất bại: ${errorMessage}`)
+			await verifyPhone(phoneNumber, code)
+			const hasSession = (await AsyncStorage.getItem('has_session')) === 'true'
+			if (hasSession) {
+				router.replace('/(home)/product')
 			} else {
-				alert('Có lỗi xảy ra, vui lòng thử lại: ' + error.message)
+				router.replace({
+					pathname: '/(auth)/signup',
+					params: {
+						phoneNumber: phoneNumber,
+					},
+				})
 			}
+		} catch (error: any) {
+			console.error('Error verifying phone number: ', error)
+			showError(error.message || t('errorRetry'))
 		} finally {
 			setIsLoading(false)
 		}
@@ -97,6 +106,7 @@ export default () => {
 	return (
 		<PaperProvider>
 			<SafeAreaView style={styles.container}>
+				{AlertComponent}
 				{/* Background decoration at the top */}
 				<View style={styles.backgroundDecoration}>
 					{/* Pink border outline */}
@@ -187,7 +197,7 @@ export default () => {
 						</TouchableOpacity>
 
 						<NavButton
-							onPress={handleNextPage}
+							onPress={handleSendOTP}
 							direction="next"
 							disabled={code.length !== 4 || isLoading}
 							size={48}
