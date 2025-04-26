@@ -1,8 +1,12 @@
+import { ForeignObject } from "react-native-svg";
+
 export default {
 	// General
 	skip: "Bỏ qua",
 	next: "Tiếp theo",
+	errorRetry: "Có lỗi xảy ra, vui lòng thử lại",
 	processing: "Đang xử lý...",
+	phone: "Số điện thoại",
 
 	// Address Input Screen
 	deliveryLocation: "Địa điểm giao hàng",
@@ -46,5 +50,43 @@ export default {
 	errorLoadingDistricts: "Lỗi khi tải danh sách quận/huyện",
 	errorLoadingWards: "Lỗi khi tải danh sách phường/xã",
 
-	// Other screens can be added here as your app grows
+	// Signin
+	signIn: "Đăng nhập",
+	forgetPassword: "Quên mật khẩu?",
+	loginWithPassword: "Đăng nhập bằng mật khẩu",
+	emailPlaceholder: "example@email.com",
+	passwordPlaceholder: "••••••••",
+	accountInfo: "Nhập thông tin tài khoản của bạn",
+	login: "Đăng nhập",
+	noAccount: "Chưa có tài khoản?",
+	signUp: "Đăng ký",
+
+	// Password Reset Flow
+	passwordReset: "Đặt lại mật khẩu",
+	enterPhoneForOTP: "Nhập số điện thoại để nhận mã xác thực",
+	sendOTP: "Gửi mã xác thực",
+	rememberPassword: "Nhớ mật khẩu?",
+	otpVerification: "Xác thực OTP",
+	enterOTPSentTo: "Vui lòng nhập mã OTP được gửi đến",
+	didntReceiveCode: "Không nhận được mã?",
+	resend: "Gửi lại",
+	resendAfter: "Gửi lại sau {seconds}s",
+	verify: "Xác nhận",
+	otpSuccess: "Xác thực thành công",
+	createNewPassword: "Tạo mật khẩu mới cho tài khoản của bạn",
+	newPassword: "Mật khẩu mới",
+	confirmPassword: "Xác nhận mật khẩu",
+	resetPassword: "Đặt lại mật khẩu",
+	passwordRequirements:
+		"Mật khẩu phải chứa ít nhất 8 ký tự, bao gồm chữ và số",
+	resetSuccess: "Đặt lại mật khẩu thành công",
+	invalidEmail: "Email không hợp lệ",
+	invalidPhone: "Vui lòng nhập số điện thoại hợp lệ",
+	enterAllInfo: "Vui lòng điền đầy đủ thông tin",
+	passwordsDontMatch: "Mật khẩu không khớp",
+	invalidPassword: "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số",
+	enterOTP: "Vui lòng nhập đủ 4 chữ số OTP",
+	invalidOTP: "Mã OTP không đúng",
+	otpSent: "Mã OTP đã được gửi tới số điện thoại của bạn",
+	newOTPSent: "Mã OTP mới đã được gửi",
 };

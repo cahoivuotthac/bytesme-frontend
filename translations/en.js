@@ -3,6 +3,8 @@ export default {
 	skip: "Skip",
 	next: "Next",
 	processing: "Processing...",
+	errorRetry: "An error occurred, please try again",
+	phone: "Phone number",
 
 	// Address Input Screen
 	deliveryLocation: "Delivery Location",
@@ -30,5 +32,44 @@ export default {
 	locationError:
 		"Could not get current location. Please enter address manually.",
 
-	// Other screens can be added here as your app grows
+	// Signin
+	signIn: "Sign In",
+	forgetPassword: "Forgot Password?",
+	loginWithPassword: "Login with password",
+	emailPlaceholder: "example@email.com",
+	passwordPlaceholder: "••••••••",
+	accountInfo: "Enter your account information",
+	login: "Login",
+	noAccount: "Don't have an account?",
+	signUp: "Sign up",
+
+	// Password Reset Flow
+	passwordReset: "Reset Password",
+	enterPhoneForOTP: "Enter your phone number to receive a verification code",
+	sendOTP: "Send verification code",
+	rememberPassword: "Remember your password?",
+	otpVerification: "OTP Verification",
+	enterOTPSentTo: "Please enter the OTP sent to",
+	didntReceiveCode: "Didn't receive the code?",
+	resend: "Resend",
+	resendAfter: "Resend after {seconds}s",
+	verify: "Verify",
+	otpSuccess: "Verification successful",
+	createNewPassword: "Create a new password for your account",
+	newPassword: "New Password",
+	confirmPassword: "Confirm Password",
+	resetPassword: "Reset Password",
+	passwordRequirements:
+		"Password must be at least 8 characters and include letters and numbers",
+	resetSuccess: "Password reset successful",
+	invalidEmail: "Invalid email address",
+	invalidPhone: "Please enter a valid phone number",
+	enterAllInfo: "Please fill in all information",
+	passwordsDontMatch: "Passwords don't match",
+	invalidPassword:
+		"Password must be at least 8 characters and include letters and numbers",
+	enterOTP: "Please enter all 4 OTP digits",
+	invalidOTP: "Invalid OTP code",
+	otpSent: "OTP has been sent to your phone number",
+	newOTPSent: "New OTP has been sent",
 };
