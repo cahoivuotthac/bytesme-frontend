@@ -155,23 +155,27 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		bottom: 0,
-		backgroundColor: '#A9411D', // Brown background from Figma
-		// borderRadius: 50,
+		backgroundColor: '#C67C4E', // Changed to match our primary accent color
 		borderTopLeftRadius: 55,
 		borderTopRightRadius: 55,
 		borderBottomLeftRadius: 50,
 		borderBottomRightRadius: 50,
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 3 },
+		shadowOpacity: 0.25,
+		shadowRadius: 6,
+		elevation: 5,
 	},
 	imageContainer: {
 		width: '95%', // Reduced from 100% to create gap
 		height: '65%',
 		borderRadius: 50,
-		backgroundColor: '#EDE9E0', // Light beige background from Figma
-		shadowColor: '#000',
+		backgroundColor: '#FFF8EF', // Lighter background to match our warm theme
+		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 4 },
-		shadowOpacity: 0.25,
-		shadowRadius: 10,
-		elevation: 10,
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 6,
 		overflow: 'hidden',
 		alignItems: 'center',
 		justifyContent: 'center',
@@ -183,24 +187,20 @@ const styles = StyleSheet.create({
 		height: '90%',
 	},
 	infoContainer: {
-		// padding: 16,
 		paddingTop: 8,
 		paddingHorizontal: 16,
 		marginLeft: 16,
-		// paddingBottom: 16,
-		// marginBottom: 16,
 	},
 	name: {
-		fontFamily: 'Roboto Condensed',
+		fontFamily: 'Inter-SemiBold',
 		fontSize: 14,
-		fontWeight: '600',
 		color: '#FFFFFF',
 		marginBottom: 4,
 	},
 	price: {
 		fontFamily: 'Inter-Medium',
 		fontSize: 12,
-		color: '#FD43FA', // Magenta price from Figma
+		color: '#FFF2E5', // Updated to a soft cream color for better readability
 	},
 	favoriteButton: {
 		position: 'absolute',
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 16,
-		// backgroundColor: 'rgba(0,0,0,0.2)',
 		justifyContent: 'center',
 		alignItems: 'center',
 	},

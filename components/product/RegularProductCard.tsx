@@ -178,21 +178,25 @@ const styles = StyleSheet.create({
 	},
 	card: {
 		borderRadius: 34,
-		backgroundColor: '#F9F9F2',
+		backgroundColor: '#F9F1EA', // Updated to a warm cream color
 		height: CARD_WIDTH,
 		overflow: 'hidden',
-		borderWidth: 1,
-		borderColor: '#000000',
+		borderWidth: 0, // Removed border
 		padding: 10,
 		paddingTop: CARD_WIDTH * 0.35, // Space for the dish that overlaps
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 5,
 	},
 	imageContainer: {
 		width: '100%',
 		height: CARD_WIDTH * 0.23, // Reduced height since dish is now above
 	},
 	dishContainer: {
-		backgroundColor: '#FAF9F2',
-		shadowColor: '#000',
+		backgroundColor: '#FFF8EF', // Updated to match our warm palette
+		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.35,
 		shadowRadius: 12,
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 13,
 		fontWeight: '600',
-		color: '#474747',
+		color: '#5D4037', // Darker brown for better contrast
 		marginBottom: 4,
 		textAlign: 'center',
 	},
@@ -223,13 +227,13 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Bold',
 		fontSize: 11,
 		marginLeft: 4,
-		color: '#FF7622',
+		color: '#C67C4E', // Updated to match our primary brand color
 		textAlign: 'center',
 	},
 	price: {
 		fontFamily: 'Inter-Bold',
 		fontSize: 12,
-		color: '#2D2D30',
+		color: '#C67C4E', // Updated to match our primary brand color
 		textAlign: 'center',
 	},
 	favoriteButton: {
@@ -241,6 +245,7 @@ const styles = StyleSheet.create({
 		borderRadius: 16,
 		justifyContent: 'center',
 		alignItems: 'center',
+		backgroundColor: 'rgba(255,255,255,0.5)', // Semi-transparent background
 	},
 })
 

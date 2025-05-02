@@ -57,7 +57,7 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 	}
 
 	// Default gradient colors if not provided
-	const gradientColors = product.gradientColors || ['#923B3C', '#D7595B']
+	const gradientColors = product.gradientColors || ['#C67C4E', '#986644']
 
 	// Navigate to product details page
 	const handlePress = () => {
@@ -174,19 +174,23 @@ const styles = StyleSheet.create({
 		borderRadius: 27,
 		padding: 10,
 		overflow: 'hidden',
-		borderWidth: 0.1,
-		borderColor: '#C67C4E',
+		borderWidth: 0,
 		paddingTop: CARD_WIDTH * 0.35, // Space for the dish that overlaps
+		shadowColor: '#8A5A44',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 10,
+		elevation: 7,
 	},
 	imageContainer: {
 		width: '100%',
 		height: CARD_WIDTH * 0.1, // Reduced height since dish is now above
 	},
 	dishContainer: {
-		backgroundColor: '#FFFFFF',
-		shadowColor: '#000',
+		backgroundColor: '#FFF8EF', // Updated to match our warm palette
+		shadowColor: '#8A5A44',
 		shadowOffset: { width: 0, height: 6 },
-		shadowOpacity: 0.25,
+		shadowOpacity: 0.4,
 		shadowRadius: 12,
 		elevation: 10,
 	},
@@ -197,29 +201,43 @@ const styles = StyleSheet.create({
 	infoContainer: {
 		flex: 1,
 		justifyContent: 'center',
+		alignItems: 'center',
 		paddingHorizontal: 8,
 	},
 	name: {
 		fontFamily: 'Inter-SemiBold',
-		fontSize: 12,
+		fontSize: 13,
 		color: '#FFFFFF',
-		marginBottom: 4,
+		marginBottom: 6,
+		textAlign: 'center',
+		textShadowColor: 'rgba(0, 0, 0, 0.2)',
+		textShadowOffset: { width: 0, height: 1 },
+		textShadowRadius: 2,
 	},
 	price: {
 		fontFamily: 'Inter-Bold',
-		fontSize: 10,
-		color: '#FFFFFF',
+		fontSize: 12,
+		color: '#FFF8EF',
+		textAlign: 'center',
+		textShadowColor: 'rgba(0, 0, 0, 0.2)',
+		textShadowOffset: { width: 0, height: 1 },
+		textShadowRadius: 2,
 	},
 	favoriteButton: {
 		position: 'absolute',
 		top: CARD_WIDTH * 0.35 + 6, // Adjusted to account for dish overlap
-		right: 16,
+		right: 12,
 		width: 32,
 		height: 32,
 		borderRadius: 16,
-		backgroundColor: 'rgba(255,255,255,0.2)',
+		backgroundColor: 'rgba(255,255,255,0.25)',
 		justifyContent: 'center',
 		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 3,
+		elevation: 3,
 	},
 })
 
