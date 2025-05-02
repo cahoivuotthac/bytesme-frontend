@@ -8,6 +8,31 @@ export default {
 	processing: "Đang xử lý...",
 	phone: "Số điện thoại",
 
+	// Product Cards
+	discount: "Giảm giá",
+	favorite: "Yêu thích",
+	notFavorite: "Thêm vào yêu thích",
+	addToFavorites: "Thêm vào yêu thích",
+	removeFromFavorites: "Xóa khỏi yêu thích",
+
+	// Search
+	searchProductPlaceholder: "Tìm kiếm món ngon với Bytesme AI...",
+	viewAll: "Xem tất cả",
+
+	// Product Categories
+	all: "Tất cả",
+	coffee: "Cà phê",
+	pastry: "Bánh ngọt",
+	tea: "Trà",
+	coldDrinks: "Đồ uống lạnh",
+	cake: "Bánh",
+
+	// Product Sections
+	bestSellers: "Bán chạy nhất",
+	highestRated: "Đánh giá cao nhất",
+	discounted: "Đang giảm giá",
+	explore: "Khám phá",
+
 	// Address Input Screen
 	deliveryLocation: "Địa điểm giao hàng",
 	deliveryLocationSubtitle:
@@ -89,4 +114,31 @@ export default {
 	invalidOTP: "Mã OTP không đúng",
 	otpSent: "Mã OTP đã được gửi tới số điện thoại của bạn",
 	newOTPSent: "Mã OTP mới đã được gửi",
+
+	// BottomBar
+	home: "Trang chủ",
+	cart: "Giỏ hàng",
+	profile: "Hồ sơ",
+	orders: "Đơn hàng",
+	notifications: "Thông báo",
+
+	// Product Detail Page
+	description: "Giới thiệu",
+	reviews: "Nhận xét",
+	similarProducts: "Sản phẩm tương tự",
+	addToCart: "Thêm vào giỏ hàng",
+	size: "Kích cỡ",
+	quantity: "Số lượng",
+	selectSize: "Chọn kích cỡ",
+	productDetails: "Chi tiết sản phẩm",
+	ingredients: "Thành phần",
+	nutritionalInfo: "Thông tin dinh dưỡng",
+	customerReviews: "Đánh giá từ khách hàng",
+	writeReview: "Viết đánh giá",
+	viewMoreReviews: "Xem thêm đánh giá",
+	relatedProducts: "Có thể bạn cũng thích",
+	outOfStock: "Hết hàng",
+	inStock: "Còn hàng",
+	ratings: "đánh giá",
+	readMore: "Xem thêm",
 };

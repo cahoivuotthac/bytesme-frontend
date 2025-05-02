@@ -6,6 +6,31 @@ export default {
 	errorRetry: "An error occurred, please try again",
 	phone: "Phone number",
 
+	// Product Cards
+	discount: "Discount",
+	favorite: "Favorite",
+	notFavorite: "Add to favorites",
+	addToFavorites: "Add to favorites",
+	removeFromFavorites: "Remove from favorites",
+
+	// Search
+	searchProductPlaceholder: "Search for delicious items with Bytesme AI...",
+	viewAll: "View all",
+
+	// Product Categories
+	all: "All",
+	coffee: "Coffee",
+	pastry: "Pastry",
+	tea: "Tea",
+	coldDrinks: "Cold Drinks",
+	cake: "Cake",
+
+	// Product Sections
+	bestSellers: "Best Sellers",
+	highestRated: "Highest Rated",
+	discounted: "Discounted",
+	explore: "Explore",
+
 	// Address Input Screen
 	deliveryLocation: "Delivery Location",
 	deliveryLocationSubtitle: "Help us deliver to you with maximum accuracy",
@@ -64,12 +89,39 @@ export default {
 	resetSuccess: "Password reset successful",
 	invalidEmail: "Invalid email address",
 	invalidPhone: "Please enter a valid phone number",
-	enterAllInfo: "Please fill in all information",
+	enterAllIntfo: "Please fill in all information",
 	passwordsDontMatch: "Passwords don't match",
 	invalidPassword:
-		"Password must be at least 8 characters and include letters and numbers",
+		"Password mus be at least 8 characters and include letters and numbers",
 	enterOTP: "Please enter all 4 OTP digits",
 	invalidOTP: "Invalid OTP code",
 	otpSent: "OTP has been sent to your phone number",
 	newOTPSent: "New OTP has been sent",
+
+	// BottomBar
+	home: "Home",
+	cart: "Cart",
+	profile: "Profile",
+	orders: "Orders",
+	notifications: "Notifications",
+
+	// Product Detail Page
+	description: "Description",
+	reviews: "Reviews",
+	similarProducts: "Similar Products",
+	addToCart: "Add to Cart",
+	size: "Size",
+	quantity: "Quantity",
+	selectSize: "Select Size",
+	productDetails: "Product Details",
+	ingredients: "Ingredients",
+	nutritionalInfo: "Nutritional Info",
+	customerReviews: "Customer Reviews",
+	writeReview: "Write a Review",
+	viewMoreReviews: "View More Reviews",
+	relatedProducts: "You May Also Like",
+	outOfStock: "Out of Stock",
+	inStock: "In Stock",
+	ratings: "ratings",
+	readMore: "Read more",
 };

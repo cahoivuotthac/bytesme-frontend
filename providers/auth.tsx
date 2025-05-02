@@ -44,9 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	// Function to check if a session exists
 	useEffect(() => {
 		const checkSession = async () => {
+			let response
 			try {
-				const response = await APIClient.get('/auth/user')
-
+				response = await APIClient.get('/auth/user')
 				if (response.status === 200) {
 					const userData = response.data
 					setAuthState({
@@ -55,23 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 						user: userData,
 					})
 					console.log('Session exists, userData:', userData)
-				} else if (response.status === 401) {
-					// User is not authenticated
-					console.log('Session expired or not authenticated')
-					// router.navigate('/(auth)/input-phone')
-				} else {
-					// No valid session
+				}
+			} catch (error: any) {
+				if (error?.response?.status === 401) {
+					console.error('Error checking session:', error)
 					setAuthState({
 						...defaultAuthState,
 						isLoading: false,
 					})
 				}
-			} catch (error) {
-				console.error('Error checking session:', error)
-				setAuthState({
-					...defaultAuthState,
-					isLoading: false,
-				})
 			}
 		}
 
