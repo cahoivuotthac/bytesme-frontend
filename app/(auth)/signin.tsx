@@ -24,7 +24,6 @@ import { useTranslation } from '@/providers/locale'
 const { width, height } = Dimensions.get('window')
 
 export default function LoginScreen() {
-	const { phoneNumber } = useLocalSearchParams()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [passwordVisible, setPasswordVisible] = useState(false)

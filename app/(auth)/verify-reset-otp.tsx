@@ -19,6 +19,7 @@ import OTPInput from '@/components/OTPInput'
 import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
+import { useAuth } from '@/providers/auth'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
 import Button from '@/components/ui/Button'
 
@@ -28,7 +29,7 @@ const RESEND_COOLDOWN_SECONDS = 30
 
 export default function VerifyResetOTPScreen() {
 	const params = useLocalSearchParams()
-	const { phoneNumber } = params
+	const { phoneNumber } = params as { phoneNumber: string }
 	const [otp, setOTP] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS)
@@ -37,6 +38,9 @@ export default function VerifyResetOTPScreen() {
 	const { AlertComponent, showError, showSuccess } = useAlert()
 	const { t } = useTranslation()
 	const OTP_LENGTH = 4
+
+	// Auth
+	const { verifyPhone } = useAuth()
 
 	useEffect(() => {
 		// Start countdown timer
@@ -85,23 +89,17 @@ export default function VerifyResetOTPScreen() {
 
 		try {
 			// Verify OTP for password reset
-			const response = await APIClient.post('/auth/otp/verify', {
-				phone_number: phoneNumber,
-				code: otp,
-				is_password_reset: 'true',
-			})
+			await verifyPhone(phoneNumber, otp, 'reset_password')
 
 			// If successful, navigate to reset password page
-			showSuccess(t('otpSuccess'))
-
-			// Pass both phone number and reset token to reset-password screen
-			router.push({
-				pathname: '/(auth)/reset-password',
-				params: {
-					phoneNumber,
-					resetToken: response.data.reset_token,
-				},
-			})
+			showSuccess(t('otpSuccess'), () =>
+				router.push({
+					pathname: '/(auth)/reset-password',
+					params: {
+						phoneNumber,
+					},
+				})
+			)
 		} catch (error: any) {
 			console.error('Error verifying OTP:', error)
 			showError(error?.response?.data?.message || t('invalidOTP'))

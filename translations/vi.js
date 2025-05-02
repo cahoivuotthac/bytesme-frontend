@@ -7,6 +7,7 @@ export default {
 	errorRetry: "Có lỗi xảy ra, vui lòng thử lại",
 	processing: "Đang xử lý...",
 	phone: "Số điện thoại",
+	apply: "Áp dụng",
 
 	// Product Cards
 	discount: "Giảm giá",
@@ -141,4 +142,7 @@ export default {
 	inStock: "Còn hàng",
 	ratings: "đánh giá",
 	readMore: "Xem thêm",
+	seeAllReviews: "Xem tất cả đánh giá",
+	errorAddingToWishlist: "Không thể thêm vào danh sách yêu thích",
+	errorAddingToCart: "Không thể thêm vào giỏ hàng",
 };

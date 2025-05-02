@@ -39,14 +39,13 @@ export default function ResetPasswordScreen() {
 
 	const { AlertComponent, showError, showSuccess } = useAlert()
 	const { t } = useTranslation()
-	const { authState, resetPassword } = useAuth()
+	const { resetPassword, isAuthenticated } = useAuth()
 
 	useEffect(() => {
-		if (!authState.isAuthenticated || !isReadyToNavigate) return
-
-		console.log('isAuthenticated state: ', authState.isAuthenticated)
-		router.replace('/(home)/products')
-	}, [authState.isAuthenticated, isReadyToNavigate])
+		if (!isAuthenticated() || !isReadyToNavigate) return
+		console.log('isAuthenticated state: ', isAuthenticated())
+		router.replace('/(home)/product')
+	}, [isReadyToNavigate])
 
 	// Validate password strength
 	const isValidPassword = (password: string) => {

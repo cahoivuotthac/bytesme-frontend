@@ -1,4 +1,3 @@
-import { View } from '@/components/Themed'
 import { Stack } from 'expo-router'
 
 export default function AuthLayout() {

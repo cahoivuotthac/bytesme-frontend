@@ -5,6 +5,7 @@ export default {
 	processing: "Processing...",
 	errorRetry: "An error occurred, please try again",
 	phone: "Phone number",
+	apply: "Apply",
 
 	// Product Cards
 	discount: "Discount",
@@ -124,4 +125,7 @@ export default {
 	inStock: "In Stock",
 	ratings: "ratings",
 	readMore: "Read more",
+	seeAllReviews: "View all reviews",
+	errorAddingToWishlist: "Error adding to wishlist",
+	errorAddingToCart: "Error adding to cart",
 };

@@ -15,7 +15,7 @@ import BottomBar from '@/components/shared/BottomBar'
  * Includes bottom navigation and handles authentication state
  */
 export default function HomeLayout() {
-	const { authState } = useAuth()
+	const { authState, isAuthenticated } = useAuth()
 	const pathname = usePathname()
 
 	// Show loading screen while checking auth state
@@ -28,7 +28,7 @@ export default function HomeLayout() {
 	}
 
 	// Redirect if not authenticated
-	if (!authState.isAuthenticated) {
+	if (!isAuthenticated()) {
 		return <Redirect href="/(auth)/input-phone" />
 	}
 

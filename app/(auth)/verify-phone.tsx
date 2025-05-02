@@ -40,7 +40,7 @@ export default () => {
 	const [canResend, setCanResend] = useState(false)
 	const [code, setCode] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const { verifyPhone, authState } = useAuth()
+	const { verifyPhone, authState, isAuthenticated } = useAuth()
 	const { showError, AlertComponent } = useAlert()
 	const { t } = useTranslation()
 
@@ -65,16 +65,11 @@ export default () => {
 		setIsLoading(true)
 		try {
 			await verifyPhone(phoneNumber, code)
-			const hasSession = (await AsyncStorage.getItem('has_session')) === 'true'
-			if (hasSession) {
+			console.log('Auth state after verify phone:', authState)
+			if (isAuthenticated()) {
 				router.replace('/(home)/product')
 			} else {
-				router.replace({
-					pathname: '/(auth)/signup',
-					params: {
-						phoneNumber: phoneNumber,
-					},
-				})
+				console.log('(Weird) User not authenticated after phone verification')
 			}
 		} catch (error: any) {
 			console.error('Error verifying phone number: ', error)

@@ -1,36 +1,37 @@
 import { createContext, useState, useContext, useEffect } from 'react'
-import { Alert } from 'react-native'
 import { APIClient } from '@/utils/api'
-import { router } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useAlert } from '@/hooks/useAlert'
-import { useTranslation } from './locale'
 
 // Define the structure of our auth state
 type AuthState = {
-	isAuthenticated: boolean
 	isLoading: boolean
 	user: any | null
+	authToken: string | null
+	resetPasswordToken: string | null
 }
 
 // Define the shape of the context
 type AuthContextType = {
-	// getAuthState: () => Promise<AuthState>
-	// setAuthState: (authState: AuthState) => Promise<void>
 	authState: AuthState
-	verifyPhone: (phoneNumber: string, code: string) => Promise<boolean>
-	signin: (email: string, password: string) => Promise<boolean>
+	isAuthenticated: () => boolean
+	verifyPhone: (
+		phoneNumber: string,
+		code: string,
+		intent?: 'signin' | 'signup' | 'reset_password'
+	) => Promise<void>
+	signin: (email: string, password: string) => Promise<void>
 	logout: () => Promise<void>
-	signup: (userData: any) => Promise<boolean>
+	signup: (userData: any) => Promise<void>
 	refreshUser: () => Promise<void>
 	resetPassword: (phoneNumber: string, newPassword: string) => Promise<void>
 }
 
 // Default auth state
 const defaultAuthState: AuthState = {
-	isAuthenticated: false,
 	isLoading: true,
 	user: null,
+	authToken: null,
+	resetPasswordToken: null,
 }
 
 // Create the context with a default undefined value
@@ -38,27 +39,40 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Provider component that wraps your app and makes auth object available to any child component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-	const { t } = useTranslation()
 	const [authState, setAuthState] = useState<AuthState>(defaultAuthState)
 
 	// Function to check if a session exists
 	useEffect(() => {
-		const checkSession = async () => {
+		const authStateUpdateOnStartup = async () => {
+			const storedAuthState = JSON.parse(
+				(await AsyncStorage.getItem('authState')) || '{}'
+			) as AuthState
+
+			console.log('Stored auth state:', storedAuthState)
+
+			// Is user authenticated?
+			let isAuthenticated =
+				Object.keys(storedAuthState).length > 0 || !!storedAuthState.authToken
+
+			// Set the bearer token in axios headers
+			APIClient.defaults.headers.common['Authorization'] =
+				storedAuthState.authToken
+
+			// Make request to check if token still authenticated
 			let response
 			try {
 				response = await APIClient.get('/auth/user')
-				if (response.status === 200) {
-					const userData = response.data
-					setAuthState({
-						isAuthenticated: true,
-						isLoading: false,
-						user: userData,
-					})
-					console.log('Session exists, userData:', userData)
-				}
+				console.log('Auth token retrieved from storage is still valid')
 			} catch (error: any) {
 				if (error?.response?.status === 401) {
-					console.error('Error checking session:', error)
+					console.error('Token retrieved from storage have expired:', error)
+				}
+				isAuthenticated = false
+			} finally {
+				if (isAuthenticated) {
+					setAuthState(storedAuthState)
+				} else {
+					delete APIClient.defaults.headers.common['Authorization']
 					setAuthState({
 						...defaultAuthState,
 						isLoading: false,
@@ -67,116 +81,142 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 		}
 
-		checkSession()
+		authStateUpdateOnStartup()
 	}, [])
 
 	// Login function
-	const signin = async (email: string, password: string): Promise<boolean> => {
+	const signin = async (email: string, password: string): Promise<void> => {
+		let response
 		try {
-			const response = await APIClient.post('/auth/signin', {
+			response = await APIClient.post('/auth/signin', {
 				email,
 				password,
 			})
 
-			if (response.status === 200) {
-				// Store authentication state in memory
-				setAuthState({
-					isAuthenticated: true,
-					isLoading: false,
-					user: response.data.user,
-				})
-
-				// Store a simple flag to indicate the user has logged in before
-				await AsyncStorage.setItem('has_session', 'true')
-
-				return true
-			} else {
-				// Handle error based on Laravel response
-				throw new Error(response.data.message || 'Invalid credentials')
+			const { user, token } = response.data
+			if (!token) {
+				throw new Error('No token received from server after login')
 			}
+			console.log('Response.data:', response.data)
+
+			const bearerToken = `Bearer ${token}`
+			APIClient.defaults.headers.common['Authorization'] = bearerToken
+			const newAuthState = {
+				isLoading: false,
+				user: user,
+				authToken: bearerToken,
+				resetPasswordToken: null,
+			}
+			setAuthState(newAuthState)
+			await persistAuthState(newAuthState)
+
+			console.log('Saved auth state:', await AsyncStorage.getItem('authState'))
 		} catch (error: any) {
-			throw new Error(error.message)
+			throw new Error(error?.response?.data?.message || error.message)
 		}
 	}
 
 	// Logout function
 	const logout = async (): Promise<void> => {
+		let response
 		try {
-			// Call Laravel logout endpoint
-			await APIClient.post('/auth/logout')
-		} catch (error) {
-			console.error('Logout API error:', error)
+			response = await APIClient.post('/auth/logout')
+		} catch (error: any) {
+			throw new Error(error?.response?.data?.message || error.message)
 		} finally {
-			// Clear flag and reset state
-			await AsyncStorage.removeItem('has_session')
+			// Clear flag and reset state whatsoever
+			delete APIClient.defaults.headers.common['Authorization']
 			setAuthState({
 				...defaultAuthState,
 				isLoading: false,
 			})
+			await AsyncStorage.removeItem('authState')
 		}
 	}
 
-	// Register function
-	const signup = async (userData: any): Promise<boolean> => {
+	const signup = async (userData: any) => {
+		let response
 		try {
-			const response = await APIClient.post('/auth/signup', userData)
+			response = await APIClient.post('/auth/signup', userData)
 
-			if (response.status === 200 || response.status === 201) {
-				// If registration automatically logs in user
-				if (response.data.user) {
-					setAuthState({
-						isAuthenticated: true,
-						isLoading: false,
-						user: response.data.user,
-					})
-
-					await AsyncStorage.setItem('has_session', 'true')
-				}
-				return true
-			} else {
-				// Handle validation errors from Laravel
-				console.error('Registration API error: ', response.data.message)
-				throw new Error(response.data.message)
+			const { user, token } = response.data
+			if (!token) {
+				throw new Error('No token received from server after registration')
 			}
+
+			const bearerToken = `Bearer ${token}`
+			APIClient.defaults.headers.common['Authorization'] = bearerToken
+			const newAuthState = {
+				isLoading: false,
+				user: user,
+				authToken: bearerToken,
+				resetPasswordToken: null,
+			}
+			setAuthState(newAuthState)
+			await persistAuthState(newAuthState)
 		} catch (error: any) {
 			console.error('Registration error: ', error)
 			throw new Error(error?.response?.data?.message || error.message)
 		}
 	}
 
-	const getAuthState = async (): Promise<AuthState> => {
-		const storedAuthState = await AsyncStorage.getItem('authState')
-		if (storedAuthState) {
-			return JSON.parse(storedAuthState)
-		}
-		return defaultAuthState
-	}
-
 	const verifyPhone = async (
 		phoneNumber: string,
-		code: string
-	): Promise<boolean> => {
+		code: string,
+		intent: 'signin' | 'signup' | 'reset_password' = 'signin'
+	): Promise<void> => {
+		let response
+		let newAuthState
+		const defaultRequestData = {
+			phone_number: phoneNumber,
+			code,
+		}
+
 		try {
-			const response = await APIClient.post('/auth/otp/verify', {
-				phone_number: phoneNumber,
-				code,
-			})
+			if (intent === 'signin') {
+				response = await APIClient.post('/auth/otp/verify', defaultRequestData)
 
-			if (response.status === 200) {
-				// Store authentication state in memory
-				if (response.data.user) {
-					setAuthState({
-						isAuthenticated: true,
+				const { user, token } = response.data
+				if (token) {
+					const bearerToken = `Bearer ${token}`
+					APIClient.defaults.headers.common['Authorization'] = bearerToken
+					newAuthState = {
 						isLoading: false,
-						user: response.data.user,
-					})
-
-					await AsyncStorage.setItem('has_session', 'true')
+						user: user,
+						authToken: bearerToken,
+						resetPasswordToken: null,
+					}
+				} else {
+					newAuthState = {
+						...defaultAuthState,
+						isLoading: false,
+					}
 				}
-				return true
+			} else if (intent === 'signup') {
+				response = await APIClient.post('/auth/otp/verify', defaultRequestData)
+				newAuthState = {
+					...defaultAuthState,
+					isLoading: false,
+				}
 			} else {
-				throw new Error(response.data.message)
+				response = await APIClient.post('/auth/otp/verify', {
+					...defaultRequestData,
+					is_password_reset: 'true',
+				})
+
+				if (!response.data.reset_token) {
+					throw new Error('No reset token received from server')
+				}
+
+				newAuthState = {
+					...defaultAuthState,
+					isLoading: false,
+					resetPasswordToken: response.data.reset_token,
+				}
 			}
+
+			setAuthState(newAuthState)
+			await persistAuthState(newAuthState)
 		} catch (error: any) {
 			console.error('Error verifying OTP: ', error)
 			throw new Error(error?.response?.data?.message || error.message)
@@ -185,15 +225,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	// Refresh user data
 	const refreshUser = async (): Promise<void> => {
-		if (!(await getAuthState()).isAuthenticated) return
-
 		try {
 			const response = await APIClient.get('/auth/user')
 
 			if (response.status === 200) {
 				setAuthState({
+					...defaultAuthState,
 					user: response.data.user,
-					isAuthenticated: true,
 					isLoading: false,
 				})
 			}
@@ -203,22 +241,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}
 
 	const resetPassword = async (phoneNumber: string, newPassword: string) => {
-		// Implement password reset logic
 		try {
+			if (!authState.resetPasswordToken) {
+				throw new Error('No reset token available')
+			}
+
 			const response = await APIClient.post('/auth/reset-password', {
 				phone_number: phoneNumber,
 				new_password: newPassword,
+				reset_token: authState.resetPasswordToken,
 			})
 
-			setAuthState({
-				isAuthenticated: true,
+			const { user, token } = response.data
+			if (!token) {
+				throw new Error('No token received from server after password reset')
+			}
+			const bearerToken = `Bearer ${token}`
+			const newAuthState = {
 				isLoading: false,
-				user: response.data.user || null,
-			})
+				user: user,
+				authToken: bearerToken,
+				resetPasswordToken: null,
+			}
+			setAuthState(newAuthState)
+			await persistAuthState(newAuthState)
 		} catch (error: any) {
 			console.error('Error resetting password:', error)
 			throw new Error(error?.response?.data?.message)
 		}
+	}
+
+	const persistAuthState = async (newAuthState: AuthState) => {
+		try {
+			await AsyncStorage.setItem('authState', JSON.stringify(newAuthState))
+		} catch (error) {
+			console.error('Error persisting auth state:', error)
+		}
+	}
+
+	const isAuthenticated = (): boolean => {
+		return authState.authToken !== null
 	}
 
 	// Context value
@@ -230,6 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		signup,
 		refreshUser,
 		resetPassword,
+		isAuthenticated,
 	}
 
 	return (
