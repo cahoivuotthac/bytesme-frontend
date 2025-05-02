@@ -202,22 +202,27 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	card: {
-		borderRadius: 34,
-		backgroundColor: '#B1E6CD',
+		borderRadius: 34, // Increased from 16 to 24 for more curvature to match other variants
+		backgroundColor: '#F9F5F0', // Updated to a warm cream color
 		height: CARD_WIDTH,
 		overflow: 'hidden',
 		borderWidth: 1,
-		borderColor: '#C67C4E',
+		borderColor: '#E4D5C9', // Subtle border color
 		padding: 10,
 		paddingTop: CARD_WIDTH * 0.35, // Space for the dish that overlaps
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 5,
 	},
 	imageContainer: {
 		width: '100%',
 		height: CARD_WIDTH * 0.23, // Reduced height since dish is now above
 	},
 	dishContainer: {
-		backgroundColor: '#FAF9F2',
-		shadowColor: '#000',
+		backgroundColor: '#FFF',
+		shadowColor: '#3E6B59', // Darker green shadow
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.35,
 		shadowRadius: 12,
@@ -239,9 +244,9 @@ const styles = StyleSheet.create({
 	},
 	discountText: {
 		position: 'absolute',
-		top: 28,
-		left: 4,
-		color: '#C67C4E',
+		top: 10,
+		left: 12,
+		color: '#FFFFFF',
 		fontFamily: 'Inter-Bold',
 		fontSize: 14,
 	},
@@ -251,7 +256,7 @@ const styles = StyleSheet.create({
 	name: {
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 13,
-		color: '#474747',
+		color: '#2D2113', // Changed to a darker, richer brown
 		marginBottom: 4,
 		textAlign: 'center',
 	},
@@ -262,24 +267,27 @@ const styles = StyleSheet.create({
 	price: {
 		fontFamily: 'Inter-Bold',
 		fontSize: 12,
-		color: '#2D2D30',
-		marginTop: 2,
+		color: '#C67C4E', // Updated to our primary coffee color
 	},
 	originalPrice: {
 		fontFamily: 'Inter-Medium',
-		fontSize: 12,
-		color: '#FF6B6B',
+		fontSize: 11,
+		color: '#9B9B9B',
 		textDecorationLine: 'line-through',
+		marginBottom: 2,
 	},
 	favoriteButton: {
 		position: 'absolute',
-		top: CARD_WIDTH * 0.65, // Adjusted to account for dish overlap
+		top: CARD_WIDTH * 0.7,
 		right: 10,
 		width: 32,
 		height: 32,
 		borderRadius: 16,
 		justifyContent: 'center',
 		alignItems: 'center',
+		backgroundColor: 'rgba(255, 255, 255, 0.5)',
+		// padding: 5,
+		// zIndex: 5,
 	},
 })
 

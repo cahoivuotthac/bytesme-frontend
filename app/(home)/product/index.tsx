@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		flexWrap: 'wrap',
 		justifyContent: 'space-around',
-		paddingHorizontal: 8,
+		// paddingHorizontal: 4,
 		marginTop: 5,
 	},
 	exploreCard: {

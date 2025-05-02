@@ -48,8 +48,8 @@ const RegularProductCard: React.FC<RegularProductCardProps> = ({
 	style,
 	onToggleFavorite,
 }) => {
-	const [isFavorite, setIsFavorite] = useState(product.isFavorite || false);
-	const [isLoading, setIsLoading] = useState(false);
+	const [isFavorite, setIsFavorite] = useState(product.isFavorite || false)
+	const [isLoading, setIsLoading] = useState(false)
 
 	// Format price with Vietnamese dong symbol
 	const formatPrice = (price: number) => {
@@ -66,30 +66,30 @@ const RegularProductCard: React.FC<RegularProductCardProps> = ({
 
 	// Toggle favorite status with API call
 	const handleFavoritePress = async (e: any) => {
-		e.stopPropagation();
-		
+		e.stopPropagation()
+
 		try {
-			setIsLoading(true);
-			
+			setIsLoading(true)
+
 			if (isFavorite) {
 				// Remove from wishlist
-				await removeFromWishlist(product.id);
+				await removeFromWishlist(product.id)
 			} else {
 				// Add to wishlist
-				await addToWishlist(product.id);
+				await addToWishlist(product.id)
 			}
-			
+
 			// Update local state
-			setIsFavorite(!isFavorite);
-			
+			setIsFavorite(!isFavorite)
+
 			// Call the parent handler if provided
 			if (onToggleFavorite) {
-				onToggleFavorite(product.id);
+				onToggleFavorite(product.id)
 			}
 		} catch (error) {
-			console.error('Wishlist operation failed:', error);
+			console.error('Wishlist operation failed:', error)
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false)
 		}
 	}
 
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
 	},
 	favoriteButton: {
 		position: 'absolute',
-		top: CARD_WIDTH * 0.65, // Adjusted to account for dish overlap
+		top: CARD_WIDTH * 0.7, // Adjusted to account for dish overlap
 		right: 10,
 		width: 32,
 		height: 32,
