@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
 	View,
 	Text,
@@ -146,7 +146,7 @@ const SIMILAR_PRODUCTS = [
 ]
 
 export default function ProductDetailScreen() {
-	const { id } = useLocalSearchParams()
+	const { id: productId } = useLocalSearchParams()
 	const { t } = useTranslation()
 	const [isFavorite, setIsFavorite] = useState(PRODUCT.isFavorite)
 	const [selectedSize, setSelectedSize] = useState('M')
@@ -158,6 +158,15 @@ export default function ProductDetailScreen() {
 
 	const { AlertComponent, showError } = useAlert()
 	const [productData, setProductData] = useState<ProductData>({} as any)
+
+	// Initialize data
+	useEffect(() => {
+		if (!productData) {
+			return
+		}
+
+		setIsFavorite(productData.is_favorite)
+	}, [productData])
 
 	// Handle quantity changes
 	const incrementQuantity = () => {
@@ -173,10 +182,9 @@ export default function ProductDetailScreen() {
 	// Toggle favorite status
 	const toggleFavorite = async () => {
 		try {
-			await APIClient.post('/user/wishlist/add', {
-				data: {
-					productId: productData.product_id,
-				},
+			console.log('product ID: ', productId)
+			await APIClient.post(`/user/wishlist/${isFavorite ? 'remove' : 'add'}`, {
+				product_id: productId,
 			})
 			setIsFavorite(!isFavorite)
 		} catch (err) {
@@ -265,9 +273,9 @@ export default function ProductDetailScreen() {
 						onPress={toggleFavorite}
 					>
 						<Ionicons
-							name={productData.is_favorite ? 'heart' : 'heart-outline'}
+							name={isFavorite ? 'heart' : 'heart-outline'}
 							size={24}
-							color={productData.is_favorite ? '#C67C4E' : '#C67C4E'}
+							color={isFavorite ? '#C67C4E' : '#C67C4E'}
 						/>
 					</TouchableOpacity>
 				</View>
