@@ -41,3 +41,18 @@ export const getCsrfToken = async () => {
 
 // 	updateProfile: (userData: any) => APIClient.put("/auth/profile", userData),
 // };
+
+// Wishlist API endpoints
+export const addToWishlist = (productId: string) => {
+	return APIClient.post("/user/wishlist/add", { product_id: productId });
+};
+
+export const removeFromWishlist = (productId: string) => {
+	return APIClient.post("/user/wishlist/remove", {
+		product_id: productId,
+	});
+};
+
+export const getWishlist = () => {
+	return APIClient.get("/user/wishlist");
+};
