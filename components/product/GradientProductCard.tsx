@@ -23,7 +23,7 @@ interface GradientProductCardProps {
 	 * Product data object
 	 */
 	product: {
-		id: string
+		productId: number
 		name: string
 		price: number
 		imageUrl: string
@@ -37,7 +37,7 @@ interface GradientProductCardProps {
 	/**
 	 * Handler for favorite button press
 	 */
-	onToggleFavorite?: (id: string) => void
+	onToggleFavorite?: (productId: number) => void
 }
 
 /**
@@ -63,7 +63,7 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 	const handlePress = () => {
 		router.push({
 			pathname: '/(home)/product/[id]',
-			params: { id: product.id },
+			params: { id: product.productId },
 		})
 	}
 
@@ -76,10 +76,10 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 
 			if (isFavorite) {
 				// Remove from wishlist
-				await removeFromWishlist(product.id)
+				await removeFromWishlist(product.productId)
 			} else {
 				// Add to wishlist
-				await addToWishlist(product.id)
+				await addToWishlist(product.productId)
 			}
 
 			// Update local state
@@ -87,7 +87,7 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 
 			// Call the parent handler if provided
 			if (onToggleFavorite) {
-				onToggleFavorite(product.id)
+				onToggleFavorite(product.productId)
 			}
 		} catch (error) {
 			console.error('Wishlist operation failed:', error)

@@ -23,7 +23,7 @@ interface DiscountProductCardProps {
 	 * Product data object
 	 */
 	product: {
-		id: string
+		productId: number
 		name: string
 		price: number
 		originalPrice: number
@@ -38,7 +38,7 @@ interface DiscountProductCardProps {
 	/**
 	 * Handler for favorite button press
 	 */
-	onToggleFavorite?: (id: string) => void
+	onToggleFavorite?: (productId: number) => void
 }
 
 /**
@@ -62,7 +62,7 @@ const DiscountProductCard: React.FC<DiscountProductCardProps> = ({
 	const handlePress = () => {
 		router.push({
 			pathname: '/(home)/product/[id]',
-			params: { id: product.id },
+			params: { id: product.productId },
 		})
 	}
 
@@ -75,10 +75,10 @@ const DiscountProductCard: React.FC<DiscountProductCardProps> = ({
 
 			if (isFavorite) {
 				// Remove from wishlist
-				await removeFromWishlist(product.id)
+				await removeFromWishlist(product.productId)
 			} else {
 				// Add to wishlist
-				await addToWishlist(product.id)
+				await addToWishlist(product.productId)
 			}
 
 			// Update local state
@@ -86,7 +86,7 @@ const DiscountProductCard: React.FC<DiscountProductCardProps> = ({
 
 			// Call the parent handler if provided
 			if (onToggleFavorite) {
-				onToggleFavorite(product.id)
+				onToggleFavorite(product.productId)
 			}
 		} catch (error) {
 			console.error('Wishlist operation failed:', error)
