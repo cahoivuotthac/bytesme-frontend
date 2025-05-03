@@ -15,7 +15,6 @@ import { getWishlist, removeFromWishlist } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import DishDecoration from '@/components/shared/DishDecoration'
 import { useTranslation } from '@/providers/locale'
-import QuantityControl from '@/components/ui/QuantityControl'
 
 const { width } = Dimensions.get('window')
 const ITEM_WIDTH = width * 0.9
@@ -51,7 +50,7 @@ const ITEM_WIDTH = width * 0.9
 interface Product {
 	productId: number
 	name: string
-	price: number
+	prices: number[]
 	imageUrl: string
 	sizes: string[]
 	isFavorite: boolean
@@ -60,16 +59,28 @@ interface Product {
 export default function FavoritesScreen() {
 	const { t } = useTranslation()
 	const [wishlistProducts, setWishlistProducts] = useState<Product[]>([])
-	const [productQuantities, setProductQuantities] = useState<
-		Record<number, number>
-	>({})
 	const [productSizes, setProductSizes] = useState<Record<number, string>>({})
+	const [productPrices, setProductPrices] = useState<Record<number, number>>({}) // Price according to size of products
 	const [isLoading, setIsLoading] = useState(false)
 	const [removingProductId, setRemovingProductId] = useState<number | null>(
 		null
 	)
 
 	const { AlertComponent, showError } = useAlert()
+
+	// Initialize sizes and prices of products
+	useEffect(() => {
+		const initialSizes: Record<number, string> = {}
+		const initialPrices: Record<number, number> = {}
+
+		wishlistProducts.forEach((product: Product) => {
+			initialSizes[product.productId] = product.sizes[0]
+			initialPrices[product.productId] = product.prices[0]
+		})
+
+		setProductSizes(initialSizes)
+		setProductPrices(initialPrices)
+	}, [wishlistProducts])
 
 	// Fetch wishlist products from API on mount
 	useEffect(() => {
@@ -80,82 +91,52 @@ export default function FavoritesScreen() {
 				const response = await getWishlist()
 
 				// pre-processing if needed
-				const products: Product[] = response.data.wishlist.map((item: any) => {
+				const products = response.data.wishlist.map((item: any) => {
 					return {
 						productId: item.product_id,
 						name: item.product.product_name,
-						// price: item.product.price,
-						price: [20000, 30000, 40000],
+						prices: [20000, 30000, 40000],
 						imageUrl: item.product.product_images[0].product_image_url,
-						// sizes: item.product.sizes,
 						sizes: ['S', 'M', 'L'],
 						isFavorite: true,
 					}
-				})
+				}) as Product[]
 
 				setWishlistProducts(products)
 			} catch (error) {
 				console.error('Failed to fetch wishlist:', error)
 				showError(t('errorFetchingWishlist'))
+			} finally {
+				setIsLoading(false)
 			}
 		}
 
 		fetchWishlistProducts()
 	}, [])
 
-	// Initialize quantities and sizes
-	useEffect(() => {
-		const initialQuantities: Record<number, number> = {}
-		const initialSizes: Record<number, string> = {}
-
-		wishlistProducts.forEach((product: Product) => {
-			initialQuantities[product.productId] = 1
-			initialSizes[product.productId] = product.sizes[0]
-		})
-
-		setProductQuantities(initialQuantities)
-		setProductSizes(initialSizes)
-	}, [wishlistProducts])
-
 	// Format price with Vietnamese dong symbol
-	const formatPrice = (price: number) => {
+	const formatPrice = (price: number | undefined) => {
+		if (typeof price !== 'number' || isNaN(price)) {
+			return '0đ'
+		}
 		return `${price.toLocaleString('vi-VN')}đ`
 	}
 
-	// Calculate total price of all items
-	const calculateTotalPrice = () => {
-		return wishlistProducts.reduce((total, product) => {
-			const quantity = productQuantities[product.productId] || 0
-			return total + product.price * quantity
-		}, 0)
-	}
-
-	// Handle quantity changes
-	const incrementQuantity = (productId: number) => {
-		setProductQuantities((prev) => ({
-			...prev,
-			[productId]: (prev[productId] || 0) + 1,
-		}))
-	}
-
-	const decrementQuantity = (productId: number) => {
-		if (productQuantities[productId] > 1) {
-			setProductQuantities((prev) => ({
-				...prev,
-				[productId]: prev[productId] - 1,
-			}))
-		}
-	}
-
 	// Handle size selection
-	const changeSize = (productId: number, size: string) => {
+	const changeSize = (product: Product, sizeIndex: number) => {
+		const selectedSize = product.sizes[sizeIndex]
+		const selectedPrice = product.prices[sizeIndex]
 		setProductSizes((prev) => ({
 			...prev,
-			[productId]: size,
+			[product.productId]: selectedSize,
+		}))
+		setProductPrices((prev) => ({
+			...prev,
+			[product.productId]: selectedPrice,
 		}))
 	}
 
-	// Remove from favorites
+	// Remove from wishlist
 	const handleRemoveFromWishlist = async (productId: number) => {
 		setRemovingProductId(productId)
 		try {
@@ -173,18 +154,19 @@ export default function FavoritesScreen() {
 		}
 	}
 
-	// Add all items to cart
-	const handleAddAllToCart = () => {
-		// Implement cart functionality
-		console.log(
-			'Adding all items to cart',
-			wishlistProducts.map((product) => ({
+	// Add item to cart
+	const handleAddToCart = (productId: number) => {
+		const product = wishlistProducts.find((p) => p.productId === productId)
+		if (product) {
+			console.log('Adding to cart:', {
 				id: product.productId,
-				quantity: productQuantities[product.productId],
-				size: productSizes[product.productId],
-			}))
-		)
-		// Navigate to cart or show confirmation
+				size: productSizes[productId] || product.sizes[0],
+				quantity: 1, // Default to 1 when adding from wishlist
+			})
+
+			// Implement your cart addition logic here
+			// You might want to show a success toast
+		}
 	}
 
 	// Render a single favorite item
@@ -217,11 +199,13 @@ export default function FavoritesScreen() {
 					</TouchableOpacity>
 				</View>
 
-				<Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
+				<Text style={styles.productPrice}>
+					{formatPrice(productPrices[item.productId])}
+				</Text>
 
 				<View style={styles.productControls}>
 					<View style={styles.sizeSelector}>
-						{item.sizes.map((size: string) => (
+						{item.sizes.map((size: string, sizeIndex: number) => (
 							<TouchableOpacity
 								key={size}
 								style={[
@@ -229,7 +213,7 @@ export default function FavoritesScreen() {
 									productSizes[item.productId] === size &&
 										styles.selectedSizeButton,
 								]}
-								onPress={() => changeSize(item.productId, size)}
+								onPress={() => changeSize(item, sizeIndex)}
 							>
 								<Text
 									style={[
@@ -244,12 +228,12 @@ export default function FavoritesScreen() {
 						))}
 					</View>
 
-					<QuantityControl
-						value={productQuantities[item.productId] || 1}
-						onIncrement={() => incrementQuantity(item.productId)}
-						onDecrement={() => decrementQuantity(item.productId)}
-						size="small"
-					/>
+					<TouchableOpacity
+						style={styles.addToCartButton}
+						onPress={() => handleAddToCart(item.productId)}
+					>
+						<Ionicons name="cart-outline" size={18} color="#FFFFFF" />
+					</TouchableOpacity>
 				</View>
 			</View>
 		</View>
@@ -269,7 +253,11 @@ export default function FavoritesScreen() {
 				<View style={styles.placeholderView} />
 			</View>
 
-			{wishlistProducts.length === 0 ? (
+			{isLoading ? (
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#C67C4E" />
+				</View>
+			) : wishlistProducts.length === 0 ? (
 				<View style={styles.emptyContainer}>
 					<Ionicons name="heart-outline" size={64} color="#CCCCCC" />
 					<Text style={styles.emptyText}>{t('noFavorites')}</Text>
@@ -281,27 +269,14 @@ export default function FavoritesScreen() {
 					</TouchableOpacity>
 				</View>
 			) : (
-				<>
-					<FlatList
-						data={wishlistProducts}
-						renderItem={renderFavoriteItem}
-						keyExtractor={(item) => item.productId.toString()}
-						contentContainerStyle={styles.listContainer}
-						showsVerticalScrollIndicator={false}
-						ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
-					/>
-
-					<View style={styles.bottomContainer}>
-						<TouchableOpacity
-							style={styles.addAllButton}
-							onPress={handleAddAllToCart}
-						>
-							<Text style={styles.addAllButtonText}>
-								{t('addAllToCart')} ({formatPrice(calculateTotalPrice())})
-							</Text>
-						</TouchableOpacity>
-					</View>
-				</>
+				<FlatList
+					data={wishlistProducts}
+					renderItem={renderFavoriteItem}
+					keyExtractor={(item) => item.productId.toString()}
+					contentContainerStyle={styles.listContainer}
+					showsVerticalScrollIndicator={false}
+					ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+				/>
 			)}
 		</SafeAreaView>
 	)
@@ -425,33 +400,23 @@ const styles = StyleSheet.create({
 	selectedSizeButtonText: {
 		color: '#FFFFFF',
 	},
-	bottomContainer: {
-		position: 'absolute',
-		bottom: 0,
-		left: 0,
-		right: 0,
-		backgroundColor: '#FFFFFF',
-		paddingHorizontal: 16,
-		paddingVertical: 16,
-		borderTopWidth: 1,
-		borderTopColor: '#F4F4F4',
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: -2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 5,
-	},
-	addAllButton: {
+	addToCartButton: {
+		width: 34,
+		height: 34,
+		borderRadius: 17,
 		backgroundColor: '#C67C4E',
-		borderRadius: 19,
-		paddingVertical: 16,
-		alignItems: 'center',
 		justifyContent: 'center',
+		alignItems: 'center',
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 3,
+		elevation: 2,
 	},
-	addAllButtonText: {
-		fontFamily: 'Inter-Bold',
-		fontSize: 16,
-		color: '#FFFFFF',
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
 	emptyContainer: {
 		flex: 1,
