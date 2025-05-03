@@ -145,4 +145,12 @@ export default {
 	seeAllReviews: "Xem tất cả đánh giá",
 	errorAddingToWishlist: "Không thể thêm vào danh sách yêu thích",
 	errorAddingToCart: "Không thể thêm vào giỏ hàng",
+
+	// Wishlist Page
+	favorites: "Yêu thích",
+	noFavorites: "Chưa có sản phẩm yêu thích nào",
+	browseProducts: "Xem sản phẩm",
+	addAllToCart: "Thêm tất cả vào giỏ hàng",
+	removingFromFavorites: "Đang xóa khỏi yêu thích...",
+	errorFetchingWishlist: "Có lỗi xảy ra khi tải danh sách yêu thích",
 };

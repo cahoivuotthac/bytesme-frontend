@@ -20,6 +20,7 @@ import { useTranslation } from '@/providers/locale'
 import ImageCarousel from '@/components/shared/ImageCarousel'
 import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
+import QuantityControl from '@/components/ui/QuantityControl'
 
 const { width, height } = Dimensions.get('window')
 
@@ -117,7 +118,7 @@ Với hương thơm dịu nhẹ và vị ngọt thanh đặc trưng, Matcha Latt
 // Mock similar products
 const SIMILAR_PRODUCTS = [
 	{
-		id: '2',
+		productId: 2,
 		name: 'Yakisoba Noodles',
 		price: 10,
 		imageUrl:
@@ -126,7 +127,7 @@ const SIMILAR_PRODUCTS = [
 		isFavorite: false,
 	},
 	{
-		id: '3',
+		productId: 3,
 		name: 'Yakisoba Noodles',
 		price: 10,
 		imageUrl:
@@ -135,7 +136,7 @@ const SIMILAR_PRODUCTS = [
 		isFavorite: true,
 	},
 	{
-		id: '4',
+		productId: 4,
 		name: 'Yakisoba Noodles',
 		price: 10,
 		imageUrl:
@@ -323,23 +324,13 @@ export default function ProductDetailScreen() {
 
 					{/* Quantity Selector and Price */}
 					<View style={styles.quantityPriceContainer}>
-						<View style={styles.quantitySelector}>
-							<TouchableOpacity
-								style={styles.quantityButton}
-								onPress={decrementQuantity}
-							>
-								<Feather name="minus" size={20} color="#968B7B" />
-							</TouchableOpacity>
-
-							<Text style={styles.quantityText}>{quantity}</Text>
-
-							<TouchableOpacity
-								style={styles.quantityButton}
-								onPress={incrementQuantity}
-							>
-								<Feather name="plus" size={20} color="#968B7B" />
-							</TouchableOpacity>
-						</View>
+						<QuantityControl
+							value={quantity}
+							onIncrement={incrementQuantity}
+							onDecrement={decrementQuantity}
+							size="large"
+							style={styles.quantityControlCustom}
+						/>
 
 						<Text style={styles.priceText}>${PRODUCT.price.toFixed(2)}</Text>
 					</View>
@@ -471,7 +462,7 @@ export default function ProductDetailScreen() {
 						>
 							{SIMILAR_PRODUCTS.map((product) => (
 								<RegularProductCard
-									key={product.id}
+									key={product.productId}
 									product={product}
 									onToggleFavorite={() => {}}
 									style={styles.similarProductCard}
@@ -819,29 +810,11 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		marginBottom: 20,
 	},
-	quantitySelector: {
-		flexDirection: 'row',
-		alignItems: 'center',
+	quantityControlCustom: {
 		backgroundColor: '#F9F9F9',
 		borderRadius: 40,
 		paddingHorizontal: 10,
 		paddingVertical: 5,
-	},
-	quantityButton: {
-		width: 30,
-		height: 30,
-		backgroundColor: '#EEF6FD',
-		borderRadius: 15,
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderWidth: 1,
-		borderColor: '#968B7B',
-	},
-	quantityText: {
-		marginHorizontal: 15,
-		fontSize: 16,
-		fontFamily: 'Inter-Medium',
-		color: '#383838',
 	},
 	priceText: {
 		fontSize: 24,

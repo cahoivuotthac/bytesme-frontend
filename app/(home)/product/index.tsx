@@ -31,21 +31,24 @@ const HOT_PRODUCTS_CAROUSEL = [
 		id: 'promo1',
 		title: 'Khuyến mãi mùa hè',
 		description: 'Giảm 30% tất cả đồ uống lạnh',
-		imageUrl: 'https://images.unsplash.com/photo-1560107230-77eda4c64c84',
+		imageUrl:
+			'https://cdn.prod.website-files.com/649249d29a20bd6bc3deac45/649249d29a20bd6bc3deaea5_AdobeStock_62684026.webp',
 		linkTo: '/(home)/product/categories/cold-drink',
 	},
 	{
 		id: 'promo2',
 		title: 'Bánh mới về',
 		description: 'Bánh ngọt thơm ngon mới về',
-		imageUrl: 'https://images.unsplash.com/photo-1567954970774-58d6aa6d429f',
+		imageUrl:
+			'https://cdn.prod.website-files.com/649249d29a20bd6bc3deac45/649249d29a20bd6bc3deaea7_AdobeStock_293739586.webp',
 		linkTo: '/(home)/product/categories/pastry',
 	},
 	{
 		id: '4',
 		title: 'Bia Nhiệt Đới',
 		description: 'Sản phẩm nổi bật',
-		imageUrl: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757',
+		imageUrl:
+			'https://cdn.prod.website-files.com/649249d29a20bd6bc3deac45/649249d29a20bd6bc3deaea6_AdobeStock_158358263.webp',
 	},
 ]
 
@@ -86,21 +89,21 @@ const CATEGORIES = [
 // Mock featured products
 const FEATURED_PRODUCTS = [
 	{
-		id: '1',
+		productId: 1,
 		name: 'Bia Nhiệt Đới',
 		price: 30000,
 		imageUrl: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757',
 		isFavorite: true,
 	},
 	{
-		id: '2',
+		productId: 2,
 		name: 'Xu Kem bơ nướng giòn tan',
 		price: 30000,
 		imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e',
 		isFavorite: false,
 	},
 	{
-		id: '3',
+		productId: 3,
 		name: 'Bánh sừng bò nhân sầu riêng',
 		price: 30000,
 		imageUrl: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812',
@@ -111,7 +114,7 @@ const FEATURED_PRODUCTS = [
 // Mock best sellers
 const BEST_SELLERS = [
 	{
-		id: '4',
+		productId: 4,
 		name: 'Bia Nhiệt Đới',
 		price: 30000,
 		imageUrl: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757',
@@ -119,7 +122,7 @@ const BEST_SELLERS = [
 		isFavorite: false,
 	},
 	{
-		id: '5',
+		productId: 5,
 		name: 'Trà Sữa Đài Loan',
 		price: 35000,
 		imageUrl: 'https://images.unsplash.com/photo-1572490122747-3968b75cc699',
@@ -127,7 +130,7 @@ const BEST_SELLERS = [
 		isFavorite: true,
 	},
 	{
-		id: '6',
+		productId: 6,
 		name: 'Cà Phê Đá',
 		price: 25000,
 		imageUrl: 'https://images.unsplash.com/photo-1507133750040-4a8f57021571',
@@ -139,7 +142,7 @@ const BEST_SELLERS = [
 // Mock discounted products
 const DISCOUNTED_PRODUCTS = [
 	{
-		id: '7',
+		productId: 7,
 		name: 'Sừng trâu Sôcôla',
 		price: 27000,
 		originalPrice: 30000,
@@ -148,7 +151,7 @@ const DISCOUNTED_PRODUCTS = [
 		isFavorite: false,
 	},
 	{
-		id: '8',
+		productId: 8,
 		name: 'Bột nhào mứt táo',
 		price: 25500,
 		originalPrice: 30000,
@@ -161,21 +164,21 @@ const DISCOUNTED_PRODUCTS = [
 // Mock explore products
 const EXPLORE_PRODUCTS = [
 	{
-		id: '9',
+		productId: 9,
 		name: 'Bánh cà phê Ailen',
 		price: 30000,
 		imageUrl: 'https://images.unsplash.com/photo-1506224772180-d75b3efbe9a0',
 		isFavorite: true,
 	},
 	{
-		id: '10',
+		productId: 10,
 		name: 'Bánh sừng bò Pháp',
 		price: 35000,
 		imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a',
 		isFavorite: false,
 	},
 	{
-		id: '11',
+		productId: 11,
 		name: 'Bánh Tiramisu',
 		price: 40000,
 		imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9',
@@ -183,7 +186,7 @@ const EXPLORE_PRODUCTS = [
 		isFavorite: false,
 	},
 	{
-		id: '12',
+		productId: 12,
 		name: 'Trà Hoa Cúc',
 		price: 32000,
 		imageUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3',
@@ -194,7 +197,7 @@ const EXPLORE_PRODUCTS = [
 export default function ProductScreen() {
 	const [searchQuery, setSearchQuery] = useState('')
 	const [activeCategory, setActiveCategory] = useState('all')
-	const [favorites, setFavorites] = useState<string[]>([])
+	const [favorites, setFavorites] = useState<number[]>([])
 	const { t } = useTranslation()
 
 	const categoriesRef = useRef<ScrollView>(null)
@@ -205,10 +208,12 @@ export default function ProductScreen() {
 	}
 
 	// Toggle favorite status for a product
-	const handleToggleFavorite = (productId: string) => {
+	const handleToggleFavorite = (productId: number) => {
 		setFavorites((prevFavorites) => {
 			if (prevFavorites.includes(productId)) {
-				return prevFavorites.filter((id) => id !== productId)
+				return prevFavorites.filter(
+					(prevProductId) => prevProductId !== productId
+				)
 			} else {
 				return [...prevFavorites, productId]
 			}
@@ -339,7 +344,7 @@ export default function ProductScreen() {
 					>
 						{FEATURED_PRODUCTS.map((product) => (
 							<FeaturedProductCard
-								key={product.id}
+								key={product.productId}
 								product={product}
 								onToggleFavorite={handleToggleFavorite}
 							/>
@@ -375,7 +380,7 @@ export default function ProductScreen() {
 					>
 						{BEST_SELLERS.map((product) => (
 							<RegularProductCard
-								key={product.id}
+								key={product.productId}
 								product={product}
 								onToggleFavorite={handleToggleFavorite}
 								style={styles.regularCard}
@@ -412,7 +417,7 @@ export default function ProductScreen() {
 					>
 						{DISCOUNTED_PRODUCTS.map((product) => (
 							<DiscountProductCard
-								key={product.id}
+								key={product.productId}
 								product={product}
 								onToggleFavorite={handleToggleFavorite}
 								style={styles.discountCard}
@@ -444,7 +449,7 @@ export default function ProductScreen() {
 					<View style={styles.exploreGrid}>
 						{EXPLORE_PRODUCTS.map((product, _) => (
 							<RegularProductCard
-								key={product.id}
+								key={product.productId}
 								product={product}
 								onToggleFavorite={handleToggleFavorite}
 								style={styles.exploreCard}

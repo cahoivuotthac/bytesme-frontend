@@ -128,4 +128,12 @@ export default {
 	seeAllReviews: "View all reviews",
 	errorAddingToWishlist: "Error adding to wishlist",
 	errorAddingToCart: "Error adding to cart",
+
+	// Wishlist Page
+	favorites: "Favorites",
+	noFavorites: "No favorite items yet",
+	browseProducts: "Browse Products",
+	addAllToCart: "Add all to cart",
+	removingFromFavorites: "Removing from favorites...",
+	errorFetchingWishlist: "Error fetching wishlist",
 };

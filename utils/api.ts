@@ -43,11 +43,11 @@ export const getCsrfToken = async () => {
 // };
 
 // Wishlist API endpoints
-export const addToWishlist = (productId: string) => {
+export const addToWishlist = (productId: number) => {
 	return APIClient.post("/user/wishlist/add", { product_id: productId });
 };
 
-export const removeFromWishlist = (productId: string) => {
+export const removeFromWishlist = (productId: number) => {
 	return APIClient.post("/user/wishlist/remove", {
 		product_id: productId,
 	});
