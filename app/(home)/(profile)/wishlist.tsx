@@ -242,17 +242,6 @@ export default function FavoritesScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
-			<View style={styles.header}>
-				<TouchableOpacity
-					style={styles.backButton}
-					onPress={() => router.back()}
-				>
-					<Ionicons name="arrow-back" size={24} color="#2D2A2A" />
-				</TouchableOpacity>
-				<Text style={styles.headerTitle}>{t('favorites')}</Text>
-				<View style={styles.placeholderView} />
-			</View>
-
 			{isLoading ? (
 				<View style={styles.loadingContainer}>
 					<ActivityIndicator size="large" color="#C67C4E" />
@@ -286,26 +275,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: '#FFFFFF',
-	},
-	header: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-		borderBottomWidth: 1,
-		borderBottomColor: '#F4F4F4',
-	},
-	backButton: {
-		padding: 8,
-	},
-	headerTitle: {
-		fontFamily: 'Inter-SemiBold',
-		fontSize: 18,
-		color: '#383838',
-	},
-	placeholderView: {
-		width: 40,
 	},
 	listContainer: {
 		paddingHorizontal: 16,

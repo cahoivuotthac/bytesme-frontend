@@ -1,0 +1,441 @@
+import React, { useState, useEffect } from 'react'
+import {
+	View,
+	Text,
+	StyleSheet,
+	TouchableOpacity,
+	ActivityIndicator,
+	Dimensions,
+	ScrollView,
+	Image,
+} from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { router } from 'expo-router'
+import { useAlert } from '@/hooks/useAlert'
+import DishDecoration from '@/components/shared/DishDecoration'
+import { useTranslation } from '@/providers/locale'
+import QuantityControl from '@/components/ui/QuantityControl'
+import Button from '@/components/ui/Button'
+
+const { width } = Dimensions.get('window')
+
+interface CartItem {
+	id: number
+	productId: number
+	name: string
+	price: number
+	imageUrl: string
+	size: string
+	quantity: number
+	note: string
+}
+
+// Mock cart data for development
+const MOCK_CART_ITEMS: CartItem[] = [
+	{
+		id: 1,
+		productId: 101,
+		name: 'Cappuccino',
+		price: 45000,
+		imageUrl: 'https://images.unsplash.com/photo-1610889556528-9a770e32642f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+		size: 'M',
+		quantity: 1,
+		note: 'Less sugar'
+	},
+	{
+		id: 2,
+		productId: 102,
+		name: 'Matcha Latte',
+		price: 50000,
+		imageUrl: 'https://images.unsplash.com/photo-1631308491952-050f00513b5f?q=80&w=3538&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+		size: 'L',
+		quantity: 2,
+		note: ''
+	},
+	{
+		id: 3,
+		productId: 103,
+		name: 'Croissant',
+		price: 30000,
+		imageUrl: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=3426&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+		size: 'M',
+		quantity: 1,
+		note: ''
+	}
+]
+
+export default function CartScreen() {
+	const { t } = useTranslation()
+	const [cartItems, setCartItems] = useState<CartItem[]>(MOCK_CART_ITEMS)
+	const [isLoading, setIsLoading] = useState(false)
+	const [removingItemId, setRemovingItemId] = useState<number | null>(null)
+	const [deliveryFee] = useState(15000) // Fixed delivery fee
+
+	const { AlertComponent, showError } = useAlert()
+
+	// Format price with Vietnamese dong symbol
+	const formatPrice = (price: number) => {
+		if (typeof price !== 'number' || isNaN(price)) {
+			return '0đ'
+		}
+		return `${price.toLocaleString('vi-VN')}đ`
+	}
+
+	// Calculate subtotal
+	const calculateSubtotal = () => {
+		return cartItems.reduce((total, item) => {
+			return total + (item.price * item.quantity)
+		}, 0)
+	}
+
+	// Calculate total
+	const calculateTotal = () => {
+		const subtotal = calculateSubtotal()
+		return subtotal + deliveryFee
+	}
+
+	// Handle quantity changes
+	const incrementQuantity = (itemId: number) => {
+		setCartItems(prev => 
+			prev.map(item => 
+				item.id === itemId 
+					? { ...item, quantity: item.quantity + 1 } 
+					: item
+			)
+		)
+	}
+
+	const decrementQuantity = (itemId: number) => {
+		setCartItems(prev => 
+			prev.map(item => 
+				item.id === itemId && item.quantity > 1
+					? { ...item, quantity: item.quantity - 1 } 
+					: item
+			)
+		)
+	}
+
+	// Remove item from cart
+	const handleRemoveItem = (itemId: number) => {
+		setRemovingItemId(itemId)
+		setTimeout(() => {
+			setCartItems(prev => prev.filter(item => item.id !== itemId))
+			setRemovingItemId(null)
+		}, 300)
+	}
+
+	// Handle checkout
+	const handleCheckout = () => {
+		if (cartItems.length === 0) {
+			showError(t('cartEmptyError'))
+			return
+		}
+		
+		// Navigate to checkout page
+		console.log('Navigating to checkout with items:', cartItems)
+		// router.push('/(home)/(profile)/checkout')
+	}
+
+	return (
+		<SafeAreaView style={styles.container} edges={['bottom']}>
+			{AlertComponent}
+			
+			{isLoading ? (
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator size="large" color="#C67C4E" />
+				</View>
+			) : cartItems.length === 0 ? (
+				<View style={styles.emptyContainer}>
+					<Ionicons name="cart-outline" size={64} color="#CCCCCC" />
+					<Text style={styles.emptyText}>{t('cartEmpty')}</Text>
+					<TouchableOpacity
+						style={styles.browseButton}
+						onPress={() => router.push('/(home)/product')}
+					>
+						<Text style={styles.browseButtonText}>{t('browseProducts')}</Text>
+					</TouchableOpacity>
+				</View>
+			) : (
+				<>
+					<ScrollView 
+						style={styles.scrollView} 
+						contentContainerStyle={styles.scrollViewContent}
+						showsVerticalScrollIndicator={false}
+					>
+						{/* Cart Items Section */}
+						<View style={styles.cartItemsContainer}>
+							{cartItems.map(item => (
+								<View key={item.id} style={styles.cartItem}>
+									<View style={styles.productImageContainer}>
+										<DishDecoration
+											imageSource={{ uri: item.imageUrl }}
+											size={70}
+											containerStyle={styles.dishContainer}
+											imageStyle={styles.dishImage}
+										/>
+									</View>
+
+									<View style={styles.productInfoContainer}>
+										<View style={styles.productNameRow}>
+											<Text style={styles.productName} numberOfLines={1}>
+												{item.name}
+											</Text>
+											<TouchableOpacity
+												onPress={() => handleRemoveItem(item.id)}
+												style={styles.removeButton}
+												hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+											>
+												{removingItemId === item.id ? (
+													<ActivityIndicator size="small" color="#C67C4E" />
+												) : (
+													<Ionicons name="close" size={18} color="#C67C4E" />
+												)}
+											</TouchableOpacity>
+										</View>
+
+										<Text style={styles.sizeText}>{item.size}</Text>
+
+										{item.note ? (
+											<Text style={styles.noteText} numberOfLines={1}>
+												{item.note}
+											</Text>
+										) : null}
+
+										<View style={styles.productControls}>
+											<Text style={styles.productPrice}>
+												{formatPrice(item.price)}
+											</Text>
+
+											<QuantityControl
+												value={item.quantity}
+												onIncrement={() => incrementQuantity(item.id)}
+												onDecrement={() => decrementQuantity(item.id)}
+												size="small"
+												buttonColor="#C67C4E"
+											/>
+										</View>
+									</View>
+								</View>
+							))}
+						</View>
+
+						{/* Price Summary Section */}
+						<View style={styles.summaryContainer}>
+							<View style={styles.summaryRow}>
+								<Text style={styles.summaryLabel}>{t('subtotal')}</Text>
+								<Text style={styles.summaryValue}>{formatPrice(calculateSubtotal())}</Text>
+							</View>
+							
+							<View style={styles.summaryRow}>
+								<Text style={styles.summaryLabel}>{t('deliveryFee')}</Text>
+								<Text style={styles.summaryValue}>{formatPrice(deliveryFee)}</Text>
+							</View>
+							
+							<View style={styles.divider} />
+							
+							<View style={styles.summaryRow}>
+								<Text style={styles.totalLabel}>{t('total')}</Text>
+								<Text style={styles.totalValue}>{formatPrice(calculateTotal())}</Text>
+							</View>
+						</View>
+						
+						{/* Extra space at bottom for the checkout button */}
+						<View style={{ height: 80 }} />
+					</ScrollView>
+
+					{/* Checkout Button */}
+					<View style={styles.checkoutContainer}>
+						<Button
+							text={`${t('checkout')} (${formatPrice(calculateTotal())})`}
+							backgroundColor="#C67C4E"
+							textColor="#FFFFFF"
+							onPress={handleCheckout}
+							style={styles.checkoutButton}
+						/>
+					</View>
+				</>
+			)}
+		</SafeAreaView>
+	)
+}
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+		backgroundColor: '#FFFFFF',
+	},
+	scrollView: {
+		flex: 1,
+	},
+	scrollViewContent: {
+		paddingHorizontal: 24,
+		paddingTop: 8,
+		paddingBottom: 16,
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	emptyContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		paddingHorizontal: 32,
+	},
+	emptyText: {
+		fontFamily: 'Inter-Medium',
+		fontSize: 16,
+		color: '#9B9B9B',
+		marginTop: 16,
+		marginBottom: 24,
+	},
+	browseButton: {
+		backgroundColor: '#C67C4E',
+		borderRadius: 16,
+		paddingVertical: 14,
+		paddingHorizontal: 24,
+	},
+	browseButtonText: {
+		fontFamily: 'Inter-Bold',
+		fontSize: 14,
+		color: '#FFFFFF',
+	},
+	cartItemsContainer: {
+		marginBottom: 24,
+	},
+	cartItem: {
+		flexDirection: 'row',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 14,
+		padding: 12,
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 6,
+		elevation: 3,
+		marginBottom: 16,
+	},
+	productImageContainer: {
+		width: 70,
+		height: 70,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 16,
+	},
+	dishContainer: {
+		backgroundColor: '#F5F5F5',
+		shadowColor: '#896450',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.2,
+		shadowRadius: 8,
+		elevation: 5,
+	},
+	dishImage: {
+		width: '85%',
+		height: '85%',
+	},
+	productInfoContainer: {
+		flex: 1,
+		justifyContent: 'space-between',
+	},
+	productNameRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 4,
+	},
+	productName: {
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+		color: '#2F2D2C',
+		flex: 1,
+		marginRight: 8,
+	},
+	removeButton: {
+		padding: 4,
+	},
+	sizeText: {
+		fontFamily: 'Inter-Regular',
+		fontSize: 12,
+		color: '#9B9B9B',
+		marginBottom: 4,
+	},
+	noteText: {
+		fontFamily: 'Inter-Regular',
+		fontSize: 12,
+		color: '#9B9B9B',
+		marginBottom: 4,
+		fontStyle: 'italic',
+	},
+	productControls: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginTop: 4,
+	},
+	productPrice: {
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+		color: '#C67C4E',
+	},
+	summaryContainer: {
+		backgroundColor: '#F4F4F4',
+		borderRadius: 16,
+		padding: 16,
+	},
+	summaryRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 12,
+	},
+	summaryLabel: {
+		fontFamily: 'Inter-Regular',
+		fontSize: 14,
+		color: '#2F2D2C',
+	},
+	summaryValue: {
+		fontFamily: 'Inter-Medium',
+		fontSize: 14,
+		color: '#2F2D2C',
+	},
+	divider: {
+		height: 1,
+		backgroundColor: '#EAEAEA',
+		marginVertical: 12,
+	},
+	totalLabel: {
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+		color: '#2F2D2C',
+	},
+	totalValue: {
+		fontFamily: 'Inter-Bold',
+		fontSize: 16,
+		color: '#C67C4E',
+	},
+	checkoutContainer: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		backgroundColor: '#FFFFFF',
+		paddingHorizontal: 24,
+		paddingVertical: 16,
+		borderTopWidth: 1,
+		borderTopColor: '#F4F4F4',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: -2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+	checkoutButton: {
+		borderRadius: 16,
+		paddingVertical: 16,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+})

@@ -35,7 +35,6 @@ export default function RootLayout() {
 	return (
 		<LocaleProvider>
 			<AuthProvider>
-				{/* Important: Use Slot instead of custom navigator logic at root level */}
 				<Slot />
 			</AuthProvider>
 		</LocaleProvider>

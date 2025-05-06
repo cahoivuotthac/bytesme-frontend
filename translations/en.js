@@ -48,6 +48,16 @@ export default {
 	setAsDefault: "Set as default address",
 	saveAddress: "Save address",
 	requiredFields: "This field is required",
+	selectProvince: "Select province",
+	selectDistrict: "Select district",
+	selectWard: "Select ward",
+	selectProvinceFirst: "Please select province first",
+	selectDistrictFirst: "Please select district first",
+	addressDetailPlaceholder: "Street name, building number...",
+	searchPlaceholder: "Search...",
+	gpsCoordinates: "GPS Coordinates:",
+	nearLocation: "Near current location",
+	locationWithCoordinates: "Location with coordinates",
 
 	// Form validation
 	pleaseEnterAddress: "Please enter your address details",
@@ -57,6 +67,10 @@ export default {
 	locationFound: "Location found! Please check the address information.",
 	locationError:
 		"Could not get current location. Please enter address manually.",
+	errorLoadingProvinces: "Error loading provinces",
+	errorLoadingDistricts: "Error loading districts",
+	errorLoadingWards: "Error loading wards",
+	pleaseCompleteAddress: "Please complete your address",
 
 	// Signin
 	signIn: "Sign In",
@@ -90,10 +104,10 @@ export default {
 	resetSuccess: "Password reset successful",
 	invalidEmail: "Invalid email address",
 	invalidPhone: "Please enter a valid phone number",
-	enterAllIntfo: "Please fill in all information",
+	enterAllInfo: "Please fill in all information",
 	passwordsDontMatch: "Passwords don't match",
 	invalidPassword:
-		"Password mus be at least 8 characters and include letters and numbers",
+		"Password must be at least 8 characters and include letters and numbers",
 	enterOTP: "Please enter all 4 OTP digits",
 	invalidOTP: "Invalid OTP code",
 	otpSent: "OTP has been sent to your phone number",
@@ -126,14 +140,33 @@ export default {
 	ratings: "ratings",
 	readMore: "Read more",
 	seeAllReviews: "View all reviews",
-	errorAddingToWishlist: "Error adding to wishlist",
 	errorAddingToCart: "Error adding to cart",
 
-	// Wishlist Page
+	// Profile layout
+	profile: "Profile",
+	cart: "Cart",
 	favorites: "Favorites",
+
+	// Wishlist
 	noFavorites: "No favorite items yet",
 	browseProducts: "Browse Products",
 	addAllToCart: "Add all to cart",
 	removingFromFavorites: "Removing from favorites...",
 	errorFetchingWishlist: "Error fetching wishlist",
+	errorRemovingFromWishlist: "Error removing from wishlist",
+	errorAddingToWishlist: "Error adding to wishlist",
+
+	// Cart page
+	checkout: "Purchase",
+	subtotal: "Subtotal",
+	deliveryFee: "Delivery Fee",
+	total: "Total",
+	emptyCart: "Your cart is empty",
+	selectAll: "Select All",
+	noItemsSelected: "No items selected for checkout",
+	errorFetchingCart: "Error fetching cart items",
+	removingFromCart: "Removing from cart...",
+	errorUpdatingQuantity: "Cannot update item quantity",
+	errorRemovingFromCart: "Error removing item from cart",
+	errorFetchingCartItems: "Error fetching cart items",
 };

@@ -143,14 +143,35 @@ export default {
 	ratings: "đánh giá",
 	readMore: "Xem thêm",
 	seeAllReviews: "Xem tất cả đánh giá",
-	errorAddingToWishlist: "Không thể thêm vào danh sách yêu thích",
 	errorAddingToCart: "Không thể thêm vào giỏ hàng",
 
-	// Wishlist Page
+	// Profile layout
+	profile: "Hồ sơ",
+	cart: "Giỏ hàng",
 	favorites: "Yêu thích",
+
+	// Wishlist
 	noFavorites: "Chưa có sản phẩm yêu thích nào",
 	browseProducts: "Xem sản phẩm",
 	addAllToCart: "Thêm tất cả vào giỏ hàng",
 	removingFromFavorites: "Đang xóa khỏi yêu thích...",
 	errorFetchingWishlist: "Có lỗi xảy ra khi tải danh sách yêu thích",
+	errorAddingToWishlist: "Không thể thêm sản phẩm vào danh sách yêu thích",
+	errorRemovingFromWishlist:
+		"Không thể xóa sản phẩm khỏi danh sách yêu thích",
+
+	// Cart page
+	checkout: "Mua hàng",
+	subtotal: "Tạm tính",
+	deliveryFee: "Phí giao hàng",
+	total: "Tổng cộng",
+	emptyCart: "Giỏ hàng của bạn đang trống",
+	selectAll: "Chọn tất cả",
+	noItemsSelected: "Chưa có sản phẩm nào được chọn để thanh toán",
+	errorFetchingCart: "Có lỗi xảy ra khi tải giỏ hàng",
+	removingFromCart: "Đang xóa khỏi giỏ hàng...",
+	errorUpdatingQuantity: "Không thể cập nhật số lượng sản phẩm",
+	errorRemovingFromCart: "Không thể xóa sản phẩm khỏi giỏ hàng",
+	errorFetchingCartItems:
+		"Có lỗi xảy ra khi tải danh sách sản phẩm trong giỏ hàng",
 };

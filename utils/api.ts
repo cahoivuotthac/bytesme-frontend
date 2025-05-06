@@ -56,3 +56,29 @@ export const removeFromWishlist = (productId: number) => {
 export const getWishlist = () => {
 	return APIClient.get("/user/wishlist");
 };
+
+export const cartAPI = {
+	getCartItems: async () => {
+		return await APIClient.get("/user/cart");
+	},
+
+	updateItemQuantity: async (productId: number, quantity: number) => {
+		return await APIClient.post("/user/cart/update-item-quantity", {
+			product_id: productId,
+			quantity: quantity,
+		});
+	},
+
+	removeFromCart: async (productId: number) => {
+		return await APIClient.post("/user/cart/remove", {
+			product_id: productId,
+		});
+	},
+
+	updateItemSize: async (productId: number, size: string) => {
+		return await APIClient.post("/user/cart/update-item-size", {
+			product_id: productId,
+			size: size,
+		});
+	},
+};

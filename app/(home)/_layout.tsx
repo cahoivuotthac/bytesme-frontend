@@ -9,6 +9,9 @@ import {
 } from 'react-native'
 import { useAuth } from '@/providers/auth'
 import BottomBar from '@/components/shared/BottomBar'
+import { Dimensions } from 'react-native'
+
+const { width, height } = Dimensions.get('window')
 
 /**
  * Layout for all authenticated screens in the app
@@ -85,7 +88,13 @@ export default function HomeLayout() {
 			</Stack>
 
 			{/* Render BottomBar conditionally based on current screen */}
-			{shouldShowBottomBar() && <BottomBar style={styles.bottomBarStyle} />}
+			{shouldShowBottomBar() && (
+				// Spacer
+				<>
+					<View style={styles.spacerStyle} />
+					<BottomBar style={styles.bottomBarStyle} />
+				</>
+			)}
 		</View>
 	)
 }
@@ -93,7 +102,7 @@ export default function HomeLayout() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: '#FFFFFF',
+		backgroundColor: '#000000',
 	},
 	loadingContainer: {
 		flex: 1,
@@ -108,5 +117,14 @@ const styles = StyleSheet.create({
 		right: 0,
 		zIndex: 100,
 		width: '100%',
+	},
+	spacerStyle: {
+		// height: Platform.OS === 'ios' ? 5 : 3,
+		height: height * 0.05,
+		backgroundColor: '#000000',
+		width: '100%',
+		position: 'absolute',
+		// bottom: Platform.OS === 'ios' ? 90 : 70,
+		zIndex: 99,
 	},
 })

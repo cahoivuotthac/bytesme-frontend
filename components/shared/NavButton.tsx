@@ -1,3 +1,4 @@
+import { router } from 'expo-router'
 import React from 'react'
 import {
 	TouchableOpacity,
@@ -56,6 +57,10 @@ export default function NextIcon({
 	style,
 	disabled = false,
 }: NextIconProps) {
+	if (!onPress && direction === 'back') {
+		onPress = () => router.back()
+	}
+
 	return (
 		<TouchableOpacity
 			style={[

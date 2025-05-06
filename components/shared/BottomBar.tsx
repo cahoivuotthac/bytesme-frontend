@@ -96,71 +96,70 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 	}
 
 	return (
-		<View style={[styles.outerContainer, style]}>
-			 {/* Inner container that clips the content to its borders */}
-			<View style={styles.innerClippingContainer}>
-				{/* Container for shadow effect */}
-				<View style={styles.shadowContainer} />
-				
-				{/* Container for the actual content */}
-				<View style={styles.mainContainer}>
-					{TABS.map((tab, index) => {
-						const active = isActive(tab.path)
+		// <View style={[styles.outerContainer, style]}>
+		<View style={[styles.innerClippingContainer, style]}>
+			{/* Container for shadow effect */}
+			{/* <View style={styles.shadowContainer} /> */}
 
-						return (
-							<TouchableOpacity
-								key={tab.name}
-								style={[
-									styles.tabButton,
-									index === 1 ? { marginRight: 20 } : {},
-									index === 2 ? { marginLeft: 20 } : {},
-								]}
-								onPress={() => navigateToTab(tab.path)}
-								activeOpacity={1}
-							>
-								<Image
-									source={tab.icon}
-									style={{
-										width: 24,
-										height: 24,
-										tintColor: '#DF7A82',
-										opacity: active ? 1 : 0.4,
-									}}
-								/>
+			{/* Container for the actual content */}
+			<View style={styles.mainContainer}>
+				{TABS.map((tab, index) => {
+					const active = isActive(tab.path)
 
-								<Text
-									style={[
-										styles.tabLabel,
-										active ? styles.activeTabLabel : styles.inactiveTabLabel,
-									]}
-									numberOfLines={1}
-								>
-									{t(tab.label)}
-								</Text>
-							</TouchableOpacity>
-						)
-					})}
-
-					{/* Central featured button */}
-					<View style={styles.centralButtonContainer}>
+					return (
 						<TouchableOpacity
-							style={styles.centralButton}
-							onPress={handleCentralButtonPress}
-							activeOpacity={0.7}
+							key={tab.name}
+							style={[
+								styles.tabButton,
+								index === 1 ? { marginRight: 20 } : {},
+								index === 2 ? { marginLeft: 20 } : {},
+							]}
+							onPress={() => navigateToTab(tab.path)}
+							activeOpacity={1.0}
 						>
 							<Image
-								source={require('@/assets/images/logo-transparent.png')}
-								style={styles.centralButtonImage}
-								resizeMode="contain"
+								source={tab.icon}
+								style={{
+									width: 24,
+									height: 24,
+									tintColor: '#DF7A82',
+									opacity: active ? 1.0 : 0.4,
+								}}
 							/>
+
+							<Text
+								style={[
+									styles.tabLabel,
+									active ? styles.activeTabLabel : styles.inactiveTabLabel,
+								]}
+								numberOfLines={1}
+							>
+								{t(tab.label)}
+							</Text>
 						</TouchableOpacity>
-					</View>
+					)
+				})}
+
+				{/* Central featured button */}
+				<View style={styles.centralButtonContainer}>
+					<TouchableOpacity
+						style={styles.centralButton}
+						onPress={handleCentralButtonPress}
+						activeOpacity={0.7}
+					>
+						<Image
+							source={require('@/assets/images/logo-transparent.png')}
+							style={styles.centralButtonImage}
+							resizeMode="contain"
+						/>
+					</TouchableOpacity>
 				</View>
-				
-				{/* iOS safe area padding */}
-				{Platform.OS === 'ios' && <View style={styles.iosSafeArea} />}
 			</View>
+
+			{/* iOS safe area padding */}
+			{Platform.OS === 'ios' && <View style={styles.iosSafeArea} />}
 		</View>
+		// </View>
 	)
 }
 
@@ -171,28 +170,38 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		zIndex: 100,
+		backgroundColor: '#FFFFFF',
 	},
 	innerClippingContainer: {
 		borderTopLeftRadius: 35,
-		borderTopRightRadius: 35, 
+		borderTopRightRadius: 35,
 		overflow: 'hidden',
-	},
-	shadowContainer: {
-		position: 'absolute',
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
 		backgroundColor: '#FFFFFF',
 		shadowColor: '#000',
 		shadowOffset: {
 			width: 0,
-			height: -2,
+			height: -4,
 		},
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
+		shadowOpacity: 0.2,
+		shadowRadius: 16,
 		elevation: 10,
 	},
+	// shadowContainer: {
+	// 	position: 'absolute',
+	// 	top: 0,
+	// 	left: 0,
+	// 	right: 0,
+	// 	bottom: 0,
+	// 	backgroundColor: '#FFFFFF',
+	// 	shadowColor: '#000',
+	// 	shadowOffset: {
+	// 		width: 0,
+	// 		height: -6,
+	// 	},
+	// 	shadowOpacity: 1.0,
+	// 	shadowRadius: 8,
+	// 	elevation: 10,
+	// },
 	mainContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-around',
@@ -224,7 +233,7 @@ const styles = StyleSheet.create({
 	},
 	centralButtonContainer: {
 		position: 'absolute',
-		top: -1,
+		top: 3,
 		left: width / 2 - 30,
 		zIndex: 101,
 	},
