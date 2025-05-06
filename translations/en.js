@@ -15,8 +15,16 @@ export default {
 	removeFromFavorites: "Remove from favorites",
 
 	// Search
-	searchProductPlaceholder: "Search for delicious items with Bytesme AI...",
+	searchProductPlaceholder: "Search for delicious items...",
+	searchProductPlaceholderAI: "Search for delicious items with Bytesme AI...",
 	viewAll: "View all",
+	search: "Search",
+	searchResults: "Search Results",
+	noSearchResults: "No results found",
+	tryDifferentKeywords: "Try different keywords or check your spelling.",
+	filter: "Filter",
+	priceRange: "Price Range",
+	productCategories: "Product Categories",
 
 	// Product Categories
 	all: "All",

@@ -22,6 +22,7 @@ import DiscountProductCard from '@/components/product/DiscountProductCard'
 import GradientProductCard from '@/components/product/GradientProductCard'
 import NavButton from '@/components/shared/NavButton'
 import { useTranslation } from '@/providers/locale'
+import { SearchBar } from '@/components/shared/SearchBar'
 
 const { width } = Dimensions.get('window')
 
@@ -207,6 +208,16 @@ export default function ProductScreen() {
 		setSearchQuery(text)
 	}
 
+	// Handle search submission
+	const handleSearchSubmit = () => {
+		if (searchQuery.trim()) {
+			router.push({
+				pathname: '/(home)/product/search-results',
+				params: { query: searchQuery },
+			})
+		}
+	}
+
 	// Toggle favorite status for a product
 	const handleToggleFavorite = (productId: number) => {
 		setFavorites((prevFavorites) => {
@@ -242,26 +253,14 @@ export default function ProductScreen() {
 					style={styles.headerGradient}
 				>
 					{/* Search Section */}
-					<View style={styles.searchContainer}>
-						<View style={styles.searchInputWrapper}>
-							<Ionicons
-								name="search"
-								size={20}
-								color="#A48B7B"
-								style={styles.searchIcon}
-							/>
-							<TextInput
-								style={styles.searchInput}
-								placeholder={t('searchProductPlaceholder')}
-								placeholderTextColor="#A48B7B"
-								value={searchQuery}
-								onChangeText={handleSearch}
-							/>
-						</View>
-						<TouchableOpacity style={styles.aiSearchButton}>
-							<Ionicons name="sparkles" size={18} color="#FFFFFF" />
-						</TouchableOpacity>
-					</View>
+					<SearchBar
+						searchQuery={searchQuery}
+						handleInputChange={handleSearch}
+						handleSearchSubmit={handleSearchSubmit}
+						handleAiButtonPress={() => {
+							router.push('/(home)/product/ai-search')
+						}}
+					/>
 				</LinearGradient>
 
 				{/* Hot Products Carousel */}

@@ -17,8 +17,16 @@ export default {
 	removeFromFavorites: "Xóa khỏi yêu thích",
 
 	// Search
-	searchProductPlaceholder: "Tìm kiếm món ngon với Bytesme AI...",
+	searchProductPlaceholder: "Tìm kiếm món ngon...",
+	searchProductPlaceholderAI: "Tìm kiếm món ngon với Bytesme AI...",
 	viewAll: "Xem tất cả",
+	search: "Tìm kiếm",
+	searchResults: "Kết quả tìm kiếm",
+	noSearchResults: "Không tìm thấy kết quả",
+	tryDifferentKeywords: "Thử từ khóa khác hoặc kiểm tra chính tả.",
+	filter: "Lọc",
+	priceRange: "Giá tiền",
+	productCategories: "Danh mục sản phẩm",
 
 	// Product Categories
 	all: "Tất cả",
