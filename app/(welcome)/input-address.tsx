@@ -38,6 +38,12 @@ interface AddressItem {
 	code: string
 }
 
+interface Address {
+	urban: AddressItem | null
+	suburb: AddressItem | null
+	quarter: AddressItem | null
+}
+
 // Location illustration component based on the Figma design
 const LocationIllustration = () => (
 	<View
@@ -102,11 +108,12 @@ export default function InputAddressScreen() {
 	const [quarterList, setQuarterList] = useState<AddressItem[]>([])
 
 	// Selected values
-	const [selectedUrban, setSelectedUrban] = useState<AddressItem | null>(null)
-	const [selectedSuburb, setSelectedSuburb] = useState<AddressItem | null>(null)
-	const [selectedQuarter, setSelectedQuarter] = useState<AddressItem | null>(
-		null
-	)
+	// const [selectedUrban, setSelectedUrban] = useState<AddressItem | null>(null)
+	// const [selectedSuburb, setSelectedSuburb] = useState<AddressItem | null>(null)
+	// const [selectedQuarter, setSelectedQuarter] = useState<AddressItem | null>(
+	// 	null
+	// )
+	const [selectedAddress, setSelectedAddress] = useState<Address | null>(null)
 
 	// Modal states for dropdowns
 	const [urbanModalVisible, setUrbanModalVisible] = useState(false)
@@ -135,28 +142,47 @@ export default function InputAddressScreen() {
 		loadUrbanList()
 	}, [])
 
-	// Load districts when province is selected
-	useEffect(() => {
-		if (selectedUrban) {
-			loadSuburbList(selectedUrban.code)
-			if (!skipAddressItemResetRef.current) {
-				setSelectedSuburb(null)
-				setSelectedQuarter(null)
-				setQuarterList([])
-			}
-		}
-	}, [selectedUrban])
+	const handleSelectUrban = (urban: AddressItem) => {
+		loadSuburbList(urban.code)
+		setSelectedAddress((prev) => ({
+			quarter: null,
+			suburb: null,
+			urban: urban,
+		}))
+		setUrbanModalVisible(false)
+		setUrbanSearch('')
+	}
+
+	const handleSelectSuburb = (suburb: AddressItem) => {
+		loadQuarterList(suburb.code)
+		setSelectedAddress((prev) => ({
+			...prev!,
+			suburb: suburb,
+			quarter: null,
+		}))
+		setSuburbModalVisible(false)
+		setSuburbSearch('')
+	}
+
+	const handleSelectQuarter = (quarter: AddressItem) => {
+		setSelectedAddress((prev) => ({
+			...prev!,
+			quarter: quarter,
+		}))
+		setQuarterModalVisible(false)
+		setQuarterSearch('')
+	}
 
 	// Load wards when district is selected
-	useEffect(() => {
-		if (selectedSuburb) {
-			loadQuarterList(selectedSuburb.code)
-			console.log(`Wards of ${selectedSuburb.name}: `, quarterList)
-			if (!skipAddressItemResetRef.current) {
-				setSelectedQuarter(null)
-			}
-		}
-	}, [selectedSuburb])
+	// useEffect(() => {
+	// 	if (selectedSuburb) {
+	// 		loadQuarterList(selectedSuburb.code)
+	// 		console.log(`Wards of ${selectedSuburb.name}: `, quarterList)
+	// 		if (!skipAddressItemResetRef.current) {
+	// 			setSelectedQuarter(null)
+	// 		}
+	// 	}
+	// }, [selectedSuburb])
 
 	useEffect(() => {
 		skipAddressItemResetRef.current = false
@@ -273,10 +299,9 @@ export default function InputAddressScreen() {
 	// In a useEffect to see when state actually changes
 	useEffect(() => {
 		console.log('State updated:', {
-			selectedDistrict: selectedSuburb,
-			selectedWard: selectedQuarter,
+			selectedAddress,
 		})
-	}, [selectedSuburb, selectedQuarter])
+	}, [selectedAddress])
 
 	const handleGetCurrentLocation = async () => {
 		setIsLoading(true)
@@ -314,27 +339,24 @@ export default function InputAddressScreen() {
 
 					const { urban, suburb, quarter, road } = res.data
 					skipAddressItemResetRef.current = true
-					setSelectedUrban({
-						code: urban.code,
-						name: urban.name_with_type,
-					})
-					setSelectedSuburb({
-						code: suburb.code,
-						name: suburb.name_with_type,
-					})
-					setSelectedQuarter({
-						code: quarter.code,
-						name: quarter.name_with_type,
+					// setSelectedUrban({
+					setSelectedAddress({
+						urban: suburb
+							? { code: urban.code, name: urban.name_with_type }
+							: null,
+						suburb: suburb
+							? { code: suburb.code, name: suburb.name_with_type }
+							: null,
+						quarter: quarter
+							? { code: quarter.code, name: quarter.name_with_type }
+							: null,
 					})
 
 					setAddressDetails(
-						road +
-							', ' +
-							quarter.name_with_type +
-							', ' +
-							suburb.name_with_type +
-							', ' +
-							urban.name_with_type
+						(road ?? ' ') +
+							(quarter ? ', ' + quarter.name_with_type : ' ') +
+							(suburb ? ', ' + suburb?.name_with_type : ' ') +
+							(urban ? ', ' + urban?.name_with_type : ' ')
 					)
 				}
 			} catch (geocodeError) {
@@ -357,20 +379,21 @@ export default function InputAddressScreen() {
 		}
 	}
 
-	const handleNext = async () => {
+	const handleComplete = async () => {
 		// Validate input
-		if (
-			!addressDetails ||
-			!selectedUrban ||
-			!selectedSuburb ||
-			!selectedQuarter
-		) {
+		if (!selectedAddress?.urban || !selectedAddress?.suburb) {
 			showError(t('pleaseCompleteAddress') || 'Please complete the address')
 			return
 		}
 
 		setIsLoading(true)
 		try {
+			const {
+				urban: selectedUrban,
+				quarter: selectedQuarter,
+				suburb: selectedSuburb,
+			} = selectedAddress
+
 			// Format the complete address
 			const fullAddress = [
 				addressDetails,
@@ -392,7 +415,7 @@ export default function InputAddressScreen() {
 			})
 
 			showSuccess(t('addressSaved') || 'Address saved successfully', () => {
-				router.replace('/(app)/')
+				router.replace('/(home)/product')
 			})
 		} catch (error) {
 			console.error('Error saving address:', error)
@@ -485,15 +508,18 @@ export default function InputAddressScreen() {
 							<TouchableOpacity
 								style={[
 									styles.inputWrapper,
-									!selectedUrban && styles.inputWrapperHighlight,
+									!selectedAddress?.urban && styles.inputWrapperHighlight,
 								]}
 								onPress={() => setUrbanModalVisible(true)}
 							>
 								<Text
-									style={[styles.input, !selectedUrban && { color: '#B1B1B1' }]}
+									style={[
+										styles.input,
+										!selectedAddress?.urban && { color: '#B1B1B1' },
+									]}
 								>
-									{selectedUrban
-										? selectedUrban.name
+									{selectedAddress?.urban
+										? selectedAddress.urban.name
 										: t('selectProvince') || 'Select province'}
 								</Text>
 								<View style={styles.dropdownIcon} />
@@ -503,7 +529,9 @@ export default function InputAddressScreen() {
 						{/* District */}
 						<View style={styles.inputGroup}>
 							<Text style={styles.inputLabel}>
-								{largeCityCodes.some((code) => code === selectedUrban?.code)
+								{largeCityCodes.some(
+									(code) => code === selectedAddress?.urban?.code
+								)
 									? t('district') || 'District'
 									: t('suburb') || 'Sub-urban'}{' '}
 								<Text style={styles.requiredStar}>*</Text>
@@ -511,27 +539,27 @@ export default function InputAddressScreen() {
 							<TouchableOpacity
 								style={[
 									styles.inputWrapper,
-									!selectedSuburb && styles.inputWrapperHighlight,
-									!selectedUrban && styles.inputWrapperDisabled,
+									!selectedAddress?.suburb && styles.inputWrapperHighlight,
+									!selectedAddress?.urban && styles.inputWrapperDisabled,
 								]}
 								onPress={() =>
-									selectedUrban
+									selectedAddress?.urban
 										? setSuburbModalVisible(true)
 										: showError(
 												t('selectProvinceFirst') ||
 													'Please select province first'
 										  )
 								}
-								disabled={!selectedUrban}
+								disabled={!selectedAddress?.urban}
 							>
 								<Text
 									style={[
 										styles.input,
-										!selectedSuburb && { color: '#B1B1B1' },
+										!selectedAddress?.suburb && { color: '#B1B1B1' },
 									]}
 								>
-									{selectedSuburb
-										? selectedSuburb.name
+									{selectedAddress?.suburb
+										? selectedAddress.suburb.name
 										: t('selectDistrict') || 'Select district'}
 								</Text>
 								<View style={styles.dropdownIcon} />
@@ -547,27 +575,27 @@ export default function InputAddressScreen() {
 							<TouchableOpacity
 								style={[
 									styles.inputWrapper,
-									!selectedQuarter && styles.inputWrapperHighlight,
-									!selectedSuburb && styles.inputWrapperDisabled,
+									!selectedAddress?.quarter && styles.inputWrapperHighlight,
+									!selectedAddress?.suburb && styles.inputWrapperDisabled,
 								]}
 								onPress={() =>
-									selectedSuburb
+									selectedAddress?.suburb
 										? setQuarterModalVisible(true)
 										: showError(
 												t('selectDistrictFirst') ||
 													'Please select district first'
 										  )
 								}
-								disabled={!selectedSuburb}
+								disabled={!selectedAddress?.suburb}
 							>
 								<Text
 									style={[
 										styles.input,
-										!selectedQuarter && { color: '#B1B1B1' },
+										!selectedAddress?.quarter && { color: '#B1B1B1' },
 									]}
 								>
-									{selectedQuarter
-										? selectedQuarter.name
+									{selectedAddress?.quarter
+										? selectedAddress?.quarter.name
 										: t('selectWard') || 'Select ward'}
 								</Text>
 								<View style={styles.dropdownIcon} />
@@ -625,7 +653,7 @@ export default function InputAddressScreen() {
 						<Button
 							style={[styles.nextButton]}
 							disabled={isLoading}
-							onPress={handleNext}
+							onPress={handleComplete}
 							text={
 								isLoading
 									? t('processing') || 'Processing...'
@@ -677,8 +705,8 @@ export default function InputAddressScreen() {
 								data={filteredProvinces}
 								keyExtractor={(item) => item.code}
 								renderItem={({ item }) =>
-									renderItem(item, (province) => {
-										setSelectedUrban(province)
+									renderItem(item, (urban) => {
+										handleSelectUrban(urban)
 										setUrbanModalVisible(false)
 										setUrbanSearch('')
 									})
@@ -725,8 +753,8 @@ export default function InputAddressScreen() {
 								data={filteredDistricts}
 								keyExtractor={(item) => item.code}
 								renderItem={({ item }) =>
-									renderItem(item, (district) => {
-										setSelectedSuburb(district)
+									renderItem(item, (suburb) => {
+										handleSelectSuburb(suburb)
 										setSuburbModalVisible(false)
 										setSuburbSearch('')
 									})
@@ -773,8 +801,8 @@ export default function InputAddressScreen() {
 								data={filteredWards}
 								keyExtractor={(item) => item.code}
 								renderItem={({ item }) =>
-									renderItem(item, (ward) => {
-										setSelectedQuarter(ward)
+									renderItem(item, (quarter) => {
+										handleSelectQuarter(quarter)
 										setQuarterModalVisible(false)
 										setQuarterSearch('')
 									})
