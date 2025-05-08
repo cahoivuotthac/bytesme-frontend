@@ -69,7 +69,7 @@ export default () => {
 			if (isAuthenticated()) {
 				router.replace('/(home)/product')
 			} else {
-				console.log('(Weird) User not authenticated after phone verification')
+				router.replace({ pathname: '/(auth)/signup', params: { phoneNumber } })
 			}
 		} catch (error: any) {
 			console.error('Error verifying phone number: ', error)

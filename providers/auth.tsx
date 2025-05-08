@@ -17,7 +17,7 @@ type AuthContextType = {
 	verifyPhone: (
 		phoneNumber: string,
 		code: string,
-		intent?: 'signin' | 'signup' | 'reset_password'
+		intent?: 'signin/signup' | 'reset_password'
 	) => Promise<void>
 	signin: (email: string, password: string) => Promise<void>
 	logout: () => Promise<void>
@@ -163,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const verifyPhone = async (
 		phoneNumber: string,
 		code: string,
-		intent: 'signin' | 'signup' | 'reset_password' = 'signin'
+		intent: 'signin/signup' | 'reset_password' = 'signin/signup'
 	): Promise<void> => {
 		let response
 		let newAuthState
@@ -173,10 +173,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 
 		try {
-			if (intent === 'signin') {
+			if (intent === 'signin/signup') {
 				response = await APIClient.post('/auth/otp/verify', defaultRequestData)
 
 				const { user, token } = response.data
+				// Is signin
 				if (token) {
 					const bearerToken = `Bearer ${token}`
 					APIClient.defaults.headers.common['Authorization'] = bearerToken
@@ -187,16 +188,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 						resetPasswordToken: null,
 					}
 				} else {
+					delete APIClient.defaults.headers.common['Authorization']
 					newAuthState = {
 						...defaultAuthState,
 						isLoading: false,
 					}
-				}
-			} else if (intent === 'signup') {
-				response = await APIClient.post('/auth/otp/verify', defaultRequestData)
-				newAuthState = {
-					...defaultAuthState,
-					isLoading: false,
 				}
 			} else {
 				response = await APIClient.post('/auth/otp/verify', {

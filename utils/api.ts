@@ -6,7 +6,7 @@ import URLs from "@/constants/URLs";
 export const APIClient = axios.create({
 	withCredentials: true, // Important
 	baseURL: URLs.serverAddress,
-	timeout: 1000,
+	timeout: 5000,
 	headers: {
 		"Content-Type": "application/json",
 		Accept: "application/json",

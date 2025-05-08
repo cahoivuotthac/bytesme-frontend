@@ -67,6 +67,8 @@ export default function SignupScreen() {
 				password,
 				password_confirmation: confirmPassword,
 			})
+
+			showSuccess('Đăng ký thành công!', () => router.push('/input-address'))
 		} catch (error: any) {
 			console.error('Error during signup:', error)
 
