@@ -17,7 +17,7 @@ import {
 	ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
-import { APIClient } from '@/utils/api'
+import { addressAPI, APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import * as Location from 'expo-location'
 import { useTranslation } from '@/providers/locale'
@@ -107,12 +107,6 @@ export default function InputAddressScreen() {
 	const [suburbList, setSuburbList] = useState<AddressItem[]>([])
 	const [quarterList, setQuarterList] = useState<AddressItem[]>([])
 
-	// Selected values
-	// const [selectedUrban, setSelectedUrban] = useState<AddressItem | null>(null)
-	// const [selectedSuburb, setSelectedSuburb] = useState<AddressItem | null>(null)
-	// const [selectedQuarter, setSelectedQuarter] = useState<AddressItem | null>(
-	// 	null
-	// )
 	const [selectedAddress, setSelectedAddress] = useState<Address | null>(null)
 
 	// Modal states for dropdowns
@@ -130,7 +124,7 @@ export default function InputAddressScreen() {
 	const [loadingSuburbList, setLoadingSuburbList] = useState(false)
 	const [loadingQuarterList, setLoadingQuarterList] = useState(false)
 
-	const [isDefault, setIsDefault] = useState(true)
+	const [isDefaultAddress, setIsDefaultAddress] = useState(true)
 	const [isLoading, setIsLoading] = useState(false)
 
 	const { AlertComponent, showError, showSuccess } = useAlert()
@@ -145,6 +139,7 @@ export default function InputAddressScreen() {
 	const handleSelectUrban = (urban: AddressItem) => {
 		loadSuburbList(urban.code)
 		setSelectedAddress((prev) => ({
+			...prev,
 			quarter: null,
 			suburb: null,
 			urban: urban,
@@ -172,17 +167,6 @@ export default function InputAddressScreen() {
 		setQuarterModalVisible(false)
 		setQuarterSearch('')
 	}
-
-	// Load wards when district is selected
-	// useEffect(() => {
-	// 	if (selectedSuburb) {
-	// 		loadQuarterList(selectedSuburb.code)
-	// 		console.log(`Wards of ${selectedSuburb.name}: `, quarterList)
-	// 		if (!skipAddressItemResetRef.current) {
-	// 			setSelectedQuarter(null)
-	// 		}
-	// 	}
-	// }, [selectedSuburb])
 
 	useEffect(() => {
 		skipAddressItemResetRef.current = false
@@ -341,7 +325,7 @@ export default function InputAddressScreen() {
 					skipAddressItemResetRef.current = true
 					// setSelectedUrban({
 					setSelectedAddress({
-						urban: suburb
+						urban: urban
 							? { code: urban.code, name: urban.name_with_type }
 							: null,
 						suburb: suburb
@@ -351,6 +335,8 @@ export default function InputAddressScreen() {
 							? { code: quarter.code, name: quarter.name_with_type }
 							: null,
 					})
+					loadSuburbList(urban.code)
+					loadQuarterList(suburb.code)
 
 					setAddressDetails(
 						(road ?? ' ') +
@@ -361,6 +347,7 @@ export default function InputAddressScreen() {
 				}
 			} catch (geocodeError) {
 				console.log('Reverse geocoding error:', geocodeError)
+				showError(t('errorGettingLocation') || 'Error getting location')
 				setAddressDetails(
 					t('locationWithCoordinates') || 'Location with coordinates'
 				)
@@ -404,14 +391,13 @@ export default function InputAddressScreen() {
 				.filter(Boolean)
 				.join(', ')
 
-			await APIClient.post('/user/addresses', {
-				name: t('defaultAddressName') || 'Home',
-				address: fullAddress,
-				is_default: isDefault,
-				province_id: selectedUrban?.code,
-				district_id: selectedSuburb?.code,
-				ward_id: selectedQuarter?.code,
-				coordinates: coordinates, // Send coordinates to the backend if available
+			await addressAPI.addAddress({
+				// name: t('defaultAddressName') || 'Home',
+				urbanName: selectedUrban.name,
+				suburbName: selectedSuburb.name,
+				quarterName: selectedQuarter?.name || null,
+				fullAddress,
+				isDefaultAddress,
 			})
 
 			showSuccess(t('addressSaved') || 'Address saved successfully', () => {
@@ -630,12 +616,15 @@ export default function InputAddressScreen() {
 						{/* Default Address Checkbox */}
 						<TouchableOpacity
 							style={styles.checkboxContainer}
-							onPress={() => setIsDefault(!isDefault)}
+							onPress={() => setIsDefaultAddress(!isDefaultAddress)}
 						>
 							<View
-								style={[styles.checkbox, isDefault && styles.checkboxChecked]}
+								style={[
+									styles.checkbox,
+									isDefaultAddress && styles.checkboxChecked,
+								]}
 							>
-								{isDefault && (
+								{isDefaultAddress && (
 									<Svg width="12" height="12" viewBox="0 0 24 24" fill="none">
 										<Path
 											d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"

@@ -18,7 +18,7 @@ type AuthContextType = {
 		phoneNumber: string,
 		code: string,
 		intent?: 'signin/signup' | 'reset_password'
-	) => Promise<void>
+	) => Promise<{ isNewUser: boolean }>
 	signin: (email: string, password: string) => Promise<void>
 	logout: () => Promise<void>
 	signup: (userData: any) => Promise<void>
@@ -164,9 +164,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		phoneNumber: string,
 		code: string,
 		intent: 'signin/signup' | 'reset_password' = 'signin/signup'
-	): Promise<void> => {
+	): Promise<{ isNewUser: boolean }> => {
 		let response
 		let newAuthState
+		let isNewUser = true
 		const defaultRequestData = {
 			phone_number: phoneNumber,
 			code,
@@ -179,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				const { user, token } = response.data
 				// Is signin
 				if (token) {
+					isNewUser = false
 					const bearerToken = `Bearer ${token}`
 					APIClient.defaults.headers.common['Authorization'] = bearerToken
 					newAuthState = {
@@ -213,6 +215,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 			setAuthState(newAuthState)
 			await persistAuthState(newAuthState)
+
+			return { isNewUser }
 		} catch (error: any) {
 			console.error('Error verifying OTP: ', error)
 			throw new Error(error?.response?.data?.message || error.message)
