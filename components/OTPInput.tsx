@@ -37,14 +37,16 @@ const OTPInput = ({
 	return (
 		<View style={styles.container}>
 			{/* <Text style={styles.title}>Enter OTP</Text> */}
-			<OTPInputView
-				style={styles.otpContainer}
-				pinCount={4}
-				autoFocusOnLoad
-				codeInputFieldStyle={styles.underlineStyleBase}
-				codeInputHighlightStyle={styles.underlineStyleHighLighted}
-				onCodeFilled={onCodedFilled}
-			/>
+			<View style={styles.otpContainer}>
+				<OTPInputView
+					style={styles.otpBox}
+					pinCount={4}
+					autoFocusOnLoad
+					codeInputFieldStyle={styles.otpTextField}
+					codeInputHighlightStyle={styles.otpTextFieldFocused}
+					onCodeFilled={onCodedFilled}
+				/>
+			</View>
 		</View>
 	)
 }
@@ -62,10 +64,32 @@ const styles = StyleSheet.create({
 		color: '#002B5B',
 		marginBottom: 20,
 	},
+
 	otpContainer: {
-		width: '80%',
-		height: 100,
+		marginBottom: 30,
+		alignItems: 'center',
 	},
+
+	otpBox: {
+		width: '80%',
+		height: 60,
+		marginVertical: 16,
+	},
+	otpTextField: {
+		backgroundColor: '#F5F5F5',
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: '#E8E8E8',
+		color: '#2F2D2C',
+		fontSize: 20,
+		fontWeight: 'bold',
+		height: 56,
+	},
+	otpTextFieldFocused: {
+		borderColor: '#C67C4E',
+		borderWidth: 2,
+	},
+
 	underlineStyleBase: {
 		width: 40,
 		height: 45,
