@@ -21,6 +21,7 @@ import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
 import { useAuth } from '@/providers/auth'
+import { isPasswordFormatValid } from '@/utils/input-validation'
 
 const { width, height } = Dimensions.get('window')
 
@@ -47,13 +48,6 @@ export default function ResetPasswordScreen() {
 		router.replace('/(home)/product')
 	}, [isReadyToNavigate])
 
-	// Validate password strength
-	const isValidPassword = (password: string) => {
-		// Minimum 8 characters, at least 1 letter and 1 number
-		const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
-		return regex.test(password)
-	}
-
 	const handleResetPassword = async () => {
 		// Validation
 		if (!newPassword || !confirmPassword) {
@@ -61,8 +55,8 @@ export default function ResetPasswordScreen() {
 			return
 		}
 
-		// Check password strength
-		if (!isValidPassword(newPassword)) {
+		// Check password format
+		if (!isPasswordFormatValid(newPassword)) {
 			showError(t('invalidPassword'))
 			return
 		}

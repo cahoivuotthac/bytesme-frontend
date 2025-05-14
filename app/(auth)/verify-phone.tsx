@@ -20,6 +20,7 @@ import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
 import DishDecoration from '@/components/shared/DishDecoration'
 import OTPInput from '@/components/OTPInput'
+import OTPInputView from '@twotalltotems/react-native-otp-input'
 import NavButton from '@/components/shared/NavButton'
 import AlertDialog from '@/components/shared/AlertDialog'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -56,7 +57,7 @@ export default () => {
 		return () => clearInterval(timer)
 	}, [countdown])
 
-	const handleSendOTP = async () => {
+	const handleVerifyPhone = async () => {
 		if (!code || code.length !== 4) {
 			alert('Vui lòng nhập mã OTP')
 			return
@@ -64,9 +65,10 @@ export default () => {
 
 		setIsLoading(true)
 		try {
-			await verifyPhone(phoneNumber, code)
+			const isNewUser = await verifyPhone(phoneNumber, code)
 			console.log('Auth state after verify phone:', authState)
-			if (isAuthenticated()) {
+			if (!isNewUser) {
+				// login if user already exists
 				router.replace('/(home)/product')
 			} else {
 				router.replace({ pathname: '/(auth)/signup', params: { phoneNumber } })
@@ -164,11 +166,12 @@ export default () => {
 
 					{/* OTP input */}
 					<View style={styles.otpContainer}>
-						<OTPInput
-							onCodedFilled={(code) => {
-								console.log('Code filled: ' + code)
-								setCode(code)
-							}}
+						<OTPInputView
+							pinCount={4}
+							onCodeChanged={setCode}
+							style={styles.otpBox}
+							codeInputFieldStyle={styles.otpTextField}
+							codeInputHighlightStyle={styles.otpTextFieldFocused}
 						/>
 					</View>
 
@@ -192,7 +195,7 @@ export default () => {
 						</TouchableOpacity>
 
 						<NavButton
-							onPress={handleSendOTP}
+							onPress={handleVerifyPhone}
 							direction="next"
 							disabled={code.length !== 4 || isLoading}
 							size={48}
@@ -233,6 +236,31 @@ const styles = StyleSheet.create({
 		borderBottomLeftRadius: 80,
 		borderBottomRightRadius: 80,
 	},
+
+	otpContainer: {
+		marginBottom: 30,
+		alignItems: 'center',
+	},
+	otpBox: {
+		width: '60%',
+		height: 60,
+		marginVertical: 16,
+	},
+	otpTextField: {
+		backgroundColor: '#F5F5F5',
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: '#E8E8E8',
+		color: '#2F2D2C',
+		fontSize: 20,
+		fontWeight: 'bold',
+		height: 56,
+	},
+	otpTextFieldFocused: {
+		borderColor: '#C67C4E',
+		borderWidth: 2,
+	},
+
 	cake1Image: {
 		position: 'absolute',
 		width: '50%',
@@ -290,10 +318,6 @@ const styles = StyleSheet.create({
 		color: '#7C7C7C',
 		paddingHorizontal: 25,
 		fontFamily: 'Inter-Regular',
-		marginBottom: 30,
-	},
-	otpContainer: {
-		marginHorizontal: 25,
 		marginBottom: 30,
 	},
 	actionContainer: {
