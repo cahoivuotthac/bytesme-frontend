@@ -28,7 +28,7 @@ const { width, height } = Dimensions.get('window')
 const ITEM_WIDTH = width - 32
 
 // Example cart item interface
-interface CartItem {
+export interface CartItem {
 	productId: number
 	productName: string
 	prices: number[]
@@ -38,6 +38,7 @@ interface CartItem {
 	isSelected: boolean
 	isWishlisted: boolean
 	selectedSizeIndex: number
+	discountPercentage: number
 	recommendationMessage?: string // Recommendation message
 }
 
@@ -151,6 +152,7 @@ export default function CartScreen() {
 						item.cart_items_size,
 						item.product.product_sizes_prices
 					),
+					discountPercentage: item.product.product_discount_percentage,
 					recommendationMessage: '', // @TODO: implement this later
 				}
 			})
@@ -326,7 +328,7 @@ export default function CartScreen() {
 	}
 
 	// Handle checkout
-	const handleCheckout = () => {
+	const handleCheckout = async () => {
 		if (totalPrice === 0) {
 			showError(t('noItemsSelected') || 'No items selected for checkout')
 			return
@@ -334,7 +336,11 @@ export default function CartScreen() {
 
 		// Navigate to checkout page or process checkout
 		console.log('Proceeding to checkout with total:', totalPrice)
-		// router.push('/(home)/checkout')
+		await AsyncStorage.setItem(
+			'checkoutItems',
+			JSON.stringify(cartItems.filter((item) => item.isSelected))
+		)
+		router.push('/(home)/order/checkout')
 	}
 
 	// Navigate to product detail
@@ -425,6 +431,20 @@ export default function CartScreen() {
 
 						<View style={styles.itemPriceRow}>
 							<Text style={styles.itemPrice}>
+								{item.discountPercentage && (
+									<Text
+										style={{
+											textDecorationLine: 'line-through',
+											color: '#9B9B9B',
+										}}
+									>
+										{formatPrice(
+											item.prices[item.selectedSizeIndex] *
+												(1 - item.discountPercentage / 100)
+										)}
+									</Text>
+								)}
+								{'  '}
 								{formatPrice(item.prices[item.selectedSizeIndex])}
 							</Text>
 							{/* Heart button */}

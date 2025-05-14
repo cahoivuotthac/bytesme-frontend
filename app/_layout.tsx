@@ -11,6 +11,7 @@ import {
 } from '@react-navigation/native'
 import { AuthProvider, useAuth } from '@/providers/auth'
 import { LocaleProvider } from '@/providers/locale'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 export default function RootLayout() {
 	const [loaded, error] = useFonts({
@@ -33,10 +34,12 @@ export default function RootLayout() {
 	}
 
 	return (
-		<LocaleProvider>
-			<AuthProvider>
-				<Slot />
-			</AuthProvider>
-		</LocaleProvider>
+		<SafeAreaProvider>
+			<LocaleProvider>
+				<AuthProvider>
+					<Slot />
+				</AuthProvider>
+			</LocaleProvider>
+		</SafeAreaProvider>
 	)
 }

@@ -72,6 +72,7 @@ export default {
 	pleaseCompleteAddress: "Vui lòng điền đầy đủ địa chỉ",
 	saveAddress: "Lưu địa chỉ",
 	requiredFields: "Thông tin bắt buộc",
+	errorGettingLocation: "Có lỗi xảy ra khi lấy vị trí hiện tại",
 
 	// Form validation
 	pleaseEnterAddress: "Vui lòng nhập đầy đủ thông tin địa chỉ",
@@ -182,4 +183,53 @@ export default {
 	errorRemovingFromCart: "Không thể xóa sản phẩm khỏi giỏ hàng",
 	errorFetchingCartItems:
 		"Có lỗi xảy ra khi tải danh sách sản phẩm trong giỏ hàng",
+
+	// Checkout page
+	deliveryAddress: "Địa chỉ giao hàng",
+	changeAddress: "Thay đổi",
+	addNewAddress: "Thêm địa chỉ mới",
+	paymentMethod: "Phương thức thanh toán",
+	addPaymentMethod: "Thêm phương thức",
+	cash: "Tiền mặt",
+	creditCard: "Thẻ tín dụng",
+	applyCoupon: "Áp dụng mã giảm giá",
+	promoCode: "Mã giảm giá",
+	enterPromoCode: "Nhập mã giảm giá",
+	apply: "Áp dụng",
+	orderSummary: "Thông tin đơn hàng",
+	discount: "Giảm giá",
+	placeOrder: "Đặt hàng",
+	shippingFee: "Phí vận chuyển",
+	confirmDeliveryAddress: "Xác nhận địa chỉ giao hàng",
+	confirmPaymentMethod: "Xác nhận phương thức thanh toán",
+
+	// Vouchers
+	bytesmeVoucher: "Voucher Bytesme",
+	enterPromoCode: "Nhập mã khuyến mãi",
+	apply: "Áp dụng",
+	availableVouchers: "Voucher có sẵn",
+	notAvailable: "Không khả dụng",
+	voucherApplied: "Áp dụng voucher thành công",
+	invalidVoucher: "Mã voucher không hợp lệ",
+	voucherError: "Lỗi khi áp dụng voucher",
+	minimumOrderValue: "Giá trị đơn hàng tối thiểu: {value}",
+	maximumDiscount: "Giảm giá tối đa: {value}",
+	expiry: "Có hiệu lực đến {date}",
+	firstOrderOnly: "Chỉ áp dụng cho đơn hàng đầu tiên",
+	freeShipping: "Miễn phí vận chuyển",
+	percentageOff: "Giảm {percent}%",
+
+	// Voucher Screen
+	chonBytesmeVoucher: "Chọn Bytesme Voucher",
+	dangTaiVoucher: "Đang tải voucher...",
+	xemThem: "Xem thêm",
+	browseAll: "Xem tất cả",
+	applyVoucher: "Áp dụng voucher",
+	chonVoucher: "Chọn voucher",
+	voucherUnavailable: "Voucher này không khả dụng cho đơn hàng của bạn",
+	pleaseSelectVoucher: "Vui lòng chọn voucher",
+	voucherSelected: "voucher đã được chọn",
+	appliedToOrder: "Đã áp dụng tại đơn hàng",
+	minOrderValue: "Đơn tối thiểu",
+	validUntil: "Hạn sử dụng:",
 };

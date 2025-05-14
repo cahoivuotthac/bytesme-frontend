@@ -256,6 +256,7 @@ export default function ProductScreen() {
 					<SearchBar
 						searchQuery={searchQuery}
 						handleInputChange={handleSearch}
+						showAiButton={true}
 						handleSearchSubmit={handleSearchSubmit}
 						handleAiButtonPress={() => {
 							router.push('/(home)/product/ai-search')

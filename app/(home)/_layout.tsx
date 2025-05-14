@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
 	},
 	spacerStyle: {
 		// height: Platform.OS === 'ios' ? 5 : 3,
-		height: height * 0.05,
+		// height: height * 0.05,
 		backgroundColor: '#000000',
 		width: '100%',
 		position: 'absolute',
