@@ -204,7 +204,7 @@ export default function SearchResultsScreen() {
 			if (category) {
 				newActiveFilters.push({
 					id: category.id,
-					type: 'category',
+					type: 'category' as const,
 					name: t(category.name),
 				})
 			}
@@ -216,7 +216,7 @@ export default function SearchResultsScreen() {
 			if (priceRange) {
 				newActiveFilters.push({
 					id: priceRange.id,
-					type: 'price',
+					type: 'price' as const,
 					name: priceRange.name,
 				})
 			}
@@ -319,7 +319,13 @@ export default function SearchResultsScreen() {
 		}
 	}
 
-	const renderItem = ({ item, index }) => {
+	const renderItem = ({
+		item,
+		index,
+	}: {
+		item: (typeof MOCK_PRODUCTS)[0]
+		index: number
+	}) => {
 		// Calculate grid positioning
 		const isEven = index % 2 === 0
 		return (
@@ -359,7 +365,7 @@ export default function SearchResultsScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
-			<StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+			{/* <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" /> */}
 
 			{/* Header */}
 			<View style={styles.header}>
@@ -374,39 +380,6 @@ export default function SearchResultsScreen() {
 				<Text style={styles.headerTitle}>{t('searchResults')}</Text>
 			</View>
 
-			{/* Search Bar */}
-			{/* <View style={styles.searchContainer}>
-				<View style={styles.searchInputWrapper}>
-					<Ionicons
-						name="search"
-						size={20}
-						color="#A48B7B"
-						style={styles.searchIcon}
-					/>
-					<TextInput
-						style={styles.searchInput}
-						placeholder={t('searchProductPlaceholder')}
-						placeholderTextColor="#A48B7B"
-						value={searchQuery}
-						onChangeText={setSearchQuery}
-						onSubmitEditing={handleSearch}
-						returnKeyType="search"
-						autoFocus={!params.query}
-					/>
-					{searchQuery.length > 0 && (
-						<TouchableOpacity
-							onPress={() => setSearchQuery('')}
-							hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-						>
-							<Ionicons name="close-circle" size={20} color="#A48B7B" />
-						</TouchableOpacity>
-					)}
-				</View>
-				<TouchableOpacity style={styles.filterButton} onPress={openFilterModal}>
-					<Ionicons name="options" size={20} color="#3D3D3D" />
-				</TouchableOpacity>
-			</View> */}
-
 			<SearchBar
 				searchQuery={searchQuery}
 				handleInputChange={setSearchQuery}
@@ -415,7 +388,6 @@ export default function SearchResultsScreen() {
 				handleAiButtonPress={() => {}}
 				handleFilterPress={openFilterModal}
 				showFiltersButton={true}
-				// style={styles.searchContainer}
 			/>
 
 			{/* Active Filters Display */}
@@ -633,6 +605,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		borderBottomWidth: 1,
 		borderBottomColor: '#F5F5F5',
+		marginBottom: 16,
 	},
 	backButton: {
 		position: 'absolute',
