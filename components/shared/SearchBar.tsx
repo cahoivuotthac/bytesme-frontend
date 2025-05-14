@@ -139,6 +139,10 @@ export function SearchBar({
 							handleBlur()
 						}}
 						hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+						style={[
+							styles.crossButton,
+							showAiButton && styles.crossButtonWhenAIVisible,
+						]}
 					>
 						<Ionicons name="close-circle" size={20} color="#A48B7B" />
 					</TouchableOpacity>
@@ -223,7 +227,15 @@ const styles = StyleSheet.create({
 		shadowColor: '#C67C4E',
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.3,
-		shadowRadius: 5,
-		elevation: 3,
+	},
+	crossButton: {
+		userSelect: 'none',
+		position: 'absolute',
+		right: 16,
+		top: '50%',
+		transform: [{ translateY: -10 }],
+	},
+	crossButtonWhenAIVisible: {
+		right: 16,
 	},
 })
