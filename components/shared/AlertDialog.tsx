@@ -9,6 +9,7 @@ import {
 	TouchableWithoutFeedback,
 	Platform,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 
 interface AlertDialogProps {
 	/**
@@ -51,7 +52,7 @@ interface AlertDialogProps {
 	 * Type of alert (affects the color scheme)
 	 * @default "default"
 	 */
-	type?: 'default' | 'success' | 'error' | 'warning'
+	type?: 'default' | 'success' | 'error' | 'warning' | 'info'
 }
 
 const { width } = Dimensions.get('window')
@@ -69,22 +70,43 @@ export default function AlertDialog({
 	onCancel,
 	type = 'default',
 }: AlertDialogProps) {
-	// Color scheme based on alert type
-	const getTypeColor = () => {
+	// Icon and color scheme based on alert type
+	const getIconAndColor = () => {
 		switch (type) {
 			case 'success':
-				// return '#53E52B'
-				return '#3B9256'
+				return {
+					name: 'checkmark-circle',
+					color: '#37B948',
+					backgroundColor: 'rgba(55, 185, 72, 0.1)',
+				}
 			case 'error':
-				return 'rgba(255, 107, 107, 0.8)'
+				return {
+					name: 'close-circle',
+					color: '#D83A52',
+					backgroundColor: 'rgba(216, 58, 82, 0.1)',
+				}
 			case 'warning':
-				return '#FFEB99'
+				return {
+					name: 'warning',
+					color: '#FFC107',
+					backgroundColor: 'rgba(255, 193, 7, 0.1)',
+				}
+			case 'info':
+				return {
+					name: 'information-circle',
+					color: '#3498DB',
+					backgroundColor: 'rgba(52, 152, 219, 0.1)',
+				}
 			default:
-				return '#C67C4E'
+				return {
+					name: 'information-circle',
+					color: '#6B7280',
+					backgroundColor: 'rgba(107, 114, 128, 0.1)',
+				}
 		}
 	}
 
-	const typeColor = getTypeColor()
+	const { name, color, backgroundColor } = getIconAndColor()
 
 	return (
 		<Modal
@@ -97,10 +119,10 @@ export default function AlertDialog({
 				<View style={styles.overlay}>
 					<TouchableWithoutFeedback>
 						<View style={styles.alertContainer}>
-							{/* Colored header indicator */}
-							<View
-								style={[styles.colorIndicator, { backgroundColor: typeColor }]}
-							/>
+							 {/* Icon */}
+							<View style={[styles.iconContainer, { backgroundColor }]}>
+								<Ionicons name={name} size={36} color={color} />
+							</View>
 
 							{/* Alert content */}
 							<View style={styles.contentContainer}>
@@ -130,7 +152,7 @@ export default function AlertDialog({
 										style={[
 											styles.button,
 											styles.confirmButton,
-											{ backgroundColor: typeColor },
+											{ backgroundColor: color },
 										]}
 										onPress={onConfirm}
 										activeOpacity={0.7}
@@ -168,12 +190,17 @@ const styles = StyleSheet.create({
 		shadowRadius: 5,
 		elevation: 6,
 	},
-	colorIndicator: {
-		height: 5,
-		width: '100%',
+	iconContainer: {
+		width: 70,
+		height: 70,
+		borderRadius: 35,
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 16,
 	},
 	contentContainer: {
 		padding: 24,
+		alignItems: 'center',
 	},
 	title: {
 		fontSize: 18,
@@ -181,6 +208,7 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Regular',
 		color: '#030303',
 		marginBottom: 12,
+		textAlign: 'center',
 	},
 	message: {
 		fontSize: 16,
@@ -188,9 +216,11 @@ const styles = StyleSheet.create({
 		color: '#7C7C7C',
 		marginBottom: 24,
 		lineHeight: 22,
+		textAlign: 'center',
 	},
 	buttonContainer: {
 		marginTop: 8,
+		width: '100%',
 	},
 	oneButtonLayout: {
 		alignItems: 'center',

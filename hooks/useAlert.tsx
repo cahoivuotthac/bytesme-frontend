@@ -8,7 +8,7 @@ interface AlertOptions {
 	cancelText?: string
 	onConfirm?: () => void
 	onCancel?: () => void
-	type?: 'default' | 'success' | 'error' | 'warning'
+	type?: 'default' | 'success' | 'error' | 'warning' | 'info'
 }
 
 export function useAlert() {
@@ -49,6 +49,21 @@ export function useAlert() {
 				title: 'Thành công',
 				message,
 				type: 'success',
+				onConfirm: () => {
+					hideAlert()
+					onConfirm?.()
+				},
+			})
+		},
+		[showAlert, hideAlert]
+	)
+
+	const showInfo = useCallback(
+		(message: string, onConfirm?: () => void) => {
+			showAlert({
+				title: 'Thông tin',
+				message,
+				type: 'info',
 				onConfirm: () => {
 					hideAlert()
 					onConfirm?.()
@@ -101,6 +116,7 @@ export function useAlert() {
 		showAlert,
 		showError,
 		showSuccess,
+		showInfo,
 		showConfirm,
 		hideAlert,
 	}
