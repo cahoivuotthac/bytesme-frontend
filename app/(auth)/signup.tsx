@@ -21,6 +21,10 @@ import { useAlert } from '@/hooks/useAlert'
 import { useAuth } from '@/providers/auth'
 import { useTranslation } from '@/providers/locale'
 import * as Font from 'expo-font'
+import {
+	isEmailFormatValid,
+	isPasswordFormatValid,
+} from '@/utils/input-validation'
 
 const { width, height } = Dimensions.get('window')
 
@@ -51,10 +55,14 @@ export default function SignupScreen() {
 			return
 		}
 
-		// Basic email validation
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-		if (!emailRegex.test(email)) {
+		// Validate email format
+		if (!isEmailFormatValid(email)) {
 			showError('Email không hợp lệ')
+			return
+		}
+
+		if (!isPasswordFormatValid(password)) {
+			showError(t('invalidPassword'))
 			return
 		}
 
