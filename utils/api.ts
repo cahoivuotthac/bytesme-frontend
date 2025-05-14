@@ -82,3 +82,31 @@ export const cartAPI = {
 		});
 	},
 };
+
+export const addressAPI = {
+	getUserAddresses: () => {
+		return APIClient.get("/user/addresses");
+	},
+
+	addAddress: ({
+		urbanName,
+		suburbName,
+		quarterName,
+		fullAddress,
+		isDefaultAddress,
+	}: {
+		urbanName: string;
+		suburbName: string;
+		quarterName: string | null;
+		fullAddress: string;
+		isDefaultAddress: boolean;
+	}) => {
+		return APIClient.post("/user/addresses/add", {
+			urban_name: urbanName,
+			suburb_name: suburbName,
+			quarter_name: quarterName,
+			full_address: fullAddress,
+			is_default_address: isDefaultAddress,
+		});
+	},
+};
