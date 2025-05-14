@@ -48,7 +48,7 @@ interface NextIconProps {
 /**
  * A circular button with an arrow pointing right
  */
-export default function NextIcon({
+export default function NavButton({
 	onPress,
 	direction = 'back',
 	size = 48,
