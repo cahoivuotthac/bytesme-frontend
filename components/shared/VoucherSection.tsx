@@ -13,60 +13,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from '@/providers/locale'
 import Colors from '@/constants/Colors'
-
-const { width } = Dimensions.get('window')
-
-export interface Voucher {
-	/**
-	 * Unique ID for the voucher
-	 */
-	id: string | number
-
-	/**
-	 * The voucher code to be applied
-	 */
-	code: string
-
-	/**
-	 * Display name for the voucher
-	 */
-	name: string
-
-	/**
-	 * Description of the voucher discount
-	 */
-	description: string
-
-	/**
-	 * Expiration date or text
-	 */
-	expiry: string
-
-	/**
-	 * Ionicons icon name for the voucher
-	 */
-	icon: string
-
-	/**
-	 * Gradient colors for the voucher card background
-	 */
-	colors: string[]
-
-	/**
-	 * Maximum discount amount (optional)
-	 */
-	maxDiscount?: number
-
-	/**
-	 * Minimum order value required (optional)
-	 */
-	minOrderValue?: number
-
-	/**
-	 * Is the voucher available/valid
-	 */
-	isValid?: boolean
-}
+import { Voucher } from '@/app/(home)/order/(checkout)/_layout'
 
 interface VoucherSectionProps {
 	/**
@@ -120,6 +67,65 @@ interface VoucherSectionProps {
 	selectedVoucher?: any
 }
 
+const getVoucherColors = (voucher: Voucher) => {
+	//
+	// Map voucher types to specific colors or return a default set
+	const colors = {
+		freeship: ['#F76F8E', '#FF9EB1'],
+		new_customer: ['#7165E3', '#9C91F1'],
+		birthday_gift: ['#FF9800', '#FFC107'],
+		holiday: ['#FF5722', '#FF7043'],
+		shop_related: ['#009688', '#4DB6AC'],
+		// Add more color pairs for different voucher types
+	}
+
+	// Get colors based on voucher type or generate random colors
+	const key = voucher.voucher_fields as keyof typeof colors
+	if (key && key in colors) {
+		return colors[key]
+	} else {
+		// Random colors if type not specified or not found
+		const colorSets = [
+			['#C67C4E', '#E8A87C'],
+			['#5E8B7E', '#7EB09B'],
+			['#9C89B8', '#B8A9D1'],
+			['#F28482', '#F5A8A6'],
+			['#3772FF', '#6A9CFF'],
+		]
+
+		// Use voucher ID to select a color set or pick a random one
+		const index = voucher.voucher_id
+			? Math.abs(voucher.voucher_id.toString().charCodeAt(0) % colorSets.length)
+			: Math.floor(Math.random() * colorSets.length)
+
+		return colorSets[index]
+	}
+}
+
+const getVoucherIcon = (
+	voucher: Voucher
+): 'bicycle' | 'person-add' | 'gift' | 'snow' | 'cart' | 'cash-outline' => {
+	// Map voucher types to specific icons
+	const icons: Record<
+		string,
+		'bicycle' | 'person-add' | 'gift' | 'snow' | 'cart'
+	> = {
+		freeship: 'bicycle',
+		new_customer: 'person-add',
+		birthday_gift: 'gift',
+		holiday: 'snow',
+		shop_related: 'cart',
+	}
+
+	// Get icon based on voucher type or return a default icon
+	const key = voucher.voucher_fields as keyof typeof icons
+	if (key && key in icons) {
+		return icons[key]
+	} else {
+		return 'cash-outline' // Default icon
+	}
+}
+
 /**
  * A flexible component to display and select vouchers
  */
@@ -156,7 +162,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 
 	// Handle voucher selection from the list
 	const handleSelectVoucher = (voucher: Voucher) => {
-		setVoucherCode(voucher.code)
+		setVoucherCode(voucher.voucher_code)
 		onSelectVoucher(voucher)
 	}
 
@@ -248,7 +254,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 			</View>
 
 			{/* Available Vouchers */}
-			{vouchers.length > 0 && (
+			{(
 				<View style={styles.availableVouchersContainer}>
 					<View style={styles.availableHeaderContainer}>
 						<Text style={styles.availableVouchersTitle}>
@@ -268,36 +274,42 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 					>
 						{vouchers.map((voucher) => (
 							<TouchableOpacity
-								key={voucher.id}
+								key={voucher.voucher_id}
 								style={[
 									styles.voucherCard,
-									selectedVoucherCode === voucher.code &&
+									selectedVoucherCode === voucher.voucher_code &&
 										styles.voucherCardSelected,
 								]}
 								onPress={() => handleSelectVoucher(voucher)}
-								disabled={!voucher.isValid}
+								disabled={!voucher.isApplicable}
 							>
 								<LinearGradient
-									colors={voucher.colors || ['#C67C4E', '#A0643C']}
+									colors={getVoucherColors(voucher) || ['#C67C4E', '#A0643C']}
 									start={{ x: 0, y: 0 }}
 									end={{ x: 1, y: 1 }}
 									style={styles.voucherCardGradient}
 								>
 									<View style={styles.voucherCardContent}>
 										<View style={styles.voucherCardIcon}>
-											<Ionicons name={voucher.icon} size={20} color="#FFFFFF" />
+											<Ionicons
+												name={getVoucherIcon(voucher)}
+												size={20}
+												color="#FFFFFF"
+											/>
 										</View>
 										<View style={styles.voucherCardDetails}>
 											<Text style={styles.voucherCardTitle}>
-												{voucher.name}
+												{voucher.voucher_name}
 											</Text>
-											<Text style={styles.voucherCardCode}>{voucher.code}</Text>
+											<Text style={styles.voucherCardCode}>
+												{voucher.voucher_code}
+											</Text>
 											<Text style={styles.voucherCardExpiry}>
-												{voucher.expiry}
+												{voucher.voucher_end_date}
 											</Text>
 
 											{/* Selected indicator */}
-											{selectedVoucherCode === voucher.code && (
+											{selectedVoucherCode === voucher.voucher_code && (
 												<View style={styles.selectedIndicator}>
 													<Ionicons
 														name="checkmark-circle"
@@ -311,7 +323,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 								</LinearGradient>
 
 								{/* Disabled overlay for invalid vouchers */}
-								{!voucher.isValid && (
+								{!voucher.isApplicable && (
 									<View style={styles.disabledOverlay}>
 										<Text style={styles.disabledText}>{t('notAvailable')}</Text>
 									</View>
@@ -371,13 +383,16 @@ const styles = StyleSheet.create({
 		flex: 1,
 		height: 50,
 		backgroundColor: '#FFFFFF',
-		borderRadius: 12,
+		borderTopLeftRadius: 20,
+		borderBottomLeftRadius: 20,
+		borderStyle: 'dashed',
 		paddingLeft: 55,
 		paddingRight: 10,
-		fontSize: 14,
+		fontSize: 12,
 		fontFamily: 'Inter-Medium',
+		textTransform: 'uppercase',
 		color: '#474747',
-		borderWidth: 1,
+		borderWidth: 0.5,
 		borderColor: '#EEEEEE',
 	},
 	voucherButton: {

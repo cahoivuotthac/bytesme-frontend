@@ -72,7 +72,8 @@ export default function HomeLayout() {
 				<Stack.Screen name="product/categories/index" />
 				<Stack.Screen name="product/categories/[categoryId]" />
 				<Stack.Screen name="cart/index" />
-				<Stack.Screen name="cart/checkout" />
+				<Stack.Screen name="order/checkout" />
+				<Stack.Screen name="order/voucher" />
 				<Stack.Screen name="order/index" />
 				<Stack.Screen name="order/[id]" />
 				<Stack.Screen name="order/tracking/[id]" />

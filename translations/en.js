@@ -227,4 +227,5 @@ export default {
 	appliedToOrder: "Applied to order",
 	minOrderValue: "Minimum order",
 	validUntil: "Valid until:",
+	noVoucherSelected: "No voucher selected",
 };

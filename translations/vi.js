@@ -232,4 +232,5 @@ export default {
 	appliedToOrder: "Đã áp dụng tại đơn hàng",
 	minOrderValue: "Đơn tối thiểu",
 	validUntil: "Hạn sử dụng:",
+	noVoucherSelected: "Chưa có voucher nào được chọn",
 };

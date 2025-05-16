@@ -19,7 +19,204 @@ import { useAlert } from '@/hooks/useAlert'
 import { addressAPI } from '@/utils/api'
 import { CheckoutContext, Voucher } from './_layout'
 
-const { width } = Dimensions.get('window')
+export const MOCK_VOUCHERS: Partial<Voucher>[] = [
+	{
+		voucher_id: 1,
+		voucher_code: 'SNHAT-BYTESME',
+		voucher_name: 'Mừng sinh nhật',
+		voucher_description: 'Giảm 15% tối đa 50K',
+		voucher_fields: 'birthday_gift',
+		voucher_start_date: '2024-05-01T00:00:00Z',
+		voucher_end_date: '2024-06-30T23:59:59Z',
+		voucher_type: 'percent',
+		voucher_value: 15,
+		voucher_rules: [
+			{
+				voucher_rule_id: 1,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '150000',
+			},
+			{
+				voucher_rule_id: 2,
+				voucher_rule_type: 'max_discount',
+				voucher_rule_value: '50000',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 2,
+		voucher_code: 'FREESHIP-25K',
+		voucher_name: 'Freeship',
+		voucher_description: 'Miễn phí vận chuyển đến 25K',
+		voucher_fields: 'freeship',
+		voucher_start_date: '2024-01-01T00:00:00Z',
+		voucher_end_date: '2024-12-31T23:59:59Z',
+		voucher_type: 'cash',
+		voucher_value: 25000,
+		voucher_rules: [
+			{
+				voucher_rule_id: 3,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '100000',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 3,
+		voucher_code: 'VIP-CUSTOMER20',
+		voucher_name: 'Khách hàng VIP',
+		voucher_description: 'Giảm 20% tối đa 100K',
+		voucher_fields: 'loyal_customer',
+		voucher_start_date: '2024-04-01T00:00:00Z',
+		voucher_end_date: '2024-07-31T23:59:59Z',
+		voucher_type: 'percent',
+		voucher_value: 20,
+		voucher_rules: [
+			{
+				voucher_rule_id: 4,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '250000',
+			},
+			{
+				voucher_rule_id: 5,
+				voucher_rule_type: 'max_discount',
+				voucher_rule_value: '100000',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 4,
+		voucher_code: 'NEWUSER-30K',
+		voucher_name: 'Khách mới',
+		voucher_description: 'Giảm 30K cho đơn đầu tiên',
+		voucher_fields: 'new_customer',
+		voucher_start_date: '2024-01-01T00:00:00Z',
+		voucher_end_date: '2024-12-31T23:59:59Z',
+		voucher_type: 'cash',
+		voucher_value: 30000,
+		voucher_rules: [
+			{
+				voucher_rule_id: 6,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '120000',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 5,
+		voucher_code: 'WEEKEND-10PCT',
+		voucher_name: 'Cuối tuần vui vẻ',
+		voucher_description: 'Giảm 10% tối đa 45K vào T7, CN',
+		voucher_fields: 'discount',
+		voucher_start_date: '2024-06-01T00:00:00Z',
+		voucher_end_date: '2024-08-31T23:59:59Z',
+		voucher_type: 'percent',
+		voucher_value: 10,
+		voucher_rules: [
+			{
+				voucher_rule_id: 7,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '180000',
+			},
+			{
+				voucher_rule_id: 8,
+				voucher_rule_type: 'max_discount',
+				voucher_rule_value: '45000',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 6,
+		voucher_code: 'JULY-SALE15K',
+		voucher_name: 'Siêu deal tháng 7',
+		voucher_description: 'Giảm 15K không điều kiện',
+		voucher_fields: 'discount',
+		voucher_start_date: '2024-07-01T00:00:00Z',
+		voucher_end_date: '2024-07-31T23:59:59Z',
+		voucher_type: 'cash',
+		voucher_value: 15000,
+		voucher_rules: [
+			{
+				voucher_rule_id: 9,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '0',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 7,
+		voucher_code: 'COMBO-SAVE25K',
+		voucher_name: 'Combo tiết kiệm',
+		voucher_description: 'Giảm 25K cho combo từ 2 món',
+		voucher_fields: 'discount',
+		voucher_start_date: '2024-05-15T00:00:00Z',
+		voucher_end_date: '2024-09-15T23:59:59Z',
+		voucher_type: 'cash',
+		voucher_value: 25000,
+		voucher_rules: [
+			{
+				voucher_rule_id: 10,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '150000',
+			},
+			{
+				voucher_rule_id: 11,
+				voucher_rule_type: 'min_items',
+				voucher_rule_value: '2',
+			},
+		],
+		isAvailable: true,
+	},
+	{
+		voucher_id: 8,
+		voucher_code: 'FREESHIP-EXTRA40',
+		voucher_name: 'Freeship Extra',
+		voucher_description: 'Miễn phí vận chuyển đến 15K',
+		voucher_fields: 'freeship',
+		voucher_start_date: '2024-06-01T00:00:00Z',
+		voucher_end_date: '2024-06-30T23:59:59Z',
+		voucher_type: 'cash',
+		voucher_value: 40000,
+		voucher_rules: [
+			{
+				voucher_rule_id: 12,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '250000',
+			},
+			{
+				voucher_rule_id: 13,
+				voucher_rule_type: 'max_discount',
+				voucher_rule_value: '15000',
+			},
+		],
+		isAvailable: false,
+	},
+	{
+		voucher_id: 9,
+		voucher_code: 'LOYAL-8PCT',
+		voucher_name: 'Thành viên thân thiết',
+		voucher_description: 'Giảm 8% không giới hạn',
+		voucher_fields: 'loyal_customer',
+		voucher_start_date: '2024-01-01T00:00:00Z',
+		voucher_end_date: '2024-12-31T23:59:59Z',
+		voucher_type: 'percent',
+		voucher_value: 8,
+		voucher_rules: [
+			{
+				voucher_rule_id: 13,
+				voucher_rule_type: 'min_bill_price',
+				voucher_rule_value: '300000',
+			},
+		],
+		isAvailable: true,
+	},
+]
 
 interface UserAddress {
 	userAddressId: number
@@ -53,38 +250,38 @@ const PAYMENT_METHODS = [
 ]
 
 // Mock vouchers data
-const MOCK_VOUCHERS = [
-	{
-		id: 'freeship',
-		code: 'FREESHIP',
-		name: 'Free Shipping',
-		description: 'Free shipping on your order',
-		expiry: 'Valid until May 20',
-		icon: 'bicycle',
-		colors: ['#FF9EB1', '#FF7C96'],
-		isValid: true,
-	},
-	{
-		id: 'save10',
-		code: 'SAVE10',
-		name: '10% Off',
-		description: '10% off your entire order',
-		expiry: 'Valid until May 15',
-		icon: 'cash-outline',
-		colors: ['#C67C4E', '#A0643C'],
-		isValid: true,
-	},
-	{
-		id: 'newuser',
-		code: 'NEWUSER',
-		name: 'New User',
-		description: 'Special discount for new users',
-		expiry: 'First order only',
-		icon: 'person-add',
-		colors: ['#7D97F4', '#5A78F0'],
-		isValid: true,
-	},
-]
+// const MOCK_VOUCHERS = [
+// 	{
+// 		id: 'freeship',
+// 		code: 'FREESHIP',
+// 		name: 'Free Shipping',
+// 		description: 'Free shipping on your order',
+// 		expiry: 'Valid until May 20',
+// 		icon: 'bicycle',
+// 		colors: ['#FF9EB1', '#FF7C96'],
+// 		isValid: true,
+// 	},
+// 	{
+// 		id: 'save10',
+// 		code: 'SAVE10',
+// 		name: '10% Off',
+// 		description: '10% off your entire order',
+// 		expiry: 'Valid until May 15',
+// 		icon: 'cash-outline',
+// 		colors: ['#C67C4E', '#A0643C'],
+// 		isValid: true,
+// 	},
+// 	{
+// 		id: 'newuser',
+// 		code: 'NEWUSER',
+// 		name: 'New User',
+// 		description: 'Special discount for new users',
+// 		expiry: 'First order only',
+// 		icon: 'person-add',
+// 		colors: ['#7D97F4', '#5A78F0'],
+// 		isValid: true,
+// 	},
+// ]
 
 export default function CheckoutScreen() {
 	const { t } = useTranslation()
@@ -96,10 +293,16 @@ export default function CheckoutScreen() {
 		checkoutItems,
 		subtotal,
 		deliveryFee,
-		discount,
 		total,
 		selectedVoucher,
 		setSelectedVoucher,
+		appliedVoucher,
+		setAppliedVoucher,
+		vouchers,
+		setVouchers,
+		setIsLoadingVouchers,
+		calculateDiscountValue,
+		isVoucherApplicable,
 	} = useContext(CheckoutContext)
 
 	// State
@@ -113,6 +316,8 @@ export default function CheckoutScreen() {
 
 	/**-------------------------------- Fetch user addresses ------------------------------------------- */
 	const [userAddresses, setUserAddresses] = useState<UserAddress[]>([])
+
+	console.log('subtotal in checkout page: ', subtotal)
 
 	useEffect(() => {
 		const fetchUserAddresses = async () => {
@@ -148,14 +353,43 @@ export default function CheckoutScreen() {
 		fetchUserAddresses()
 	}, [])
 
-	// Update promotion code when voucher changes
+	/**--------------------- Update Promo code in voucher input when voucher is applied ----------------- */
 	useEffect(() => {
-		if (selectedVoucher) {
-			setPromoCode(selectedVoucher.voucher_name)
+		// if (appliedVoucher) {
+		console.log('appliedVoucher changed: ', appliedVoucher)
+		setPromoCode(appliedVoucher?.voucher_code || '')
+		// } else {
+		// 	setPromoCode('')
+		// }
+	}, [appliedVoucher])
+
+	/**--------------------- Fetch quick vouchers ----------------- */
+	useEffect(() => {
+		const fetchQuickVouchers = async () => {
+			setIsLoadingVouchers(true)
+			try {
+				// In a real app, fetch from API
+				const quickVouchers = MOCK_VOUCHERS.slice(0, 3).map((voucher) => ({
+					...voucher,
+					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
+					discount_value: calculateDiscountValue(voucher),
+					isApplicable: isVoucherApplicable(voucher),
+				})) as Voucher[]
+				setVouchers(quickVouchers)
+			} catch (err) {}
+		}
+
+		fetchQuickVouchers()
+	}, [subtotal, deliveryFee])
+
+	/**--------------------- Updated promo code when applied voucher changes ----------------- */
+	useEffect(() => {
+		if (appliedVoucher) {
+			setPromoCode(appliedVoucher.voucher_code)
 		} else {
 			setPromoCode('')
 		}
-	}, [selectedVoucher])
+	}, [appliedVoucher])
 
 	// Render address card
 	const renderAddressCard = (address: UserAddress) => {
@@ -274,7 +508,7 @@ export default function CheckoutScreen() {
 	}
 
 	// Handle voucher selection from VoucherSection component
-	const handleSelectVoucher = (voucher) => {
+	const handleSelectQuickVoucher = (voucher: Voucher) => {
 		if (selectedVoucher?.voucher_id === voucher.voucher_id) {
 			// Deselect voucher if already selected
 			setSelectedVoucher(null)
@@ -282,30 +516,13 @@ export default function CheckoutScreen() {
 			return
 		}
 
-		const voucherObj = {
-			voucher_id: voucher.id,
-			voucher_name: voucher.code,
-			voucher_description: voucher.description,
-			voucher_fields: voucher.id === 'freeship' ? 'freeship' : 'discount',
-			voucher_start_date: new Date().toISOString(),
-			voucher_end_date: new Date(
-				Date.now() + 30 * 24 * 60 * 60 * 1000
-			).toISOString(), // 30 days from now
-			voucher_type: voucher.id === 'save10' ? 'percent' : 'fixed',
-			voucher_value:
-				voucher.id === 'save10'
-					? 10
-					: voucher.id === 'freeship'
-					? 20000
-					: 50000,
-		}
-
-		setSelectedVoucher(voucherObj)
-		showSuccess(`${voucher.name} voucher applied`)
+		setSelectedVoucher(voucher)
+		setAppliedVoucher(voucher)
+		showSuccess(`${voucher.voucher_name} voucher applied`)
 	}
 
 	// Handle manual voucher application in VoucherSection component
-	const handleApplyVoucherCode = (code) => {
+	const handleApplyVoucherCode = (code: string) => {
 		setApplyingVoucher(true)
 
 		// Simulate API call
@@ -315,9 +532,9 @@ export default function CheckoutScreen() {
 			showInfo(`Applying voucher: ${code}`)
 
 			// Find matching voucher from mock data
-			const matchedVoucher = MOCK_VOUCHERS.find((v) => v.code === code)
+			const matchedVoucher = vouchers.find((v) => v.voucher_code === code)
 			if (matchedVoucher) {
-				handleSelectVoucher(matchedVoucher)
+				handleSelectQuickVoucher(matchedVoucher)
 			}
 		}, 800)
 	}
@@ -399,9 +616,9 @@ export default function CheckoutScreen() {
 
 				{/* Bytesme Voucher Section */}
 				<VoucherSection
-					vouchers={MOCK_VOUCHERS}
+					vouchers={vouchers}
 					selectedVoucherCode={promoCode}
-					onSelectVoucher={handleSelectVoucher}
+					onSelectVoucher={handleSelectQuickVoucher}
 					onApplyVoucherCode={handleApplyVoucherCode}
 					isLoading={applyingVoucher}
 					inputPlaceholder="Chọn hoặc nhập mã giảm giá"
@@ -418,21 +635,44 @@ export default function CheckoutScreen() {
 						</Text>
 					</View>
 
+					{/* Delivery fee */}
 					<View style={styles.summaryRow}>
 						<Text style={styles.summaryLabel}>{t('deliveryFee')}</Text>
-						<Text style={styles.summaryValue}>
-							{deliveryFee.toLocaleString('vi-VN')}đ
-						</Text>
+						{(appliedVoucher?.discount_value ?? 0) > 0 &&
+						appliedVoucher?.voucher_fields === 'freeship' ? (
+							<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+								<Text
+									style={[
+										styles.summaryValue,
+										{ textDecorationLine: 'line-through', marginRight: 8 },
+									]}
+								>
+									{deliveryFee.toLocaleString('vi-VN')}đ
+								</Text>
+								<Text style={styles.discountValue}>
+									{Math.max(
+										0,
+										deliveryFee - appliedVoucher?.discount_value
+									).toLocaleString('vi-VN')}
+									đ
+								</Text>
+							</View>
+						) : (
+							<Text style={styles.summaryValue}>
+								{deliveryFee.toLocaleString('vi-VN')}đ
+							</Text>
+						)}
 					</View>
 
-					{discount > 0 && (
-						<View style={styles.summaryRow}>
-							<Text style={styles.summaryLabel}>{t('discount')}</Text>
-							<Text style={styles.discountValue}>
-								-{discount.toLocaleString('vi-VN')}đ
-							</Text>
-						</View>
-					)}
+					{(appliedVoucher?.discount_value ?? 0) > 0 &&
+						appliedVoucher?.voucher_fields !== 'freeship' && (
+							<View style={styles.summaryRow}>
+								<Text style={styles.summaryLabel}>{t('discount')}</Text>
+								<Text style={styles.discountValue}>
+									-{appliedVoucher?.discount_value.toLocaleString('vi-VN')}đ
+								</Text>
+							</View>
+						)}
 
 					<View style={styles.divider} />
 

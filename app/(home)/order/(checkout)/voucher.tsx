@@ -18,191 +18,7 @@ import { useAlert } from '@/hooks/useAlert'
 import { CheckoutContext, Voucher } from './_layout'
 import Button from '@/components/ui/Button'
 
-// Mock data for vouchers
-const MOCK_VOUCHERS: Voucher[] = [
-	{
-		voucher_id: 1,
-		voucher_name: 'Mừng sinh nhật',
-		voucher_description: 'Giảm 15% tối đa 50K',
-		voucher_fields: 'birthday_gift',
-		voucher_start_date: '2024-05-01T00:00:00Z',
-		voucher_end_date: '2024-06-30T23:59:59Z',
-		voucher_type: 'percent',
-		voucher_value: 15,
-		voucher_rules: [
-			{
-				voucher_rule_id: 1,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '150000',
-			},
-			{
-				voucher_rule_id: 2,
-				voucher_rule_type: 'max_discount',
-				voucher_rule_value: '50000',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 2,
-		voucher_name: 'Freeship',
-		voucher_description: 'Miễn phí vận chuyển đến 25K',
-		voucher_fields: 'freeship',
-		voucher_start_date: '2024-01-01T00:00:00Z',
-		voucher_end_date: '2024-12-31T23:59:59Z',
-		voucher_type: 'cash',
-		voucher_value: 25000,
-		voucher_rules: [
-			{
-				voucher_rule_id: 3,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '100000',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 3,
-		voucher_name: 'Khách hàng VIP',
-		voucher_description: 'Giảm 20% tối đa 100K',
-		voucher_fields: 'loyal_customer',
-		voucher_start_date: '2024-04-01T00:00:00Z',
-		voucher_end_date: '2024-07-31T23:59:59Z',
-		voucher_type: 'percent',
-		voucher_value: 20,
-		voucher_rules: [
-			{
-				voucher_rule_id: 4,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '250000',
-			},
-			{
-				voucher_rule_id: 5,
-				voucher_rule_type: 'max_discount',
-				voucher_rule_value: '100000',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 4,
-		voucher_name: 'Khách mới',
-		voucher_description: 'Giảm 30K cho đơn đầu tiên',
-		voucher_fields: 'new_customer',
-		voucher_start_date: '2024-01-01T00:00:00Z',
-		voucher_end_date: '2024-12-31T23:59:59Z',
-		voucher_type: 'cash',
-		voucher_value: 30000,
-		voucher_rules: [
-			{
-				voucher_rule_id: 6,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '120000',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 5,
-		voucher_name: 'Cuối tuần vui vẻ',
-		voucher_description: 'Giảm 10% tối đa 45K vào T7, CN',
-		voucher_fields: 'discount',
-		voucher_start_date: '2024-06-01T00:00:00Z',
-		voucher_end_date: '2024-08-31T23:59:59Z',
-		voucher_type: 'percent',
-		voucher_value: 10,
-		voucher_rules: [
-			{
-				voucher_rule_id: 7,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '180000',
-			},
-			{
-				voucher_rule_id: 8,
-				voucher_rule_type: 'max_discount',
-				voucher_rule_value: '45000',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 6,
-		voucher_name: 'Siêu deal tháng 7',
-		voucher_description: 'Giảm 15K không điều kiện',
-		voucher_fields: 'discount',
-		voucher_start_date: '2024-07-01T00:00:00Z',
-		voucher_end_date: '2024-07-31T23:59:59Z',
-		voucher_type: 'cash',
-		voucher_value: 15000,
-		voucher_rules: [
-			{
-				voucher_rule_id: 9,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '0',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 7,
-		voucher_name: 'Combo tiết kiệm',
-		voucher_description: 'Giảm 25K cho combo từ 2 món',
-		voucher_fields: 'discount',
-		voucher_start_date: '2024-05-15T00:00:00Z',
-		voucher_end_date: '2024-09-15T23:59:59Z',
-		voucher_type: 'cash',
-		voucher_value: 25000,
-		voucher_rules: [
-			{
-				voucher_rule_id: 10,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '150000',
-			},
-			{
-				voucher_rule_id: 11,
-				voucher_rule_type: 'min_items',
-				voucher_rule_value: '2',
-			},
-		],
-		isAvailable: true,
-	},
-	{
-		voucher_id: 8,
-		voucher_name: 'Freeship Extra',
-		voucher_description: 'Miễn phí vận chuyển đến 40K',
-		voucher_fields: 'freeship',
-		voucher_start_date: '2024-06-01T00:00:00Z',
-		voucher_end_date: '2024-06-30T23:59:59Z',
-		voucher_type: 'cash',
-		voucher_value: 40000,
-		voucher_rules: [
-			{
-				voucher_rule_id: 12,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '250000',
-			},
-		],
-		isAvailable: false,
-	},
-	{
-		voucher_id: 9,
-		voucher_name: 'Thành viên thân thiết',
-		voucher_description: 'Giảm 8% không giới hạn',
-		voucher_fields: 'loyal_customer',
-		voucher_start_date: '2024-01-01T00:00:00Z',
-		voucher_end_date: '2024-12-31T23:59:59Z',
-		voucher_type: 'percent',
-		voucher_value: 8,
-		voucher_rules: [
-			{
-				voucher_rule_id: 13,
-				voucher_rule_type: 'min_bill_price',
-				voucher_rule_value: '300000',
-			},
-		],
-		isAvailable: true,
-	},
-]
+import { MOCK_VOUCHERS } from './checkout'
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -283,7 +99,7 @@ const VoucherItem = ({
 	const colors = getVoucherColors(voucher.voucher_fields)
 
 	// Add opacity to non-applicable vouchers
-	const notApplicableStyle = !isApplicable ? { opacity: 0.5 } : {}
+	const notApplicableStyle = !isApplicable ? { opacity: 0.1 } : {}
 
 	return (
 		<View
@@ -397,7 +213,7 @@ const VoucherItem = ({
 				</View>
 
 				{/* Best choice badge */}
-				{isBestChoice && (
+				{isBestChoice && voucher.isApplicable && (
 					<View style={styles.bestChoiceBadge}>
 						<Text style={styles.bestChoiceText}>Lựa chọn tốt nhất</Text>
 					</View>
@@ -428,159 +244,87 @@ export default function VoucherPage() {
 	const { AlertComponent, showInfo } = useAlert()
 
 	// Get checkout context data
-	const { subtotal, deliveryFee, selectedVoucher, setSelectedVoucher } =
-		useContext(CheckoutContext)
+	const {
+		setIsLoadingVouchers,
+		subtotal,
+		selectedVoucher,
+		setSelectedVoucher,
+		setAppliedVoucher,
+		vouchers,
+		setVouchers,
+		isLoadingVouchers,
+		calculateDiscountValue,
+		isVoucherApplicable,
+	} = useContext(CheckoutContext)
+
+	console.log("subtotal in voucher page: ", subtotal)
 
 	// Local state
-	const [vouchers, setVouchers] = useState<Voucher[]>([])
-	const [loading, setLoading] = useState(true)
 	const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(
 		selectedVoucher?.voucher_id || null
 	)
-
-	const calculateDiscountValue = (voucher: Voucher) => {
-		let discountValue = 0
-
-		switch (voucher.voucher_fields) {
-			case 'birthday_gift':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percent') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
-
-			case 'freeship':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percent') {
-					discountValue = (Number(voucher.voucher_value) * deliveryFee) / 100
-				}
-				break
-
-			case 'loyal_customer':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				}
-				if (voucher.voucher_type === 'percent') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
-
-			default:
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				}
-				if (voucher.voucher_type === 'percent') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
-		}
-
-		const maxDiscountRule = voucher.voucher_rules?.find(
-			(rule) => rule.voucher_rule_type === 'max_discount'
-		)
-		if (maxDiscountRule) {
-			discountValue = Math.min(
-				discountValue,
-				Number(maxDiscountRule.voucher_rule_value)
-			)
-		}
-
-		return discountValue
-	}
-
-	// Best choice voucher calculation
-	// const bestChoiceVoucherId = useMemo(() => {
-	// 	if (!vouchers || vouchers.length === 0) return null
-
-	// 	// Find the best choice voucher ID based on most price discount
-	// 	let bestChoiceIdx = 0
-	// 	let bestChoiceValue = 0
-	// 	for (let i = 0; i < vouchers.length; i++) {
-	// 		const discountValue = calculateDiscountValue(vouchers[i])
-	// 		if (discountValue > bestChoiceValue) {
-	// 			bestChoiceValue = discountValue
-	// 			bestChoiceIdx = i
-	// 		}
-	// 	}
-
-	// 	return vouchers[bestChoiceIdx]?.voucher_id
-	// }, [vouchers, subtotal, deliveryFee])
-
-	// Check if a voucher is applicable based on the rules
-	const isVoucherApplicable = (voucher: Voucher) => {
-		const minRule = voucher.voucher_rules?.find(
-			(rule) => rule.voucher_rule_type === 'min_bill_price'
-		)
-		const minAmount = minRule ? parseInt(minRule.voucher_rule_value) : 0
-		if (subtotal < minAmount) {
-			return false
-		}
-
-		return true
-	}
-
-	// Fetch vouchers and initialize
-	const fetchVouchers = async () => {
-		try {
-			setLoading(true)
-			// In a real app, fetch from API
-			// const response = await fetch('/api/vouchers')
-			// const data = await response.json()
-
-			// Using mock data for now
-			setTimeout(() => {
-				// Mark the currently selected voucher
-				const updatedVouchers = MOCK_VOUCHERS.map((voucher) => ({
-					...voucher,
-					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
-				}))
-
-				setVouchers(updatedVouchers)
-				setLoading(false)
-			}, 800)
-		} catch (error) {
-			console.error('Error fetching vouchers:', error)
-			setLoading(false)
-		}
-	}
+	const [sortedVouchers, setSortedVouchers] = useState<Voucher[]>([])
 
 	// Fetch vouchers on mount
 	useEffect(() => {
-		fetchVouchers()
+		/**-------------------------------- Fetch vouchers on mount ------------------------------------------- */
+		const fetchAllVouchers = async () => {
+			setIsLoadingVouchers(true)
+			try {
+				// In a real app, fetch from API
+				// const response = await fetch('/api/vouchers')
+				// const data = await response.json()
+
+				// Using mock data for now
+				setTimeout(() => {
+					// Mark the currently selected voucher
+					const updatedVouchers = MOCK_VOUCHERS.map((voucher) => ({
+						...voucher,
+						isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
+						discount_value: calculateDiscountValue(voucher),
+						isApplicable: isVoucherApplicable(voucher),
+					})) as Voucher[]
+
+					console.log('MOCK VOUCHERS: ', MOCK_VOUCHERS)
+
+					setVouchers(updatedVouchers)
+					setIsLoadingVouchers(false)
+				}, 800)
+			} catch (error) {
+				console.error('Error fetching vouchers:', error)
+				setIsLoadingVouchers(false)
+			}
+		}
+
+		fetchAllVouchers()
 	}, [])
 
 	// Sort vouchers based on applicability and discount value
 	useEffect(() => {
 		if (!vouchers || vouchers.length === 0) return
 
+		console.log('DEBUG: vouchers changed, now sorting')
+
 		// Create a copy before sorting to avoid mutation
 		const vouchersCopy = [...vouchers]
-		const sortedVouchers = vouchersCopy.sort((a, b) => {
-			// if (a.voucher_id === bestChoiceVoucherId) return -1
-			// if (b.voucher_id === bestChoiceVoucherId) return 1
-
-			const aApplicable = isVoucherApplicable(a)
-			const bApplicable = isVoucherApplicable(b)
-
-			if (aApplicable && !bApplicable) return -1
-			if (!aApplicable && bApplicable) return 1
-			return calculateDiscountValue(b) - calculateDiscountValue(a)
+		const sorted = vouchersCopy.sort((a, b) => {
+			if (a.isApplicable && !b.isApplicable) return -1
+			if (!a.isApplicable && b.isApplicable) return 1
+			return b.discount_value - a.discount_value
 		})
 
 		// Only update if sorting has actually changed the order
 		if (
-			JSON.stringify(sortedVouchers.map((v) => v.voucher_id)) !==
-			JSON.stringify(vouchers.map((v) => v.voucher_id))
+			JSON.stringify(sorted.map((v) => v.voucher_id)) !==
+			JSON.stringify(sortedVouchers.map((v) => v.voucher_id))
 		) {
-			setVouchers(sortedVouchers)
+			setSortedVouchers(sorted)
 		}
 	}, [subtotal, vouchers])
 
 	// Select voucher handler
 	const selectVoucher = (voucher: Voucher) => {
-		if (!isVoucherApplicable(voucher)) {
+		if (!voucher.isApplicable) {
 			showInfo('Voucher này không khả dụng cho đơn hàng của bạn')
 			return
 		}
@@ -591,11 +335,13 @@ export default function VoucherPage() {
 			setSelectedVoucher(null)
 			setSelectedVoucherId(null)
 
+			console.log('MOCK VOUCHERS: ', MOCK_VOUCHERS)
+
 			// Update UI state
 			const updatedVouchers = vouchers.map((v) => ({
 				...v,
 				isSelected: false,
-			}))
+			})) as Voucher[]
 			setVouchers(updatedVouchers)
 
 			return
@@ -611,13 +357,22 @@ export default function VoucherPage() {
 			isSelected: v.voucher_id === voucher.voucher_id,
 		}))
 		setVouchers(updatedVouchers)
-
-		console.log('Selected voucher:', voucher)
 	}
 
+	useEffect(() => {
+		console.log('DEBUG: selected voucher changed ', selectedVoucher)
+	}, [selectedVoucher])
+
 	// Handle confirmation and return to checkout page
-	const handleConfirm = () => {
-		router.back()
+	const handleApplyVoucher = () => {
+		if (!selectedVoucherId) {
+			showInfo(t('noVoucherSelected'))
+			return
+		} else {
+			// const appliedVoucher = vouchers.find((v) => v.voucher_id === selected)
+			setAppliedVoucher(selectedVoucher)
+			router.back()
+		}
 	}
 
 	return (
@@ -636,7 +391,7 @@ export default function VoucherPage() {
 			</View>
 
 			{/* Main Content */}
-			{loading ? (
+			{isLoadingVouchers ? (
 				<View style={styles.loadingContainer}>
 					<ActivityIndicator size="large" color="#C67C4E" />
 					<Text style={styles.loadingText}>{t('dangTaiVoucher')}</Text>
@@ -648,13 +403,13 @@ export default function VoucherPage() {
 						showsVerticalScrollIndicator={false}
 						contentContainerStyle={styles.scrollContent}
 					>
-						{vouchers.map((voucher, index) => (
+						{sortedVouchers.map((voucher, index) => (
 							<VoucherItem
 								key={voucher.voucher_id}
 								voucher={voucher}
 								isSelected={voucher.voucher_id === selectedVoucherId}
 								onSelect={selectVoucher}
-								isApplicable={isVoucherApplicable(voucher)}
+								isApplicable={voucher.isApplicable}
 								isBestChoice={index === 0}
 							/>
 						))}
@@ -682,18 +437,11 @@ export default function VoucherPage() {
 						<View style={styles.bottomSpacer} />
 					</ScrollView>
 
-					{/* Confirm Button */}
+					{/* Apply Voucher Button*/}
 					<View style={styles.buttonContainer}>
-						{/* <TouchableOpacity
-							style={styles.confirmButton}
-							onPress={handleConfirm}
-							disabled={!selectedVoucher}
-						>
-							<Text style={styles.confirmButtonText}>{t('applyVoucher')}</Text>
-						</TouchableOpacity> */}
 						<Button
 							text={t('applyVoucher')}
-							onPress={handleConfirm}
+							onPress={handleApplyVoucher}
 							disabled={selectedVoucherId == null}
 							style={styles.confirmButton}
 						/>
