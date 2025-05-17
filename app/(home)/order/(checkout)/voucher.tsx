@@ -12,14 +12,12 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
-import NavButton from '@/components/shared/NavButton'
-import ZigzagBorder from '@/components/shared/ZigzagBorder'
 import { useAlert } from '@/hooks/useAlert'
 import { CheckoutContext, Voucher } from './_layout'
-import Button from '@/components/ui/Button'
-
-import { MOCK_VOUCHERS } from './checkout'
 import { voucherAPI } from '@/utils/api'
+import ZigzagBorder from '@/components/shared/ZigzagBorder'
+import NavButton from '@/components/shared/NavButton'
+import Button from '@/components/ui/Button'
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
