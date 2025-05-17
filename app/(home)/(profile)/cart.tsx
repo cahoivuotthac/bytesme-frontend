@@ -388,6 +388,7 @@ export default function CartScreen() {
 						<View style={styles.itemHeaderRow}>
 							<TouchableOpacity
 								onPress={() => navigateToProduct(item.productId)}
+								style={styles.productNameContainer}
 							>
 								<Text style={styles.itemName} numberOfLines={1}>
 									{item.productName}
@@ -396,6 +397,7 @@ export default function CartScreen() {
 							<TouchableOpacity
 								onPress={() => removeFromCart(item.productId)}
 								hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+								style={styles.deleteButton}
 							>
 								<Feather name="trash-2" size={20} color="#8D8D8D" />
 							</TouchableOpacity>
@@ -701,13 +703,23 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
+		width: '100%',
+	},
+	productNameContainer: {
+		flex: 1,
+		marginRight: 8,
+		paddingRight: 8,
+	},
+	deleteButton: {
+		width: 28,
+		height: 28,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
 	itemName: {
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 16,
 		color: '#2F2D2C',
-		flex: 1,
-		marginRight: 8,
 	},
 	itemSize: {
 		fontFamily: 'Inter-Regular',
