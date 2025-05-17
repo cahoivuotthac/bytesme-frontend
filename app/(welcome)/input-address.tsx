@@ -24,6 +24,7 @@ import { useTranslation } from '@/providers/locale'
 import Svg, { Path, Rect, LinearGradient, Stop, Defs } from 'react-native-svg'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { largeCityCodes } from '@/constants/Cities'
+import NavButton from '@/components/shared/NavButton'
 
 // Import local JSON data
 import urbansData from '@/assets/constants/vietnam-address/tinh-tp.json'
@@ -425,6 +426,16 @@ export default function InputAddressScreen() {
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
 			<StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+			{/* Header */}
+			<View style={styles.header}>
+				<NavButton
+					direction="back"
+					style={styles.backButton}
+					backgroundColor="transparent"
+					iconColor="rgba(198, 124, 78, 0.8)"
+				/>
+				{/* <Text style={styles.headerTitle}>{t('checkout')}</Text> */}
+			</View>
 			<Image
 				style={styles.colorfulBlurDecoration}
 				source={require('@/assets/decorations/colorful-blur.png')}
@@ -807,6 +818,23 @@ export default function InputAddressScreen() {
 }
 
 const styles = StyleSheet.create({
+	header: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 16,
+		paddingHorizontal: 20,
+	},
+	headerTitle: {
+		fontSize: 18,
+		fontFamily: 'Inter-SemiBold',
+		color: '#383838',
+	},
+	backButton: {
+		position: 'absolute',
+		left: 16,
+		zIndex: 10,
+	},
 	container: {
 		flex: 1,
 		backgroundColor: '#FFFAF5', // Warmer white

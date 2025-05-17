@@ -22,11 +22,11 @@ export interface Voucher {
 	voucher_type: string
 	voucher_value: number
 	voucher_rules?: VoucherRule[]
+	is_applicable: boolean
+	discount_value: number
+
 	isSelected?: boolean
 	isAvailable?: boolean
-
-	discount_value: number
-	isApplicable: boolean
 }
 
 // Create the context with proper typing
@@ -123,7 +123,7 @@ export default function CheckoutLayout() {
 			case 'birthday_gift':
 				if (voucher.voucher_type === 'cash') {
 					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percent') {
+				} else if (voucher.voucher_type === 'percentage') {
 					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
 				}
 				break
@@ -131,7 +131,7 @@ export default function CheckoutLayout() {
 			case 'freeship':
 				if (voucher.voucher_type === 'cash') {
 					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percent') {
+				} else if (voucher.voucher_type === 'percentage') {
 					discountValue = (Number(voucher.voucher_value) * deliveryFee) / 100
 				}
 				break
@@ -140,7 +140,7 @@ export default function CheckoutLayout() {
 				if (voucher.voucher_type === 'cash') {
 					discountValue = Number(voucher.voucher_value)
 				}
-				if (voucher.voucher_type === 'percent') {
+				if (voucher.voucher_type === 'percentage') {
 					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
 				}
 				break
@@ -149,7 +149,7 @@ export default function CheckoutLayout() {
 				if (voucher.voucher_type === 'cash') {
 					discountValue = Number(voucher.voucher_value)
 				}
-				if (voucher.voucher_type === 'percent') {
+				if (voucher.voucher_type === 'percentage') {
 					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
 				}
 				break

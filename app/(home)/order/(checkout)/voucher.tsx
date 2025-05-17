@@ -19,6 +19,7 @@ import { CheckoutContext, Voucher } from './_layout'
 import Button from '@/components/ui/Button'
 
 import { MOCK_VOUCHERS } from './checkout'
+import { voucherAPI } from '@/utils/api'
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -80,7 +81,7 @@ const getVoucherColors = (field: string) => {
 interface VoucherItemProps {
 	voucher: Voucher
 	isSelected: boolean
-	isApplicable: boolean
+	is_applicable: boolean
 	isBestChoice: boolean
 	onSelect: (voucher: Voucher) => void
 }
@@ -89,7 +90,7 @@ const VoucherItem = ({
 	voucher,
 	isSelected,
 	isBestChoice,
-	isApplicable = true,
+	is_applicable = true,
 	onSelect,
 }: VoucherItemProps) => {
 	const { t } = useTranslation()
@@ -99,7 +100,7 @@ const VoucherItem = ({
 	const colors = getVoucherColors(voucher.voucher_fields)
 
 	// Add opacity to non-applicable vouchers
-	const notApplicableStyle = !isApplicable ? { opacity: 0.1 } : {}
+	const notApplicableStyle = !is_applicable ? { opacity: 0.1 } : {}
 
 	return (
 		<View
@@ -122,7 +123,7 @@ const VoucherItem = ({
 				]}
 				onPress={() => onSelect(voucher)}
 				activeOpacity={0.8}
-				disabled={!isApplicable}
+				disabled={!is_applicable}
 			>
 				{/* Left side with background color and icon */}
 				<View style={[styles.voucherLeft, { backgroundColor: colors.bg }]}>
@@ -170,7 +171,7 @@ const VoucherItem = ({
 							).toLocaleString('vi-VN')}
 							đ
 						</Text>
-						{!isApplicable && (
+						{!is_applicable && (
 							<Text
 								style={{
 									color: '#FF6B6B',
@@ -213,7 +214,7 @@ const VoucherItem = ({
 				</View>
 
 				{/* Best choice badge */}
-				{isBestChoice && voucher.isApplicable && (
+				{isBestChoice && voucher.is_applicable && (
 					<View style={styles.bestChoiceBadge}>
 						<Text style={styles.bestChoiceText}>Lựa chọn tốt nhất</Text>
 					</View>
@@ -257,39 +258,31 @@ export default function VoucherPage() {
 		isVoucherApplicable,
 	} = useContext(CheckoutContext)
 
-	console.log("subtotal in voucher page: ", subtotal)
+	console.log('subtotal in voucher page: ', subtotal)
 
 	// Local state
 	const [selectedVoucherId, setSelectedVoucherId] = useState<number | null>(
 		selectedVoucher?.voucher_id || null
 	)
 	const [sortedVouchers, setSortedVouchers] = useState<Voucher[]>([])
+	const pageSize = 15
+	const [page, setPage] = useState(0)
 
-	// Fetch vouchers on mount
+	/**-------------------------------- Fetch vouchers on mount ------------------------------------------- */
 	useEffect(() => {
-		/**-------------------------------- Fetch vouchers on mount ------------------------------------------- */
 		const fetchAllVouchers = async () => {
 			setIsLoadingVouchers(true)
 			try {
 				// In a real app, fetch from API
-				// const response = await fetch('/api/vouchers')
-				// const data = await response.json()
+				let vouchers = (await voucherAPI.getVouchers(0, pageSize))
+					.data as Voucher[]
+				vouchers = vouchers.map((voucher) => ({
+					...voucher,
+					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
+				})) as Voucher[]
 
-				// Using mock data for now
-				setTimeout(() => {
-					// Mark the currently selected voucher
-					const updatedVouchers = MOCK_VOUCHERS.map((voucher) => ({
-						...voucher,
-						isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
-						discount_value: calculateDiscountValue(voucher),
-						isApplicable: isVoucherApplicable(voucher),
-					})) as Voucher[]
-
-					console.log('MOCK VOUCHERS: ', MOCK_VOUCHERS)
-
-					setVouchers(updatedVouchers)
-					setIsLoadingVouchers(false)
-				}, 800)
+				setVouchers(vouchers)
+				setIsLoadingVouchers(false)
 			} catch (error) {
 				console.error('Error fetching vouchers:', error)
 				setIsLoadingVouchers(false)
@@ -299,7 +292,7 @@ export default function VoucherPage() {
 		fetchAllVouchers()
 	}, [])
 
-	// Sort vouchers based on applicability and discount value
+	/**-------------------------------- Sort vouchers ------------------------------------------- */
 	useEffect(() => {
 		if (!vouchers || vouchers.length === 0) return
 
@@ -308,8 +301,8 @@ export default function VoucherPage() {
 		// Create a copy before sorting to avoid mutation
 		const vouchersCopy = [...vouchers]
 		const sorted = vouchersCopy.sort((a, b) => {
-			if (a.isApplicable && !b.isApplicable) return -1
-			if (!a.isApplicable && b.isApplicable) return 1
+			if (a.is_applicable && !b.is_applicable) return -1
+			if (!a.is_applicable && b.is_applicable) return 1
 			return b.discount_value - a.discount_value
 		})
 
@@ -322,9 +315,29 @@ export default function VoucherPage() {
 		}
 	}, [subtotal, vouchers])
 
+	/**-------------------------------- Load more vouchers ------------------------------------------- */
+	const loadMoreVouchers = async () => {
+		const nextPage = page + 1
+		const offset = nextPage * pageSize
+		setIsLoadingVouchers(true)
+		try {
+			const newVouchers = (await voucherAPI.getVouchers(offset, pageSize))
+				.data as Voucher[]
+			if (newVouchers.length > 0) {
+				const updatedVouchers = [...vouchers, ...newVouchers]
+				setVouchers(updatedVouchers)
+			}
+			setIsLoadingVouchers(false)
+			setPage(nextPage)
+		} catch (error) {
+			console.error('Error loading more vouchers:', error)
+			setIsLoadingVouchers(false)
+		}
+	}
+
 	// Select voucher handler
 	const selectVoucher = (voucher: Voucher) => {
-		if (!voucher.isApplicable) {
+		if (!voucher.is_applicable) {
 			showInfo('Voucher này không khả dụng cho đơn hàng của bạn')
 			return
 		}
@@ -334,8 +347,7 @@ export default function VoucherPage() {
 			// Deselect
 			setSelectedVoucher(null)
 			setSelectedVoucherId(null)
-
-			console.log('MOCK VOUCHERS: ', MOCK_VOUCHERS)
+			setAppliedVoucher(null)
 
 			// Update UI state
 			const updatedVouchers = vouchers.map((v) => ({
@@ -409,20 +421,32 @@ export default function VoucherPage() {
 								voucher={voucher}
 								isSelected={voucher.voucher_id === selectedVoucherId}
 								onSelect={selectVoucher}
-								isApplicable={voucher.isApplicable}
+								is_applicable={voucher.is_applicable}
 								isBestChoice={index === 0}
 							/>
 						))}
 
-						<View style={styles.showMoreContainer}>
-							<TouchableOpacity
-								style={styles.showMoreButton}
-								onPress={() => showInfo('Đang tải thêm voucher...')}
-							>
-								<Text style={styles.showMoreText}>{t('xemThem')}</Text>
-								<Ionicons name="chevron-down" size={16} color="#C67C4E" />
-							</TouchableOpacity>
-						</View>
+						{vouchers.length > 0 && (
+							<View style={styles.showMoreContainer}>
+								<TouchableOpacity
+									style={styles.showMoreButton}
+									onPress={loadMoreVouchers}
+									disabled={isLoadingVouchers}
+								>
+									{isLoadingVouchers ? (
+										<View style={styles.loadingContainer}>
+											<ActivityIndicator size="small" color="#C67C4E" />
+											<Text style={styles.showMoreText}>{t('dangTai')}</Text>
+										</View>
+									) : (
+										<>
+											<Text style={styles.showMoreText}>{t('xemThem')}</Text>
+											<Ionicons name="chevron-down" size={16} color="#C67C4E" />
+										</>
+									)}
+								</TouchableOpacity>
+							</View>
+						)}
 
 						{selectedVoucher && (
 							<View style={styles.selectionInfo}>

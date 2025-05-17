@@ -202,6 +202,7 @@ export default {
 	shippingFee: "Phí vận chuyển",
 	confirmDeliveryAddress: "Xác nhận địa chỉ giao hàng",
 	confirmPaymentMethod: "Xác nhận phương thức thanh toán",
+	yourOrder: "Đơn hàng của bạn",
 
 	// Vouchers
 	bytesmeVoucher: "Voucher Bytesme",

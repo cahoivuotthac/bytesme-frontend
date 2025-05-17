@@ -110,3 +110,23 @@ export const addressAPI = {
 		});
 	},
 };
+
+export const voucherAPI = {
+	getVouchers: (offset: number, limit: number) => {
+		return APIClient.get(
+			"/voucher?" +
+				new URLSearchParams({
+					offset: offset.toString(),
+					limit: limit.toString(),
+				}).toString()
+		);
+	},
+
+	applyVoucher: (voucherCode: string) => {
+		return APIClient.post("/user/vouchers/apply", { code: voucherCode });
+	},
+
+	removeVoucher: () => {
+		return APIClient.post("/user/vouchers/remove");
+	},
+};

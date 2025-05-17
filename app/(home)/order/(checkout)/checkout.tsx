@@ -7,6 +7,8 @@ import {
 	TouchableOpacity,
 	SafeAreaView,
 	Dimensions,
+	Image,
+	FlatList,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -16,7 +18,7 @@ import NavButton from '@/components/shared/NavButton'
 import VoucherSection from '@/components/shared/VoucherSection'
 import Button from '@/components/ui/Button'
 import { useAlert } from '@/hooks/useAlert'
-import { addressAPI } from '@/utils/api'
+import { addressAPI, voucherAPI } from '@/utils/api'
 import { CheckoutContext, Voucher } from './_layout'
 
 export const MOCK_VOUCHERS: Partial<Voucher>[] = [
@@ -28,7 +30,7 @@ export const MOCK_VOUCHERS: Partial<Voucher>[] = [
 		voucher_fields: 'birthday_gift',
 		voucher_start_date: '2024-05-01T00:00:00Z',
 		voucher_end_date: '2024-06-30T23:59:59Z',
-		voucher_type: 'percent',
+		voucher_type: 'percentage',
 		voucher_value: 15,
 		voucher_rules: [
 			{
@@ -71,7 +73,7 @@ export const MOCK_VOUCHERS: Partial<Voucher>[] = [
 		voucher_fields: 'loyal_customer',
 		voucher_start_date: '2024-04-01T00:00:00Z',
 		voucher_end_date: '2024-07-31T23:59:59Z',
-		voucher_type: 'percent',
+		voucher_type: 'percentage',
 		voucher_value: 20,
 		voucher_rules: [
 			{
@@ -114,7 +116,7 @@ export const MOCK_VOUCHERS: Partial<Voucher>[] = [
 		voucher_fields: 'discount',
 		voucher_start_date: '2024-06-01T00:00:00Z',
 		voucher_end_date: '2024-08-31T23:59:59Z',
-		voucher_type: 'percent',
+		voucher_type: 'percentage',
 		voucher_value: 10,
 		voucher_rules: [
 			{
@@ -205,7 +207,7 @@ export const MOCK_VOUCHERS: Partial<Voucher>[] = [
 		voucher_fields: 'loyal_customer',
 		voucher_start_date: '2024-01-01T00:00:00Z',
 		voucher_end_date: '2024-12-31T23:59:59Z',
-		voucher_type: 'percent',
+		voucher_type: 'percentage',
 		voucher_value: 8,
 		voucher_rules: [
 			{
@@ -249,40 +251,6 @@ const PAYMENT_METHODS = [
 	},
 ]
 
-// Mock vouchers data
-// const MOCK_VOUCHERS = [
-// 	{
-// 		id: 'freeship',
-// 		code: 'FREESHIP',
-// 		name: 'Free Shipping',
-// 		description: 'Free shipping on your order',
-// 		expiry: 'Valid until May 20',
-// 		icon: 'bicycle',
-// 		colors: ['#FF9EB1', '#FF7C96'],
-// 		isValid: true,
-// 	},
-// 	{
-// 		id: 'save10',
-// 		code: 'SAVE10',
-// 		name: '10% Off',
-// 		description: '10% off your entire order',
-// 		expiry: 'Valid until May 15',
-// 		icon: 'cash-outline',
-// 		colors: ['#C67C4E', '#A0643C'],
-// 		isValid: true,
-// 	},
-// 	{
-// 		id: 'newuser',
-// 		code: 'NEWUSER',
-// 		name: 'New User',
-// 		description: 'Special discount for new users',
-// 		expiry: 'First order only',
-// 		icon: 'person-add',
-// 		colors: ['#7D97F4', '#5A78F0'],
-// 		isValid: true,
-// 	},
-// ]
-
 export default function CheckoutScreen() {
 	const { t } = useTranslation()
 	const { AlertComponent, showInfo, showError, showSuccess } = useAlert()
@@ -310,9 +278,9 @@ export default function CheckoutScreen() {
 		null
 	)
 	const [selectedPayment, setSelectedPayment] = useState('cod')
-	const [promoCode, setPromoCode] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [applyingVoucher, setApplyingVoucher] = useState(false)
+	const [quickVouchers, setQuickVouchers] = useState<Voucher[]>([])
 
 	/**-------------------------------- Fetch user addresses ------------------------------------------- */
 	const [userAddresses, setUserAddresses] = useState<UserAddress[]>([])
@@ -353,43 +321,25 @@ export default function CheckoutScreen() {
 		fetchUserAddresses()
 	}, [])
 
-	/**--------------------- Update Promo code in voucher input when voucher is applied ----------------- */
-	useEffect(() => {
-		// if (appliedVoucher) {
-		console.log('appliedVoucher changed: ', appliedVoucher)
-		setPromoCode(appliedVoucher?.voucher_code || '')
-		// } else {
-		// 	setPromoCode('')
-		// }
-	}, [appliedVoucher])
-
 	/**--------------------- Fetch quick vouchers ----------------- */
 	useEffect(() => {
 		const fetchQuickVouchers = async () => {
 			setIsLoadingVouchers(true)
 			try {
 				// In a real app, fetch from API
-				const quickVouchers = MOCK_VOUCHERS.slice(0, 3).map((voucher) => ({
+				let quickVouchers = (await voucherAPI.getVouchers(0, 3))
+					.data as Voucher[]
+
+				quickVouchers = quickVouchers.map((voucher) => ({
 					...voucher,
 					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
-					discount_value: calculateDiscountValue(voucher),
-					isApplicable: isVoucherApplicable(voucher),
 				})) as Voucher[]
-				setVouchers(quickVouchers)
+				setQuickVouchers(quickVouchers)
 			} catch (err) {}
 		}
 
 		fetchQuickVouchers()
 	}, [subtotal, deliveryFee])
-
-	/**--------------------- Updated promo code when applied voucher changes ----------------- */
-	useEffect(() => {
-		if (appliedVoucher) {
-			setPromoCode(appliedVoucher.voucher_code)
-		} else {
-			setPromoCode('')
-		}
-	}, [appliedVoucher])
 
 	// Render address card
 	const renderAddressCard = (address: UserAddress) => {
@@ -528,7 +478,7 @@ export default function CheckoutScreen() {
 		// Simulate API call
 		setTimeout(() => {
 			setApplyingVoucher(false)
-			setPromoCode(code)
+			// setPromoCode(code)
 			showInfo(`Applying voucher: ${code}`)
 
 			// Find matching voucher from mock data
@@ -566,6 +516,74 @@ export default function CheckoutScreen() {
 			</View>
 
 			<ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+				{/* Checkout Items Strip */}
+				<View style={styles.checkoutItemsContainer}>
+					<View style={styles.checkoutItemsHeader}>
+						<Text style={styles.checkoutItemsTitle}>
+							{t('yourOrder')} ({checkoutItems.length})
+						</Text>
+						{checkoutItems.length > 3 && (
+							<TouchableOpacity
+								onPress={() => showInfo(t('viewingAllItems'))}
+								style={styles.viewAllButton}
+							>
+								<Text style={styles.viewAllText}>{t('viewAll')}</Text>
+							</TouchableOpacity>
+						)}
+					</View>
+
+					{checkoutItems.length > 0 ? (
+						<FlatList
+							data={checkoutItems.slice(0, 3)} // Show max 3 items
+							horizontal
+							showsHorizontalScrollIndicator={false}
+							keyExtractor={(item) => item.productId.toString()}
+							contentContainerStyle={styles.checkoutItemsList}
+							renderItem={({ item }) => (
+								<View style={styles.checkoutItemCard}>
+									<View style={styles.itemImageContainer}>
+										<Image
+											source={{ uri: item.imageUrl }}
+											style={styles.itemImage}
+											resizeMode="cover"
+										/>
+									</View>
+									<View style={styles.itemInfoContainer}>
+										<Text style={styles.itemName} numberOfLines={1}>
+											{item.productName}
+										</Text>
+										<Text style={styles.itemSize}>
+											{item.sizes[item.selectedSizeIndex]}
+										</Text>
+										<View style={styles.itemQuantityPrice}>
+											<Text style={styles.itemQuantity}>x{item.quantity}</Text>
+											<Text style={styles.itemPrice}>
+												{(
+													item.prices[item.selectedSizeIndex] * item.quantity
+												).toLocaleString('vi-VN')}
+												đ
+											</Text>
+										</View>
+									</View>
+								</View>
+							)}
+							ListFooterComponent={() =>
+								checkoutItems.length > 3 ? (
+									<View style={styles.moreItemsIndicator}>
+										<Text style={styles.moreItemsText}>
+											+{checkoutItems.length - 3}
+										</Text>
+									</View>
+								) : null
+							}
+						/>
+					) : (
+						<View style={styles.emptyItemsContainer}>
+							<Text style={styles.emptyItemsText}>{t('noItemsFound')}</Text>
+						</View>
+					)}
+				</View>
+
 				{/* Delivery Address Section */}
 				<View style={styles.section}>
 					<Text style={styles.sectionTitle}>{t('deliveryAddress')}</Text>
@@ -616,14 +634,13 @@ export default function CheckoutScreen() {
 
 				{/* Bytesme Voucher Section */}
 				<VoucherSection
-					vouchers={vouchers}
-					selectedVoucherCode={promoCode}
+					vouchers={quickVouchers}
 					onSelectVoucher={handleSelectQuickVoucher}
 					onApplyVoucherCode={handleApplyVoucherCode}
 					isLoading={applyingVoucher}
 					inputPlaceholder="Chọn hoặc nhập mã giảm giá"
 					onBrowseVouchers={navigateToVoucherPage}
-					selectedVoucher={selectedVoucher}
+					appliedVoucher={appliedVoucher}
 				/>
 
 				{/* Order Summary Section */}
@@ -1029,5 +1046,115 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Medium',
 		color: '#C67C4E',
 		marginLeft: 8,
+	},
+	checkoutItemsContainer: {
+		marginHorizontal: 20,
+		marginTop: 16,
+		backgroundColor: '#FFFFFF',
+		borderRadius: 20,
+		padding: 16,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.1,
+		shadowRadius: 2,
+		elevation: 2,
+	},
+	checkoutItemsHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 12,
+	},
+	checkoutItemsTitle: {
+		fontSize: 16,
+		fontFamily: 'Inter-SemiBold',
+		color: '#474747',
+	},
+	viewAllButton: {
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+		backgroundColor: '#C67C4E',
+		borderRadius: 8,
+	},
+	viewAllText: {
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		color: '#FFFFFF',
+	},
+	checkoutItemsList: {
+		gap: 12,
+	},
+	checkoutItemCard: {
+		width: 120,
+		backgroundColor: '#F8F8F8',
+		borderRadius: 16,
+		padding: 8,
+	},
+	itemImageContainer: {
+		width: '100%',
+		height: 80,
+		borderRadius: 12,
+		overflow: 'hidden',
+		marginBottom: 8,
+	},
+	itemImage: {
+		width: '100%',
+		height: '100%',
+	},
+	itemInfoContainer: {
+		flex: 1,
+	},
+	itemName: {
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		color: '#474747',
+		marginBottom: 4,
+	},
+	itemSize: {
+		fontSize: 10,
+		fontFamily: 'Inter-Regular',
+		color: '#968B7B',
+		marginBottom: 4,
+	},
+	itemQuantityPrice: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	itemQuantity: {
+		fontSize: 10,
+		fontFamily: 'Inter-Medium',
+		color: '#474747',
+	},
+	itemPrice: {
+		fontSize: 10,
+		fontFamily: 'Inter-Medium',
+		color: '#A9411D',
+	},
+	moreItemsIndicator: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: '#C67C4E',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	moreItemsText: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#FFFFFF',
+	},
+	emptyItemsContainer: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		paddingVertical: 20,
+		backgroundColor: 'rgba(198, 124, 78, 0.05)',
+		borderRadius: 16,
+		marginBottom: 12,
+	},
+	emptyItemsText: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#C67C4E',
 	},
 })

@@ -18,7 +18,7 @@ export default function WelcomeLayout() {
 				name="input-address"
 				options={{
 					title: t('deliveryLocation'),
-					headerShown: true,
+					headerShown: false,
 				}}
 			/>
 		</Stack>

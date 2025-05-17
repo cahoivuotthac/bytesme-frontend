@@ -24,7 +24,7 @@ interface VoucherSectionProps {
 	/**
 	 * Currently selected voucher code (if any)
 	 */
-	selectedVoucherCode?: string
+	// appliedVoucherCode?: string
 
 	/**
 	 * Callback when a voucher is selected
@@ -62,9 +62,9 @@ interface VoucherSectionProps {
 	onBrowseVouchers?: () => void
 
 	/**
-	 * Selected voucher from voucher page (if any)
+	 * Applied voucher from voucher page (if any)
 	 */
-	selectedVoucher?: any
+	appliedVoucher: Voucher | null
 }
 
 const getVoucherColors = (voucher: Voucher) => {
@@ -131,7 +131,7 @@ const getVoucherIcon = (
  */
 const VoucherSection: React.FC<VoucherSectionProps> = ({
 	vouchers = [],
-	selectedVoucherCode = '',
+	// appliedVoucherCode = '',
 	onSelectVoucher,
 	onApplyVoucherCode,
 	isLoading = false,
@@ -139,19 +139,23 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 	inputPlaceholder,
 	style,
 	onBrowseVouchers,
-	selectedVoucher,
+	appliedVoucher,
 }) => {
 	const { t } = useTranslation()
-	const [voucherCode, setVoucherCode] = useState(selectedVoucherCode)
+	const [voucherCode, setVoucherCode] = useState(
+		appliedVoucher?.voucher_code || ''
+	)
 	const inputRef = useRef<TextInput>(null)
 
-	// Update local state when selected voucher changes from parent
+	// Update local state when applied voucher changes from parent
 	useEffect(() => {
 		// Only update if the voucher was selected from the list
-		if (selectedVoucherCode !== voucherCode && selectedVoucherCode !== '') {
-			setVoucherCode(selectedVoucherCode)
+		if (appliedVoucher && appliedVoucher.voucher_code !== voucherCode) {
+			setVoucherCode(appliedVoucher.voucher_code)
+		} else {
+			setVoucherCode('')
 		}
-	}, [selectedVoucherCode])
+	}, [appliedVoucher])
 
 	// Handle manual voucher code application
 	const handleApplyVoucher = () => {
@@ -183,7 +187,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 	}
 
 	// If a voucher is selected from the voucher page, display it
-	if (selectedVoucher) {
+	if (appliedVoucher) {
 		return (
 			<View style={[styles.section, style]}>
 				<Text style={styles.sectionTitle}>{title || t('bytesmeVoucher')}</Text>
@@ -199,10 +203,14 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 
 					<View style={styles.selectedVoucherContent}>
 						<Text style={styles.selectedVoucherName}>
-							{selectedVoucher.voucher_name}
+							{appliedVoucher.voucher_name}
 						</Text>
-						<Text style={styles.selectedVoucherDesc}>
-							{selectedVoucher.voucher_description}
+						<Text
+							style={styles.selectedVoucherDesc}
+							numberOfLines={1}
+							ellipsizeMode="tail"
+						>
+							{appliedVoucher.voucher_description}
 						</Text>
 					</View>
 
@@ -254,7 +262,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 			</View>
 
 			{/* Available Vouchers */}
-			{(
+			{
 				<View style={styles.availableVouchersContainer}>
 					<View style={styles.availableHeaderContainer}>
 						<Text style={styles.availableVouchersTitle}>
@@ -272,16 +280,18 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 						showsHorizontalScrollIndicator={false}
 						contentContainerStyle={styles.vouchersScrollContent}
 					>
-						{vouchers.map((voucher) => (
+						{vouchers.map((voucher: Voucher) => (
 							<TouchableOpacity
 								key={voucher.voucher_id}
 								style={[
 									styles.voucherCard,
-									selectedVoucherCode === voucher.voucher_code &&
+									appliedVoucher &&
+										(appliedVoucher as Voucher).voucher_code ===
+											voucher.voucher_code &&
 										styles.voucherCardSelected,
 								]}
 								onPress={() => handleSelectVoucher(voucher)}
-								disabled={!voucher.isApplicable}
+								disabled={!voucher.is_applicable}
 							>
 								<LinearGradient
 									colors={getVoucherColors(voucher) || ['#C67C4E', '#A0643C']}
@@ -298,32 +308,46 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 											/>
 										</View>
 										<View style={styles.voucherCardDetails}>
-											<Text style={styles.voucherCardTitle}>
+											<Text
+												style={styles.voucherCardTitle}
+												numberOfLines={1}
+												ellipsizeMode="tail"
+											>
 												{voucher.voucher_name}
 											</Text>
-											<Text style={styles.voucherCardCode}>
+											<Text
+												style={styles.voucherCardCode}
+												numberOfLines={1}
+												ellipsizeMode="tail"
+											>
 												{voucher.voucher_code}
 											</Text>
-											<Text style={styles.voucherCardExpiry}>
+											<Text
+												style={styles.voucherCardExpiry}
+												numberOfLines={1}
+												ellipsizeMode="tail"
+											>
 												{voucher.voucher_end_date}
 											</Text>
 
 											{/* Selected indicator */}
-											{selectedVoucherCode === voucher.voucher_code && (
-												<View style={styles.selectedIndicator}>
-													<Ionicons
-														name="checkmark-circle"
-														size={14}
-														color="#FFFFFF"
-													/>
-												</View>
-											)}
+											{appliedVoucher &&
+												(appliedVoucher as Voucher).voucher_code ===
+													voucher.voucher_code && (
+													<View style={styles.selectedIndicator}>
+														<Ionicons
+															name="checkmark-circle"
+															size={14}
+															color="#FFFFFF"
+														/>
+													</View>
+												)}
 										</View>
 									</View>
 								</LinearGradient>
 
 								{/* Disabled overlay for invalid vouchers */}
-								{!voucher.isApplicable && (
+								{!voucher.is_applicable && (
 									<View style={styles.disabledOverlay}>
 										<Text style={styles.disabledText}>{t('notAvailable')}</Text>
 									</View>
@@ -332,7 +356,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 						))}
 					</ScrollView>
 				</View>
-			)}
+			}
 		</View>
 	)
 }
@@ -473,22 +497,25 @@ const styles = StyleSheet.create({
 	},
 	voucherCardDetails: {
 		flex: 1,
+		overflow: 'hidden',
 	},
 	voucherCardTitle: {
 		fontSize: 14,
 		fontFamily: 'Inter-SemiBold',
 		color: '#FFFFFF',
+		marginBottom: 4,
 	},
 	voucherCardCode: {
 		fontSize: 12,
 		fontFamily: 'Inter-Medium',
 		color: '#FFFFFF',
-		marginTop: 4,
+		marginTop: 2,
 		backgroundColor: 'rgba(255, 255, 255, 0.2)',
 		paddingHorizontal: 6,
 		paddingVertical: 2,
 		borderRadius: 4,
 		alignSelf: 'flex-start',
+		maxWidth: '100%',
 	},
 	voucherCardExpiry: {
 		fontSize: 10,
@@ -543,6 +570,7 @@ const styles = StyleSheet.create({
 	selectedVoucherContent: {
 		flex: 1,
 		paddingRight: 8,
+		overflow: 'hidden',
 	},
 	selectedVoucherName: {
 		fontSize: 14,
@@ -554,6 +582,8 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		fontFamily: 'Inter-Regular',
 		color: '#686868',
+		numberOfLines: 1,
+		ellipsizeMode: 'tail',
 	},
 	selectedVoucherArrow: {
 		width: 40,

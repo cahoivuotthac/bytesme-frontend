@@ -197,6 +197,7 @@ export default {
 	shippingFee: "Shipping Fee",
 	confirmDeliveryAddress: "Confirm delivery address",
 	confirmPaymentMethod: "Confirm payment method",
+	yourOrder: "Review your order",
 
 	// Vouchers
 	bytesmeVoucher: "Bytesme Voucher",
