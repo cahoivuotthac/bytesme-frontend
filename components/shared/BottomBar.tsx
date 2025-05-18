@@ -60,6 +60,7 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 	const currentPath = usePathname()
 	const { t } = useTranslation()
 	const [pulseAnimation] = useState(new Animated.Value(1))
+	const [activeTabIndex, setActiveTabIndex] = useState(0)
 
 	// Start the pulse animation when component mounts
 	React.useEffect(() => {
@@ -79,14 +80,10 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 		).start()
 	}, [])
 
-	// Function to determine if a tab is active
-	const isActive = (path: string) => {
-		return currentPath.includes(path)
-	}
-
 	// Function to navigate to a tab
-	const navigateToTab = (path: string) => {
-		router.push(path as any)
+	const handleTabPressed = (tabIndex: number) => {
+		setActiveTabIndex(tabIndex)
+		router.push(TABS[tabIndex].path as any)
 	}
 
 	// Handle featured deals/promotions button press
@@ -103,18 +100,18 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 
 			{/* Container for the actual content */}
 			<View style={styles.mainContainer}>
-				{TABS.map((tab, index) => {
-					const active = isActive(tab.path)
+				{TABS.map((tab, tabIndex) => {
+					const isActive = tabIndex === activeTabIndex
 
 					return (
 						<TouchableOpacity
 							key={tab.name}
 							style={[
 								styles.tabButton,
-								index === 1 ? { marginRight: 20 } : {},
-								index === 2 ? { marginLeft: 20 } : {},
+								tabIndex === 1 ? { marginRight: 20 } : {},
+								tabIndex === 2 ? { marginLeft: 20 } : {},
 							]}
-							onPress={() => navigateToTab(tab.path)}
+							onPress={() => handleTabPressed(tabIndex)}
 							activeOpacity={1.0}
 						>
 							<Image
@@ -123,14 +120,14 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 									width: 24,
 									height: 24,
 									tintColor: '#DF7A82',
-									opacity: active ? 1.0 : 0.4,
+									opacity: isActive ? 1.0 : 0.4,
 								}}
 							/>
 
 							<Text
 								style={[
 									styles.tabLabel,
-									active ? styles.activeTabLabel : styles.inactiveTabLabel,
+									isActive ? styles.activeTabLabel : styles.inactiveTabLabel,
 								]}
 								numberOfLines={1}
 							>

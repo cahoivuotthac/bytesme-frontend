@@ -22,6 +22,7 @@ import DishDecoration from '@/components/shared/DishDecoration'
 import { addToWishlist, cartAPI, removeFromWishlist } from '@/utils/api'
 import DashedLine from 'react-native-dashed-line'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { formatPrice } from '@/utils/display'
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window')
@@ -39,11 +40,12 @@ export interface CartItem {
 	isWishlisted: boolean
 	selectedSizeIndex: number
 	discountPercentage: number
+	discountPrice?: number
 	recommendationMessage?: string // Recommendation message
 }
 
 export default function CartScreen() {
-	const { t } = useTranslation()
+	const { t, locale } = useTranslation()
 	const router = useRouter()
 	const { AlertComponent, showError } = useAlert()
 
@@ -67,51 +69,6 @@ export default function CartScreen() {
 	const fetchCartItems = async () => {
 		setIsLoading(true)
 		try {
-			// 	// Simulating API call with mock data
-			// 	setTimeout(() => {
-			// 		const mockItems: CartItem[] = [
-			// 			{
-			// 				productId: 18,
-			// 				productName: 'Cappuccino',
-			// 				prices: [59000, 69000, 79000],
-			// 				sizes: ['S', 'M', 'L'],
-			// 				quantity: 1,
-			// 				imageUrl:
-			// 					'https://images.unsplash.com/photo-1572442388796-11668a67e53d',
-			// 				selectedSizeIndex: 1, // Start with M size selected
-			// 				isSelected: false,
-			// 				isWishlisted: false,
-			// 			},
-			// 			{
-			// 				productId: 19,
-			// 				productName: 'Tiramisu Cake',
-			// 				prices: [79000, 89000, 99000, 109000],
-			// 				sizes: ['S', 'M', 'L', 'XL'],
-			// 				quantity: 2,
-			// 				imageUrl:
-			// 					'https://images.unsplash.com/photo-1571115177098-24ec42ed204d',
-			// 				selectedSizeIndex: 2, // Start with L size selected
-			// 				isSelected: true,
-			// 				isWishlisted: false,
-			// 			},
-			// 			{
-			// 				productId: 20,
-			// 				productName: 'Chocolate Croissant',
-			// 				prices: [35000, 45000, 55000],
-			// 				sizes: ['S', 'M', 'L'],
-			// 				quantity: 1,
-			// 				imageUrl:
-			// 					'https://images.unsplash.com/photo-1608198093002-ad4e005484ec',
-			// 				selectedSizeIndex: 1, // Start with M size selected
-			// 				isSelected: true,
-			// 				isWishlisted: false,
-			// 			},
-			// 		]
-			// 		setCartItems(mockItems)
-			// 		setSelectAll(mockItems.every((item) => item.isSelected))
-			// setIsLoading(false)
-			// }, 800)
-
 			// Fetch cart items from API
 			const response = await cartAPI.getCartItems()
 			const { cartItems } = response.data
@@ -139,8 +96,8 @@ export default function CartScreen() {
 				return {
 					productId: item.product.product_id,
 					productName: item.product.product_name,
-					prices: [25000, 30000, 35000], // @TODO: replace with actual prices later;
-					sizes: ['S', 'M', 'L'],
+					prices: item.product.product_unit_price.prices,
+					sizes: item.product.product_unit_price.sizes,
 					quantity: item.cart_items_quantity,
 					imageUrl: item.product.product_images[0].image_url, // @TODO: fill images into db later
 					isSelected:
@@ -150,7 +107,7 @@ export default function CartScreen() {
 					isWishlisted: item.is_wishlisted,
 					selectedSizeIndex: getSelectedSizeIndex(
 						item.cart_items_size,
-						item.product.product_sizes_prices
+						item.product.product_unit_price.sizes
 					),
 					discountPercentage: item.product.product_discount_percentage,
 					recommendationMessage: '', // @TODO: implement this later
@@ -159,6 +116,7 @@ export default function CartScreen() {
 
 			// Resolve all promises before setting state
 			const processedCartItems = await Promise.all(promises)
+			console.log('Processed cart items:', processedCartItems)
 			setCartItems(processedCartItems)
 		} catch (error) {
 			console.error('Failed to fetch cart items:', error)
@@ -170,7 +128,7 @@ export default function CartScreen() {
 	}
 
 	// Change the size of a product
-	const changeSize = (productId: number, sizeIndex: number) => {
+	const changeSize = async (productId: number, sizeIndex: number) => {
 		try {
 			let selectedSize = ''
 			setCartItems((prevItems) =>
@@ -184,24 +142,27 @@ export default function CartScreen() {
 				})
 			)
 
-			cartAPI.updateItemSize(productId, selectedSize)
-		} catch (error) {}
+			await cartAPI.updateItemSize(productId, selectedSize)
+		} catch (error) {
+			showError(t('errorUpdatingSize'))
+			console.error('Error updating size:', error)
+		}
 	}
 
 	// Calculate total price based on selected items
 	const calculateTotalPrice = () => {
 		const total = cartItems.reduce((sum, item) => {
 			if (item.isSelected) {
-				return sum + item.prices[item.selectedSizeIndex] * item.quantity
+				const unitPrice = Math.round(
+					(item.prices[item.selectedSizeIndex] *
+						(100 - item.discountPercentage)) /
+						100
+				)
+				return sum + unitPrice * item.quantity
 			}
 			return sum
 		}, 0)
 		setTotalPrice(total)
-	}
-
-	// Format price with Vietnamese dong symbol
-	const formatPrice = (price: number) => {
-		return `${price.toLocaleString('vi-VN')}đ`
 	}
 
 	// Handle quantity increment
@@ -433,21 +394,26 @@ export default function CartScreen() {
 
 						<View style={styles.itemPriceRow}>
 							<Text style={styles.itemPrice}>
-								{item.discountPercentage && (
-									<Text
-										style={{
-											textDecorationLine: 'line-through',
-											color: '#9B9B9B',
-										}}
-									>
-										{formatPrice(
-											item.prices[item.selectedSizeIndex] *
-												(1 - item.discountPercentage / 100)
-										)}
-									</Text>
+								{item.discountPercentage && item.discountPercentage > 0 ? (
+									<>
+										<Text
+											style={{
+												textDecorationLine: 'line-through',
+												color: '#9B9B9B',
+											}}
+										>
+											{formatPrice(item.prices[item.selectedSizeIndex], locale)}
+										</Text>
+										{'  '}
+									</>
+								) : null}
+								{formatPrice(
+									Math.round(
+										item.prices[item.selectedSizeIndex] *
+											(1 - item.discountPercentage / 100)
+									),
+									locale
 								)}
-								{'  '}
-								{formatPrice(item.prices[item.selectedSizeIndex])}
 							</Text>
 							{/* Heart button */}
 							<TouchableOpacity
@@ -543,7 +509,9 @@ export default function CartScreen() {
 					<View style={styles.summaryContainer}>
 						<View style={styles.totalRow}>
 							<Text style={styles.totalLabel}>{t('total')}</Text>
-							<Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
+							<Text style={styles.totalValue}>
+								{formatPrice(totalPrice, locale)}
+							</Text>
 						</View>
 
 						<Button

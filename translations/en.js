@@ -6,6 +6,8 @@ export default {
 	errorRetry: "An error occurred, please try again",
 	phone: "Phone number",
 	apply: "Apply",
+	cancel: "Cancel",
+	confirm: "Confirm",
 
 	// Product Cards
 	discount: "Discount",
@@ -167,6 +169,7 @@ export default {
 
 	// Cart page
 	checkout: "Purchase",
+	noAddressFound: "You haven't setup a delivery address yet",
 	subtotal: "Subtotal",
 	deliveryFee: "Delivery Fee",
 	total: "Total",
@@ -178,6 +181,7 @@ export default {
 	errorUpdatingQuantity: "Cannot update item quantity",
 	errorRemovingFromCart: "Error removing item from cart",
 	errorFetchingCartItems: "Error fetching cart items",
+	errorUpdatingSize: "Không thể cập nhật kích cỡ sản phẩm. Vui lòng thử lại.",
 
 	// Checkout page
 	deliveryAddress: "Delivery Address",
@@ -198,6 +202,7 @@ export default {
 	confirmDeliveryAddress: "Confirm delivery address",
 	confirmPaymentMethod: "Confirm payment method",
 	yourOrder: "Review your order",
+	confirmPlaceOrder: "Confirm and place order",
 
 	// Vouchers
 	bytesmeVoucher: "Bytesme Voucher",
@@ -215,18 +220,38 @@ export default {
 	freeShipping: "Free shipping",
 	percentageOff: "{percent}% off",
 
-	// Voucher Screen
+	// Voucher rules and conditions
+	moreVouchers: "Discover vouchers",
+	specificCategories: "Only valid for specific product categories",
+	specificProducts: "Only valid for specific products",
+	deliveryDistanceLimit: "Delivery distance restriction applies",
+	limitedQuantity: "Limited availability",
+	onlyLeft: "Only {count} vouchers left",
+	andMoreRules: "...and {count} more conditions",
+	voucherRules: "Voucher Conditions",
+	voucherDetails: "Voucher Details",
+	viewAllConditions: "View all conditions",
+	voucherExpired: "Voucher expired",
+	voucherNotYetActive: "Voucher not yet active",
+	voucherSelected: "Selected",
+	voucherNotApplicable: "Not applicable",
+	applyVoucher: "Apply Voucher",
+	voucherValue: "Voucher Value",
+	validFrom: "Valid from ",
+	validUntil: " until ",
+	days: "days",
+	noVoucherSelected: "No voucher selected",
+	pleaseSelectAddress: "Please pick a delivery address",
+	voucherAlreadyApplied: "Voucher already applied",
+	showLess: "Show less",
+	firstOrderOnly: "First order only",
+	minimumOrderValue: "Minimum order {value}",
+	minimumItems: "Minimum {count} items",
+	maximumDiscount: "Maximum discount {value}",
 	chonBytesmeVoucher: "Choose Bytesme Voucher",
 	dangTaiVoucher: "Loading vouchers...",
+	dangTai: "Loading...",
 	xemThem: "See more",
-	browseAll: "Browse all",
-	applyVoucher: "Apply voucher",
-	chonVoucher: "Choose voucher",
-	voucherUnavailable: "This voucher is not available for your order",
-	pleaseSelectVoucher: "Please select a voucher",
-	voucherSelected: "voucher selected",
-	appliedToOrder: "Applied to order",
-	minOrderValue: "Minimum order",
-	validUntil: "Valid until:",
-	noVoucherSelected: "No voucher selected",
+	percentageOff: "{percent}% off",
+	freeShipping: "Free shipping",
 };

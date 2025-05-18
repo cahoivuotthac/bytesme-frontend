@@ -8,6 +8,8 @@ import {
 	SafeAreaView,
 	ActivityIndicator,
 	Image,
+	Modal,
+	Animated,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -18,16 +20,11 @@ import { voucherAPI } from '@/utils/api'
 import ZigzagBorder from '@/components/shared/ZigzagBorder'
 import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
+import VoucherRuleDisplay from '@/components/shared/VoucherRuleDisplay'
+import { formatDate } from '@/utils/display'
+import { formatVoucherValue } from '@/utils/vouchers'
 
 // Helper function to format date
-const formatDate = (dateString: string) => {
-	const date = new Date(dateString)
-	return date.toLocaleDateString('vi-VN', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
-	})
-}
 
 // Get voucher thumbnail image based on voucher type
 const getVoucherIcon = (voucherField: string) => {
@@ -82,6 +79,7 @@ interface VoucherItemProps {
 	is_applicable: boolean
 	isBestChoice: boolean
 	onSelect: (voucher: Voucher) => void
+	onApply: (voucher: Voucher) => void
 }
 
 const VoucherItem = ({
@@ -90,151 +88,291 @@ const VoucherItem = ({
 	isBestChoice,
 	is_applicable = true,
 	onSelect,
+	onApply,
 }: VoucherItemProps) => {
-	const { t } = useTranslation()
+	const { t, locale } = useTranslation()
 	const cardRef = useRef(null)
 	const [cardHeight, setCardHeight] = useState(0)
-	const expiryDate = formatDate(voucher.voucher_end_date)
+	const expiryDate = formatDate(voucher.voucher_end_date, locale)
 	const colors = getVoucherColors(voucher.voucher_fields)
+	const [showDetailsModal, setShowDetailsModal] = useState(false)
+	const [expandRules, setExpandRules] = useState(false)
+	const scaleAnim = useRef(new Animated.Value(1)).current
+
+	// Handle selection animation
+	useEffect(() => {
+		if (isSelected) {
+			Animated.sequence([
+				Animated.timing(scaleAnim, {
+					toValue: 1.03,
+					duration: 150,
+					useNativeDriver: true,
+				}),
+				Animated.timing(scaleAnim, {
+					toValue: 1,
+					duration: 150,
+					useNativeDriver: true,
+				}),
+			]).start()
+		}
+	}, [isSelected])
 
 	// Add opacity to non-applicable vouchers
-	const notApplicableStyle = !is_applicable ? { opacity: 0.1 } : {}
+	const notApplicableStyle = !is_applicable ? { opacity: 0.5 } : {}
 
 	return (
-		<View
-			style={[styles.voucherCardWrapper, notApplicableStyle]}
-			ref={cardRef}
-			onLayout={(event) => {
-				const { height } = event.nativeEvent.layout
-				setCardHeight(height)
-			}}
-		>
-			{/* Floating bottom decoration layers */}
-			<View style={[styles.floatingLayer1, { backgroundColor: '#E5E5E5' }]} />
-			<View style={[styles.floatingLayer2, { backgroundColor: '#F0F0F0' }]} />
-
-			{/* Main card */}
-			<TouchableOpacity
-				style={[
-					styles.voucherCard,
-					{ backgroundColor: isSelected ? colors.lightBg : '#FFFFFF' },
-				]}
-				onPress={() => onSelect(voucher)}
-				activeOpacity={0.8}
-				disabled={!is_applicable}
+		<>
+			<Animated.View
+				style={{
+					transform: [{ scale: scaleAnim }],
+					width: '100%',
+				}}
 			>
-				{/* Left side with background color and icon */}
-				<View style={[styles.voucherLeft, { backgroundColor: colors.bg }]}>
-					<View style={styles.voucherIconContainer}>
-						<Image
-							source={getVoucherIcon(voucher.voucher_fields)}
-							style={styles.voucherIcon}
-							resizeMode="contain"
-						/>
-					</View>
-					<Text style={styles.voucherName}>{voucher.voucher_name}</Text>
+				<View
+					style={[styles.voucherCardWrapper, notApplicableStyle]}
+					ref={cardRef}
+					onLayout={(event) => {
+						const { height } = event.nativeEvent.layout
+						setCardHeight(height)
+					}}
+				>
+					{/* Floating bottom decoration layers */}
+					<View
+						style={[styles.floatingLayer1, { backgroundColor: '#E5E5E5' }]}
+					/>
+					<View
+						style={[styles.floatingLayer2, { backgroundColor: '#F0F0F0' }]}
+					/>
 
-					{/* Zigzag border now at the right side of left card */}
-					{cardHeight > 0 && (
-						<View style={styles.zigzagContainer}>
-							<ZigzagBorder
-								height={cardHeight}
-								width={3}
-								color="#FB6D3A"
-								position="right"
-							/>
+					{/* Main card */}
+					<TouchableOpacity
+						style={[
+							styles.voucherCard,
+							{ backgroundColor: isSelected ? colors.lightBg : '#FFFFFF' },
+						]}
+						onPress={() => onSelect(voucher)}
+						activeOpacity={0.8}
+						disabled={!is_applicable}
+					>
+						{/* Left side with background color and icon */}
+						<View style={[styles.voucherLeft, { backgroundColor: colors.bg }]}>
+							<View style={styles.voucherIconContainer}>
+								<Image
+									source={getVoucherIcon(voucher.voucher_fields)}
+									style={styles.voucherIcon}
+									resizeMode="contain"
+								/>
+							</View>
+							<Text style={styles.voucherName}>{voucher.voucher_name}</Text>
+
+							{/* Zigzag border now at the right side of left card */}
+							{cardHeight > 0 && (
+								<View style={styles.zigzagContainer}>
+									<ZigzagBorder
+										height={cardHeight}
+										width={3}
+										color={colors.bg} // Use the dynamic background color based on voucher type
+										position="right"
+									/>
+								</View>
+							)}
 						</View>
-					)}
-				</View>
 
-				{/* Dashed line separator - now at the left side of right card */}
-				<View style={styles.dashedLine}>
-					{Array.from({ length: Math.ceil(cardHeight / 6) }).map((_, index) => (
-						<View key={index} style={styles.dashLine} />
-					))}
-				</View>
+						{/* Dashed line separator - now at the left side of right card */}
+						<View style={styles.dashedLine}>
+							{Array.from({ length: Math.ceil(cardHeight / 6) }).map(
+								(_, index) => (
+									<View key={index} style={styles.dashLine} />
+								)
+							)}
+						</View>
 
-				{/* Right side with details */}
-				<View style={styles.voucherRight}>
-					<View style={styles.voucherDetails}>
-						<Text style={styles.voucherDescription}>
-							{voucher.voucher_description}
-						</Text>
-						<Text
-							style={[styles.voucherMinimum, { color: colors.highlightText }]}
-						>
-							Đơn tối thiểu{' '}
-							{parseInt(
-								voucher.voucher_rules?.[0]?.voucher_rule_value || '300000'
-							).toLocaleString('vi-VN')}
-							đ
-						</Text>
-						{!is_applicable && (
-							<Text
-								style={{
-									color: '#FF6B6B',
-									fontSize: 12,
-									fontFamily: 'Inter-Medium',
-									marginTop: 2,
-								}}
-							>
-								Không đủ điều kiện áp dụng
-							</Text>
-						)}
-						{voucher.voucher_end_date && (
-							<Text style={styles.voucherExpiry}>
-								{t('validUntil')} {expiryDate}
-							</Text>
-						)}
-					</View>
+						{/* Right side with details */}
+						<View style={styles.voucherRight}>
+							<View style={styles.voucherDetails}>
+								<Text style={styles.voucherDescription}>
+									{voucher.voucher_description}
+								</Text>
 
-					{/* Radio button */}
-					<View style={styles.radioContainer}>
-						<View
-							style={[
-								styles.radioOuter,
-								isSelected && [
-									styles.radioOuterSelected,
-									{ borderColor: colors.highlightText },
-								],
-							]}
-						>
+								{/* Use VoucherRuleDisplay for showing rules */}
+								<VoucherRuleDisplay
+									rules={voucher.voucher_rules}
+									style={styles.rulesContainer}
+									isExpanded={false}
+									maxRulesCollapsed={2}
+								/>
+
+								{/* Show unavailable message if not applicable */}
+								{!is_applicable && (
+									<Text style={styles.notApplicableText}>
+										{t('voucherNotApplicable')}
+									</Text>
+								)}
+
+								{/* Show expiry date */}
+								{voucher.voucher_end_date && (
+									<Text style={styles.voucherExpiry}>
+										{t('validUntil')} {expiryDate}
+									</Text>
+								)}
+
+								{/* Show details button */}
+								{voucher.voucher_rules && voucher.voucher_rules.length > 0 && (
+									<TouchableOpacity
+										style={styles.viewDetailsButton}
+										onPress={() => setShowDetailsModal(true)}
+									>
+										<Text style={styles.viewDetailsText}>
+											{t('viewAllConditions')}
+										</Text>
+										<Ionicons name="chevron-down" size={12} color="#C67C4E" />
+									</TouchableOpacity>
+								)}
+							</View>
+
+							{/* Radio button */}
+							<View style={styles.radioContainer}>
+								<View
+									style={[
+										styles.radioOuter,
+										isSelected && [
+											styles.radioOuterSelected,
+											{ borderColor: colors.highlightText },
+										],
+									]}
+								>
+									{isSelected && (
+										<View
+											style={[
+												styles.radioInner,
+												{ backgroundColor: colors.highlightText },
+											]}
+										/>
+									)}
+								</View>
+							</View>
+
+							{/* Best choice badge */}
+							{isBestChoice && voucher.is_applicable && (
+								<View style={styles.bestChoiceBadge}>
+									<Text style={styles.bestChoiceText}>Lựa chọn tốt nhất</Text>
+								</View>
+							)}
+
+							{/* "Đã chọn" badge */}
 							{isSelected && (
 								<View
 									style={[
-										styles.radioInner,
-										{ backgroundColor: colors.highlightText },
+										styles.selectedBadge,
+										{ backgroundColor: `${colors.highlightText}1A` },
 									]}
-								/>
+								>
+									<Text
+										style={[
+											styles.selectedText,
+											{ color: colors.highlightText },
+										]}
+									>
+										Đã chọn
+									</Text>
+								</View>
 							)}
+						</View>
+					</TouchableOpacity>
+				</View>
+			</Animated.View>
+
+			{/* Voucher Details Modal */}
+			<Modal
+				animationType="fade"
+				transparent={true}
+				visible={showDetailsModal}
+				onRequestClose={() => setShowDetailsModal(false)}
+			>
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<View style={styles.modalHeader}>
+							<Text style={styles.modalTitle}>{t('voucherDetails')}</Text>
+							<TouchableOpacity
+								onPress={() => setShowDetailsModal(false)}
+								style={styles.closeButton}
+							>
+								<Ionicons name="close" size={24} color="#333333" />
+							</TouchableOpacity>
+						</View>
+
+						<ScrollView
+							style={styles.modalBody}
+							showsVerticalScrollIndicator={false}
+						>
+							<Text style={styles.detailTitle}>{voucher.voucher_name}</Text>
+							<Text style={styles.detailCode}>{voucher.voucher_code}</Text>
+							<Text style={styles.detailDescription}>
+								{voucher.voucher_description}
+							</Text>
+
+							<View style={styles.voucherValueContainer}>
+								<Text style={styles.voucherValueLabel}>
+									{t('voucherValue')}:
+								</Text>
+								<Text style={styles.voucherValueText}>
+									{formatVoucherValue(voucher)}
+								</Text>
+							</View>
+
+							<View style={styles.validityContainer}>
+								<Text style={styles.validityLabel}>
+									{t('validFrom') +
+										formatDate(voucher.voucher_start_date, locale) +
+										t('validUntil') +
+										formatDate(voucher.voucher_end_date, locale)}
+								</Text>
+							</View>
+
+							<View style={styles.rulesContainer}>
+								<Text style={styles.rulesTitle}>{t('voucherRules')}</Text>
+								{/* <TouchableOpacity
+									style={styles.expandButton}
+									onPress={() => setExpandRules(!expandRules)}
+								>
+									<Text style={styles.expandButtonText}>
+										{expandRules ? t('showLess') : t('viewAllConditions')}
+									</Text>
+									<Ionicons
+										name={expandRules ? 'chevron-up' : 'chevron-down'}
+										size={16}
+										color="#C67C4E"
+									/>
+								</TouchableOpacity> */}
+
+								<VoucherRuleDisplay
+									rules={voucher.voucher_rules}
+									isExpanded={expandRules}
+									style={styles.rulesDisplay}
+								/>
+							</View>
+						</ScrollView>
+
+						<View style={styles.modalFooter}>
+							<Button
+								text={
+									!is_applicable ? t('voucherNotApplicable') : t('applyVoucher')
+								}
+								onPress={() => {
+									setShowDetailsModal(false)
+									if (is_applicable) {
+										onApply(voucher)
+									}
+								}}
+								style={styles.applyButton}
+								backgroundColor={is_applicable ? '#C67C4E' : '#CCCCCC'}
+								disabled={!is_applicable}
+							/>
 						</View>
 					</View>
 				</View>
-
-				{/* Best choice badge */}
-				{isBestChoice && voucher.is_applicable && (
-					<View style={styles.bestChoiceBadge}>
-						<Text style={styles.bestChoiceText}>Lựa chọn tốt nhất</Text>
-					</View>
-				)}
-
-				{/* "Đã chọn" badge */}
-				{isSelected && (
-					<View
-						style={[
-							styles.selectedBadge,
-							{ backgroundColor: `${colors.highlightText}1A` },
-						]}
-					>
-						<Text
-							style={[styles.selectedText, { color: colors.highlightText }]}
-						>
-							Đã chọn
-						</Text>
-					</View>
-				)}
-			</TouchableOpacity>
-		</View>
+			</Modal>
+		</>
 	)
 }
 
@@ -244,16 +382,18 @@ export default function VoucherPage() {
 
 	// Get checkout context data
 	const {
+		checkoutItems,
 		setIsLoadingVouchers,
 		subtotal,
+		deliveryFee,
+		appliedVoucher,
 		selectedVoucher,
 		setSelectedVoucher,
 		setAppliedVoucher,
 		vouchers,
 		setVouchers,
 		isLoadingVouchers,
-		calculateDiscountValue,
-		isVoucherApplicable,
+		// calculateDiscountValue,
 	} = useContext(CheckoutContext)
 
 	console.log('subtotal in voucher page: ', subtotal)
@@ -269,11 +409,17 @@ export default function VoucherPage() {
 	/**-------------------------------- Fetch vouchers on mount ------------------------------------------- */
 	useEffect(() => {
 		const fetchAllVouchers = async () => {
+			if (!checkoutItems || checkoutItems.length === 0) return
 			setIsLoadingVouchers(true)
 			try {
 				// In a real app, fetch from API
-				let vouchers = (await voucherAPI.getVouchers(0, pageSize))
-					.data as Voucher[]
+				let vouchers = (
+					await voucherAPI.getVouchers(
+						checkoutItems.map((item) => item.productId),
+						0,
+						pageSize
+					)
+				).data as Voucher[]
 				vouchers = vouchers.map((voucher) => ({
 					...voucher,
 					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
@@ -288,7 +434,7 @@ export default function VoucherPage() {
 		}
 
 		fetchAllVouchers()
-	}, [])
+	}, [checkoutItems, subtotal, deliveryFee])
 
 	/**-------------------------------- Sort vouchers ------------------------------------------- */
 	useEffect(() => {
@@ -319,8 +465,13 @@ export default function VoucherPage() {
 		const offset = nextPage * pageSize
 		setIsLoadingVouchers(true)
 		try {
-			const newVouchers = (await voucherAPI.getVouchers(offset, pageSize))
-				.data as Voucher[]
+			const newVouchers = (
+				await voucherAPI.getVouchers(
+					checkoutItems.map((item) => item.productId),
+					offset,
+					pageSize
+				)
+			).data as Voucher[]
 			if (newVouchers.length > 0) {
 				const updatedVouchers = [...vouchers, ...newVouchers]
 				setVouchers(updatedVouchers)
@@ -374,14 +525,20 @@ export default function VoucherPage() {
 	}, [selectedVoucher])
 
 	// Handle confirmation and return to checkout page
-	const handleApplyVoucher = () => {
+	const handleApplyVoucher = (
+		voucher: Voucher,
+		navigateBack: boolean = true
+	) => {
 		if (!selectedVoucherId) {
 			showInfo(t('noVoucherSelected'))
 			return
 		} else {
 			// const appliedVoucher = vouchers.find((v) => v.voucher_id === selected)
-			setAppliedVoucher(selectedVoucher)
-			router.back()
+			setSelectedVoucher(voucher)
+			setSelectedVoucherId(voucher.voucher_id)
+			setAppliedVoucher(voucher)
+			console.log('Setting applied voucher to: ', voucher)
+			if (navigateBack) router.back()
 		}
 	}
 
@@ -418,7 +575,13 @@ export default function VoucherPage() {
 								key={voucher.voucher_id}
 								voucher={voucher}
 								isSelected={voucher.voucher_id === selectedVoucherId}
+								// onSelect={selectVoucher}
 								onSelect={selectVoucher}
+								onApply={(voucher) => {
+									if (selectedVoucher) {
+										handleApplyVoucher(voucher, false)
+									}
+								}}
 								is_applicable={voucher.is_applicable}
 								isBestChoice={index === 0}
 							/>
@@ -462,9 +625,21 @@ export default function VoucherPage() {
 					{/* Apply Voucher Button*/}
 					<View style={styles.buttonContainer}>
 						<Button
-							text={t('applyVoucher')}
-							onPress={handleApplyVoucher}
-							disabled={selectedVoucherId == null}
+							text={
+								appliedVoucher &&
+								selectedVoucher?.voucher_id === appliedVoucher?.voucher_id
+									? t('voucherAlreadyApplied')
+									: t('applyVoucher')
+							}
+							onPress={() => {
+								if (selectedVoucher) {
+									handleApplyVoucher(selectedVoucher)
+								}
+							}}
+							disabled={
+								selectedVoucherId == null ||
+								selectedVoucher?.voucher_id === appliedVoucher?.voucher_id
+							}
 							style={styles.confirmButton}
 						/>
 					</View>
@@ -508,6 +683,29 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Medium',
 		color: '#383838',
 	},
+
+	rulesContainer: {
+		marginVertical: 4, // Reduced spacing
+	},
+	notApplicableText: {
+		color: '#FF6B6B',
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		marginTop: 4,
+		marginBottom: 2,
+	},
+	viewDetailsButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginTop: 6,
+	},
+	viewDetailsText: {
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		color: '#C67C4E',
+		marginRight: 4,
+	},
+
 	content: {
 		flex: 1,
 	},
@@ -553,13 +751,16 @@ const styles = StyleSheet.create({
 		backgroundColor: '#FFFFFF',
 		position: 'relative',
 		zIndex: 3,
+		alignItems: 'stretch', // Ensure children stretch to full height
+		minHeight: 120, // Set minimum height instead of fixed height
 	},
 	voucherLeft: {
-		width: 110,
+		width: '35%', // Increase width for more space for text
 		padding: 12,
+		paddingHorizontal: 8, // Adjusted horizontal padding
 		justifyContent: 'center',
 		alignItems: 'center',
-		paddingVertical: 16,
+		alignSelf: 'stretch', // Make left side stretch to card height
 		position: 'relative', // Needed for absolute positioning of zigzag
 		zIndex: 2,
 	},
@@ -576,6 +777,8 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		color: '#FFFFFF',
 		textAlign: 'center',
+		flexWrap: 'wrap',
+		lineHeight: 18,
 	},
 	dashedLine: {
 		position: 'absolute',
@@ -596,15 +799,18 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		padding: 16,
 		paddingLeft: 24, // Increased to provide space from the dashed line
+		justifyContent: 'space-between', // Ensure proper spacing between content and radio button
 	},
 	voucherDetails: {
 		flex: 1,
+		justifyContent: 'center', // Center content vertically
 	},
 	voucherDescription: {
-		fontSize: 16,
+		fontSize: 14, // Reduced from 16px to 14px
 		fontFamily: 'Inter-SemiBold',
 		color: '#383838',
-		marginBottom: 8,
+		marginBottom: 6, // Reduced spacing
+		flexShrink: 1,
 	},
 	voucherMinimum: {
 		fontSize: 13,
@@ -615,7 +821,7 @@ const styles = StyleSheet.create({
 		fontSize: 10,
 		fontFamily: 'Inter-Regular',
 		color: '#9E9E9E',
-		marginTop: 2,
+		marginTop: 4,
 	},
 	radioContainer: {
 		justifyContent: 'center',
@@ -755,5 +961,104 @@ const styles = StyleSheet.create({
 		borderBottomLeftRadius: 12,
 		borderBottomRightRadius: 12,
 		zIndex: 0,
+	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0, 0, 0, 0.5)',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	modalContent: {
+		width: '90%',
+		backgroundColor: '#FFFFFF',
+		borderRadius: 12,
+		padding: 16,
+	},
+	modalHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 16,
+	},
+	modalTitle: {
+		fontSize: 18,
+		fontFamily: 'Inter-SemiBold',
+		color: '#333333',
+	},
+	closeButton: {
+		padding: 8,
+	},
+	modalBody: {
+		maxHeight: '70%',
+	},
+	detailTitle: {
+		fontSize: 16,
+		fontFamily: 'Inter-SemiBold',
+		color: '#333333',
+		marginBottom: 8,
+	},
+	detailCode: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#666666',
+		marginBottom: 8,
+	},
+	detailDescription: {
+		fontSize: 14,
+		fontFamily: 'Inter-Regular',
+		color: '#666666',
+		marginBottom: 16,
+	},
+	voucherValueContainer: {
+		marginBottom: 16,
+	},
+	voucherValueLabel: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#333333',
+	},
+	voucherValueText: {
+		fontSize: 14,
+		fontFamily: 'Inter-SemiBold',
+		color: '#333333',
+	},
+	validityContainer: {
+		marginBottom: 16,
+	},
+	validityLabel: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#333333',
+	},
+	rulesContainer: {
+		marginBottom: 16,
+	},
+	rulesTitle: {
+		fontSize: 14,
+		fontFamily: 'Inter-SemiBold',
+		color: '#333333',
+		marginBottom: 8,
+	},
+	expandButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	expandButtonText: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#C67C4E',
+		marginRight: 4,
+	},
+	rulesDisplay: {
+		marginBottom: 16,
+	},
+	modalFooter: {
+		marginTop: 16,
+	},
+	applyButton: {
+		width: '100%',
+		paddingVertical: 12,
+		borderRadius: 8,
 	},
 })

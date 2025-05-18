@@ -16,7 +16,7 @@ import {
 	FlatList,
 	ActivityIndicator,
 } from 'react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { addressAPI, APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import * as Location from 'expo-location'
@@ -131,6 +131,9 @@ export default function InputAddressScreen() {
 	const { AlertComponent, showError, showSuccess } = useAlert()
 
 	const skipAddressItemResetRef = useRef(false)
+
+	const navigateBackPath =
+		(useLocalSearchParams().navigateBackPath as string) || '/(home)/product'
 
 	// Load provinces from JSON on component mount
 	useEffect(() => {
@@ -402,7 +405,7 @@ export default function InputAddressScreen() {
 			})
 
 			showSuccess(t('addressSaved') || 'Address saved successfully', () => {
-				router.replace('/(home)/product')
+				router.replace(navigateBackPath as any)
 			})
 		} catch (error) {
 			console.error('Error saving address:', error)
@@ -433,6 +436,7 @@ export default function InputAddressScreen() {
 					style={styles.backButton}
 					backgroundColor="transparent"
 					iconColor="rgba(198, 124, 78, 0.8)"
+					onPress={() => router.replace(navigateBackPath as any)}
 				/>
 				{/* <Text style={styles.headerTitle}>{t('checkout')}</Text> */}
 			</View>
@@ -649,7 +653,7 @@ export default function InputAddressScreen() {
 							</Text>
 						</TouchableOpacity>
 
-						{/* Next Button */}
+						{/* Save Button */}
 						<Button
 							style={[styles.nextButton]}
 							disabled={isLoading}
@@ -968,6 +972,7 @@ const styles = StyleSheet.create({
 	},
 	nextButton: {
 		alignItems: 'center',
+		width: '85%',
 		justifyContent: 'center',
 		marginTop: 30,
 		marginBottom: 20,

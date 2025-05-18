@@ -112,10 +112,11 @@ export const addressAPI = {
 };
 
 export const voucherAPI = {
-	getVouchers: (offset: number, limit: number) => {
+	getVouchers: (selectedItemIds: number[], offset: number, limit: number) => {
 		return APIClient.get(
 			"/voucher?" +
 				new URLSearchParams({
+					selected_item_ids: selectedItemIds.join(","),
 					offset: offset.toString(),
 					limit: limit.toString(),
 				}).toString()
@@ -128,5 +129,38 @@ export const voucherAPI = {
 
 	removeVoucher: () => {
 		return APIClient.post("/user/vouchers/remove");
+	},
+};
+
+export const orderAPI = {
+	getOrderHistory: (offset: number, limit: number) => {
+		return APIClient.get(
+			"/order?" +
+				new URLSearchParams({
+					offset: offset.toString(),
+					limit: limit.toString(),
+				}).toString()
+		);
+	},
+
+	placeOrder: (params: {
+		user_address_id: number;
+		payment_method_id: string;
+		voucher_code: string | null;
+		selected_item_ids: number[];
+	}) => {
+		const payload = params.voucher_code
+			? { ...params }
+			: Object.fromEntries(
+					Object.entries(params).filter(
+						([key]) => key !== "voucher_code"
+					)
+			  );
+		const response = APIClient.post("/order/place", {
+			...payload,
+			selected_item_ids: params.selected_item_ids.join(","),
+		});
+
+		return response;
 	},
 };

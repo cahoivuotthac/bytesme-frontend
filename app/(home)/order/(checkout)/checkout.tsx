@@ -14,12 +14,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
+import { useAlert } from '@/hooks/useAlert'
+import { addressAPI, voucherAPI, orderAPI } from '@/utils/api'
+import { CheckoutContext, Voucher } from './_layout'
+import { formatPrice } from '@/utils/display'
 import NavButton from '@/components/shared/NavButton'
 import VoucherSection from '@/components/shared/VoucherSection'
 import Button from '@/components/ui/Button'
-import { useAlert } from '@/hooks/useAlert'
-import { addressAPI, voucherAPI } from '@/utils/api'
-import { CheckoutContext, Voucher } from './_layout'
 
 interface UserAddress {
 	userAddressId: number
@@ -30,8 +31,17 @@ interface UserAddress {
 	isDefaultAddress: boolean
 }
 
+type PaymentMethodId = 'cod' | 'card' | 'momo' | 'vnpay' | 'vietqr'
+
+interface PaymentMethod {
+	id: PaymentMethodId
+	name: string
+	icon: string
+	iconColor: string
+}
+
 // Payment methods
-const PAYMENT_METHODS = [
+const PAYMENT_METHODS: PaymentMethod[] = [
 	{
 		id: 'cod',
 		name: 'Thanh toán khi nhận hàng\n(COD)',
@@ -50,11 +60,24 @@ const PAYMENT_METHODS = [
 		icon: 'wallet-outline',
 		iconColor: '#A94FD3',
 	},
+	{
+		id: 'vnpay',
+		name: 'VNPay\n**** **** **** 7122',
+		icon: 'wallet-outline',
+		iconColor: '#0066CC',
+	},
+	{
+		id: 'vietqr',
+		name: 'VietQR\n**** **** **** 7122',
+		icon: 'qr-code-outline',
+		iconColor: '#FFCC00',
+	},
 ]
 
 export default function CheckoutScreen() {
-	const { t } = useTranslation()
-	const { AlertComponent, showInfo, showError, showSuccess } = useAlert()
+	const { t, locale } = useTranslation()
+	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
+		useAlert()
 	const params = useLocalSearchParams()
 
 	// Get state from shared context
@@ -70,23 +93,20 @@ export default function CheckoutScreen() {
 		vouchers,
 		setVouchers,
 		setIsLoadingVouchers,
-		calculateDiscountValue,
-		isVoucherApplicable,
 	} = useContext(CheckoutContext)
 
 	// State
 	const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
 		null
 	)
-	const [selectedPayment, setSelectedPayment] = useState('cod')
+	const [selectedPaymentMethodId, setSelectedPaymentMethodId] =
+		useState<PaymentMethodId>('cod')
 	const [isLoading, setIsLoading] = useState(false)
 	const [applyingVoucher, setApplyingVoucher] = useState(false)
 	const [quickVouchers, setQuickVouchers] = useState<Voucher[]>([])
 
 	/**-------------------------------- Fetch user addresses ------------------------------------------- */
 	const [userAddresses, setUserAddresses] = useState<UserAddress[]>([])
-
-	console.log('subtotal in checkout page: ', subtotal)
 
 	useEffect(() => {
 		const fetchUserAddresses = async () => {
@@ -125,11 +145,21 @@ export default function CheckoutScreen() {
 	/**--------------------- Fetch quick vouchers ----------------- */
 	useEffect(() => {
 		const fetchQuickVouchers = async () => {
+			if (!checkoutItems || checkoutItems.length === 0) {
+				return
+			}
 			setIsLoadingVouchers(true)
+
 			try {
 				// In a real app, fetch from API
-				let quickVouchers = (await voucherAPI.getVouchers(0, 3))
-					.data as Voucher[]
+				console.log('checkoutItems in fetch quick vouchers:', checkoutItems)
+				let quickVouchers = (
+					await voucherAPI.getVouchers(
+						checkoutItems.map((item) => item.productId),
+						0,
+						3
+					)
+				).data as Voucher[]
 
 				quickVouchers = quickVouchers.map((voucher) => ({
 					...voucher,
@@ -140,7 +170,7 @@ export default function CheckoutScreen() {
 		}
 
 		fetchQuickVouchers()
-	}, [subtotal, deliveryFee])
+	}, [subtotal, deliveryFee, checkoutItems])
 
 	// Render address card
 	const renderAddressCard = (address: UserAddress) => {
@@ -220,14 +250,14 @@ export default function CheckoutScreen() {
 	}
 
 	// Render payment method
-	const renderPaymentMethod = (method) => {
-		const isSelected = selectedPayment === method.id
+	const renderPaymentMethod = (method: PaymentMethod) => {
+		const isSelected = selectedPaymentMethodId === method.id
 
 		return (
 			<TouchableOpacity
 				key={method.id}
 				style={styles.paymentMethodCard}
-				onPress={() => setSelectedPayment(method.id)}
+				onPress={() => setSelectedPaymentMethodId(method.id)}
 			>
 				<View style={styles.paymentIconContainer}>
 					<Ionicons name={method.icon} size={32} color={method.iconColor} />
@@ -291,14 +321,47 @@ export default function CheckoutScreen() {
 	}
 
 	// Handle place order
-	const handlePlaceOrder = () => {
+	const handlePlaceOrder = async () => {
+		if (!selectedAddressId) {
+			showError(t('pleaseSelectAddress'))
+			setIsLoading(false)
+			return
+		}
+
+		if (!selectedPaymentMethodId) {
+			showInfo(t('pleaseSelectPaymentMethod'))
+			setIsLoading(false)
+			return
+		}
+
+		// Order placement flow starts here
 		setIsLoading(true)
+		const params = {
+			user_address_id: selectedAddressId,
+			payment_method_id: selectedPaymentMethodId,
+			voucher_code: appliedVoucher?.voucher_code || null,
+			selected_item_ids: checkoutItems.map((item) => item.productId),
+		}
+		try {
+			switch (selectedPaymentMethodId) {
+				case 'cod':
+					await orderAPI.placeOrder({ ...params })
+					break
+				case 'vnpay':
+					await orderAPI.placeOrder({ ...params })
+					break
+			}
+			console.log('Order placed successfully:', params)
+		} catch (err) {
+			console.error('Error placing order:', err)
+			showError(t('orderFailed'))
+			setIsLoading(false)
+			return
+		}
+
+		setIsLoading(false)
 
 		// Simulate order placement
-		setTimeout(() => {
-			setIsLoading(false)
-			router.push('/order/confirm')
-		}, 1000)
 	}
 
 	return (
@@ -335,7 +398,7 @@ export default function CheckoutScreen() {
 
 					{checkoutItems.length > 0 ? (
 						<FlatList
-							data={checkoutItems.slice(0, 3)} // Show max 3 items
+							data={checkoutItems} // Show max 3 items
 							horizontal
 							showsHorizontalScrollIndicator={false}
 							keyExtractor={(item) => item.productId.toString()}
@@ -359,10 +422,12 @@ export default function CheckoutScreen() {
 										<View style={styles.itemQuantityPrice}>
 											<Text style={styles.itemQuantity}>x{item.quantity}</Text>
 											<Text style={styles.itemPrice}>
-												{(
-													item.prices[item.selectedSizeIndex] * item.quantity
-												).toLocaleString('vi-VN')}
-												đ
+												{formatPrice(
+													Math.round(
+														item.prices[item.selectedSizeIndex] * item.quantity
+													),
+													locale
+												)}
 											</Text>
 										</View>
 									</View>
@@ -403,7 +468,14 @@ export default function CheckoutScreen() {
 					{/* Add New Address Button */}
 					<TouchableOpacity
 						style={styles.addAddressButton}
-						onPress={() => router.push('/input-address')}
+						onPress={() =>
+							router.push({
+								pathname: '/input-address',
+								params: {
+									navigateBackPath: '/order/(checkout)/checkout',
+								},
+							})
+						}
 					>
 						<Ionicons name="add-circle" size={24} color="#C67C4E" />
 						<Text style={styles.addAddressText}>{t('addNewAddress')}</Text>
@@ -442,6 +514,7 @@ export default function CheckoutScreen() {
 					inputPlaceholder="Chọn hoặc nhập mã giảm giá"
 					onBrowseVouchers={navigateToVoucherPage}
 					appliedVoucher={appliedVoucher}
+					appliedVoucherCode={appliedVoucher?.voucher_code || ''}
 				/>
 
 				{/* Order Summary Section */}
@@ -449,7 +522,7 @@ export default function CheckoutScreen() {
 					<View style={styles.summaryRow}>
 						<Text style={styles.summaryLabel}>{t('subtotal')}</Text>
 						<Text style={styles.summaryValue}>
-							{subtotal.toLocaleString('vi-VN')}đ
+							{formatPrice(subtotal, locale)}
 						</Text>
 					</View>
 
@@ -465,29 +538,31 @@ export default function CheckoutScreen() {
 										{ textDecorationLine: 'line-through', marginRight: 8 },
 									]}
 								>
-									{deliveryFee.toLocaleString('vi-VN')}đ
+									{formatPrice(deliveryFee, locale)}
 								</Text>
 								<Text style={styles.discountValue}>
-									{Math.max(
-										0,
-										deliveryFee - appliedVoucher?.discount_value
-									).toLocaleString('vi-VN')}
-									đ
+									{formatPrice(
+										Math.max(
+											0,
+											deliveryFee - (appliedVoucher?.discount_value || 0)
+										),
+										locale
+									)}
 								</Text>
 							</View>
 						) : (
 							<Text style={styles.summaryValue}>
-								{deliveryFee.toLocaleString('vi-VN')}đ
+								{formatPrice(deliveryFee, locale)}
 							</Text>
 						)}
 					</View>
 
-					{(appliedVoucher?.discount_value ?? 0) > 0 &&
+					{appliedVoucher?.discount_value &&
 						appliedVoucher?.voucher_fields !== 'freeship' && (
 							<View style={styles.summaryRow}>
 								<Text style={styles.summaryLabel}>{t('discount')}</Text>
 								<Text style={styles.discountValue}>
-									-{appliedVoucher?.discount_value.toLocaleString('vi-VN')}đ
+									-{formatPrice(appliedVoucher.discount_value, locale)}
 								</Text>
 							</View>
 						)}
@@ -496,9 +571,7 @@ export default function CheckoutScreen() {
 
 					<View style={styles.totalRow}>
 						<Text style={styles.totalLabel}>{t('total')}</Text>
-						<Text style={styles.totalValue}>
-							{total.toLocaleString('vi-VN')}đ
-						</Text>
+						<Text style={styles.totalValue}>{formatPrice(total, locale)}</Text>
 					</View>
 				</View>
 

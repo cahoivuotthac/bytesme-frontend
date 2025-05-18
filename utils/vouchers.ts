@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import { Voucher, VoucherRule } from "@/app/(home)/order/(checkout)/_layout";
+import { useTranslation } from "@/providers/locale";
 
 // Voucher types
 
@@ -152,7 +153,7 @@ export const getAppliedVoucher = async (): Promise<Voucher | null> => {
 // 			message: "voucherError",
 // 		};
 // 	}
-};
+// };
 
 /**
  * Format voucher value for display
@@ -184,3 +185,23 @@ export const getAppliedVoucher = async (): Promise<Voucher | null> => {
 // 	const date = new Date(expiryDate);
 // 	return date.toLocaleDateString("vi-VN");
 // };
+
+export const formatVoucherValue = (voucher: Voucher) => {
+	const { t } = useTranslation();
+
+	const formattedValue = parseInt(voucher.voucher_value).toLocaleString(
+		"vi-VN"
+	);
+	switch (voucher.voucher_type) {
+		case "percentage":
+			return `${t("percentageOff").replace("{percent}", formattedValue)}`;
+		case "cash":
+			return `${t("percentageOff").replace(
+				"{percent}%",
+				formattedValue
+			)}đ`;
+		case "gift_product":
+			return voucher.voucher_description;
+	}
+	return "";
+};

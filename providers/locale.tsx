@@ -20,9 +20,10 @@ i18n.enableFallback = true
 i18n.defaultLocale = 'vi'
 
 // Context for managing language across the app
+type SupportedLocale = 'en' | 'vi'
 type LocaleContextType = {
-	locale: string
-	setLocale: (locale: string) => void
+	locale: SupportedLocale
+	setLocale: (locale: SupportedLocale) => void
 	t: (scope: string, options?: Record<string, any>) => string
 }
 
@@ -36,13 +37,17 @@ export const LocaleContext = createContext<LocaleContextType | undefined>(
 
 // Provider component for language management
 export const LocaleProvider = ({ children }: { children: React.ReactNode }) => {
-	const [locale, setLocale] = useState(i18n.locale || 'vi')
+	const [locale, setLocale] = useState<SupportedLocale>(
+		(i18n.locale as SupportedLocale) || 'vi'
+	)
 
 	// Effect to load saved language preference when app starts
 	useEffect(() => {
 		const loadSavedLocale = async () => {
 			try {
-				const savedLocale = await AsyncStorage.getItem(LOCALE_STORAGE_KEY)
+				const savedLocale = (await AsyncStorage.getItem(
+					LOCALE_STORAGE_KEY
+				)) as SupportedLocale
 				if (savedLocale) {
 					i18n.locale = savedLocale
 					setLocale(savedLocale)
@@ -56,7 +61,7 @@ export const LocaleProvider = ({ children }: { children: React.ReactNode }) => {
 	}, [])
 
 	// Function to change the language
-	const handleSetLocale = async (newLocale: string) => {
+	const handleSetLocale = async (newLocale: SupportedLocale) => {
 		try {
 			i18n.locale = newLocale
 			setLocale(newLocale)

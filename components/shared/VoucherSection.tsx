@@ -7,13 +7,14 @@ import {
 	TouchableOpacity,
 	TextInput,
 	ActivityIndicator,
-	Dimensions,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from '@/providers/locale'
-import Colors from '@/constants/Colors'
 import { Voucher } from '@/app/(home)/order/(checkout)/_layout'
+import { formatDate } from '@/utils/display'
+import VoucherRuleDisplay from './VoucherRuleDisplay'
+import Colors from '@/constants/Colors'
 
 interface VoucherSectionProps {
 	/**
@@ -24,7 +25,7 @@ interface VoucherSectionProps {
 	/**
 	 * Currently selected voucher code (if any)
 	 */
-	// appliedVoucherCode?: string
+	appliedVoucherCode?: string
 
 	/**
 	 * Callback when a voucher is selected
@@ -62,13 +63,12 @@ interface VoucherSectionProps {
 	onBrowseVouchers?: () => void
 
 	/**
-	 * Applied voucher from voucher page (if any)
+	 * Selected voucher from voucher page (if any)
 	 */
-	appliedVoucher: Voucher | null
+	appliedVoucher?: any
 }
 
 const getVoucherColors = (voucher: Voucher) => {
-	//
 	// Map voucher types to specific colors or return a default set
 	const colors = {
 		freeship: ['#F76F8E', '#FF9EB1'],
@@ -76,7 +76,6 @@ const getVoucherColors = (voucher: Voucher) => {
 		birthday_gift: ['#FF9800', '#FFC107'],
 		holiday: ['#FF5722', '#FF7043'],
 		shop_related: ['#009688', '#4DB6AC'],
-		// Add more color pairs for different voucher types
 	}
 
 	// Get colors based on voucher type or generate random colors
@@ -131,7 +130,7 @@ const getVoucherIcon = (
  */
 const VoucherSection: React.FC<VoucherSectionProps> = ({
 	vouchers = [],
-	// appliedVoucherCode = '',
+	appliedVoucherCode = '',
 	onSelectVoucher,
 	onApplyVoucherCode,
 	isLoading = false,
@@ -141,21 +140,22 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 	onBrowseVouchers,
 	appliedVoucher,
 }) => {
-	const { t } = useTranslation()
-	const [voucherCode, setVoucherCode] = useState(
-		appliedVoucher?.voucher_code || ''
+	const { t, locale } = useTranslation()
+	const [voucherCode, setVoucherCode] = useState(appliedVoucherCode)
+	const [expandedVoucherId, setExpandedVoucherId] = useState<number | null>(
+		null
 	)
 	const inputRef = useRef<TextInput>(null)
 
-	// Update local state when applied voucher changes from parent
+	// Update local state when selected voucher changes from parent
 	useEffect(() => {
 		// Only update if the voucher was selected from the list
-		if (appliedVoucher && appliedVoucher.voucher_code !== voucherCode) {
-			setVoucherCode(appliedVoucher.voucher_code)
+		if (appliedVoucherCode && appliedVoucherCode !== voucherCode) {
+			setVoucherCode(appliedVoucherCode)
 		} else {
 			setVoucherCode('')
 		}
-	}, [appliedVoucher])
+	}, [appliedVoucherCode])
 
 	// Handle manual voucher code application
 	const handleApplyVoucher = () => {
@@ -186,6 +186,11 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 		}
 	}
 
+	// Toggle expanded state for a voucher
+	const toggleExpandVoucher = (voucherId: number) => {
+		setExpandedVoucherId(expandedVoucherId === voucherId ? null : voucherId)
+	}
+
 	// If a voucher is selected from the voucher page, display it
 	if (appliedVoucher) {
 		return (
@@ -202,7 +207,11 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 					</View>
 
 					<View style={styles.selectedVoucherContent}>
-						<Text style={styles.selectedVoucherName}>
+						<Text
+							style={styles.selectedVoucherName}
+							numberOfLines={1}
+							ellipsizeMode="tail"
+						>
 							{appliedVoucher.voucher_name}
 						</Text>
 						<Text
@@ -212,6 +221,15 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 						>
 							{appliedVoucher.voucher_description}
 						</Text>
+
+						{/* Display voucher rules */}
+						{appliedVoucher.voucher_rules &&
+							appliedVoucher.voucher_rules.length > 0 && (
+								<VoucherRuleDisplay
+									rules={appliedVoucher.voucher_rules}
+									style={styles.rulesList}
+								/>
+							)}
 					</View>
 
 					<View style={styles.selectedVoucherArrow}>
@@ -270,7 +288,7 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 						</Text>
 						{onBrowseVouchers && (
 							<TouchableOpacity onPress={handleBrowseVouchers}>
-								<Text style={styles.browseAllText}>{t('browseAll')}</Text>
+								<Text style={styles.moreVouchersText}>{t('moreVouchers')}</Text>
 							</TouchableOpacity>
 						)}
 					</View>
@@ -280,18 +298,19 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 						showsHorizontalScrollIndicator={false}
 						contentContainerStyle={styles.vouchersScrollContent}
 					>
-						{vouchers.map((voucher: Voucher) => (
+						{vouchers.map((voucher) => (
 							<TouchableOpacity
 								key={voucher.voucher_id}
 								style={[
 									styles.voucherCard,
-									appliedVoucher &&
-										(appliedVoucher as Voucher).voucher_code ===
-											voucher.voucher_code &&
+									appliedVoucherCode === voucher.voucher_code &&
 										styles.voucherCardSelected,
+									!voucher.is_applicable && styles.voucherCardDisabled,
 								]}
-								onPress={() => handleSelectVoucher(voucher)}
-								disabled={!voucher.is_applicable}
+								onPress={() =>
+									voucher.is_applicable && handleSelectVoucher(voucher)
+								}
+								activeOpacity={voucher.is_applicable ? 0.7 : 1}
 							>
 								<LinearGradient
 									colors={getVoucherColors(voucher) || ['#C67C4E', '#A0643C']}
@@ -322,28 +341,62 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 											>
 												{voucher.voucher_code}
 											</Text>
+											{/* Display expiry date */}
 											<Text
 												style={styles.voucherCardExpiry}
 												numberOfLines={1}
 												ellipsizeMode="tail"
 											>
-												{voucher.voucher_end_date}
+												{formatDate(voucher.voucher_end_date, locale)}
 											</Text>
 
 											{/* Selected indicator */}
-											{appliedVoucher &&
-												(appliedVoucher as Voucher).voucher_code ===
-													voucher.voucher_code && (
-													<View style={styles.selectedIndicator}>
-														<Ionicons
-															name="checkmark-circle"
-															size={14}
-															color="#FFFFFF"
-														/>
-													</View>
-												)}
+											{appliedVoucherCode === voucher.voucher_code && (
+												<View style={styles.selectedIndicator}>
+													<Ionicons
+														name="checkmark-circle"
+														size={14}
+														color="#FFFFFF"
+													/>
+												</View>
+											)}
 										</View>
 									</View>
+
+									{/* Show voucher rules when expanded */}
+									{expandedVoucherId === voucher.voucher_id &&
+										voucher.voucher_rules && (
+											<View style={styles.expandedRulesContainer}>
+												<VoucherRuleDisplay
+													rules={voucher.voucher_rules}
+													isExpanded={true}
+												/>
+											</View>
+										)}
+
+									{/* Toggle button to show more rules */}
+									{voucher.voucher_rules &&
+										voucher.voucher_rules.length > 0 && (
+											<TouchableOpacity
+												style={styles.toggleRulesButton}
+												onPress={() => toggleExpandVoucher(voucher.voucher_id)}
+											>
+												<Text style={styles.toggleRulesText}>
+													{expandedVoucherId === voucher.voucher_id
+														? t('showLess')
+														: t('viewAllConditions')}
+												</Text>
+												<Ionicons
+													name={
+														expandedVoucherId === voucher.voucher_id
+															? 'chevron-up'
+															: 'chevron-down'
+													}
+													size={14}
+													color="#FFFFFF"
+												/>
+											</TouchableOpacity>
+										)}
 								</LinearGradient>
 
 								{/* Disabled overlay for invalid vouchers */}
@@ -451,7 +504,7 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		color: '#474747',
 	},
-	browseAllText: {
+	moreVouchersText: {
 		fontSize: 12,
 		fontFamily: 'Inter-Medium',
 		color: '#C67C4E',
@@ -461,8 +514,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 8,
 	},
 	voucherCard: {
-		width: 200,
-		height: 80,
+		width: 220,
 		borderRadius: 16,
 		overflow: 'hidden',
 		marginRight: 12,
@@ -477,14 +529,15 @@ const styles = StyleSheet.create({
 		borderWidth: 2,
 		borderColor: '#C67C4E',
 	},
+	voucherCardDisabled: {
+		opacity: 0.7,
+	},
 	voucherCardGradient: {
-		flex: 1,
 		padding: 12,
 	},
 	voucherCardContent: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		height: '100%',
 	},
 	voucherCardIcon: {
 		width: 40,
@@ -522,6 +575,25 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Regular',
 		color: 'rgba(255, 255, 255, 0.8)',
 		marginTop: 4,
+	},
+	expandedRulesContainer: {
+		marginTop: 12,
+		paddingTop: 10,
+		borderTopWidth: 1,
+		borderTopColor: 'rgba(255, 255, 255, 0.3)',
+	},
+	toggleRulesButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginTop: 8,
+		paddingVertical: 4,
+	},
+	toggleRulesText: {
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		color: '#FFFFFF',
+		marginRight: 4,
 	},
 	selectedIndicator: {
 		position: 'absolute',
@@ -589,6 +661,9 @@ const styles = StyleSheet.create({
 		width: 40,
 		justifyContent: 'center',
 		alignItems: 'center',
+	},
+	rulesList: {
+		marginTop: 4,
 	},
 })
 

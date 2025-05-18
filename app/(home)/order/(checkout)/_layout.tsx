@@ -4,29 +4,31 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CartItem } from '@/app/(home)/(profile)/cart'
 import { useAlert } from '@/hooks/useAlert'
 
-// Interface for voucher data
+// Interface for voucher rule
 export interface VoucherRule {
 	voucher_rule_id: number
 	voucher_rule_type: string
 	voucher_rule_value: string
+	is_fulfilled?: boolean // Whether the rule is fulfilled by the current order (set by backend)
+	message?: string // Human-readable message about the rule (set by backend)
 }
 
+// Interface for voucher data with additional fields for UI state
 export interface Voucher {
 	voucher_id: number
 	voucher_code: string
 	voucher_name: string
 	voucher_description: string
-	voucher_fields: string
+	voucher_fields: string // e.g. 'freeship', 'birthday_gift', etc.
 	voucher_start_date: string
 	voucher_end_date: string
-	voucher_type: string
-	voucher_value: number
+	voucher_type: string // 'cash', 'percentage', etc.
+	voucher_value: string
 	voucher_rules?: VoucherRule[]
-	is_applicable: boolean
-	discount_value: number
-
 	isSelected?: boolean
 	isAvailable?: boolean
+	is_applicable: boolean // Whether all rules are fulfilled (set by backend)
+	discount_value: number // Calculated discount value (set by backend)
 }
 
 // Create the context with proper typing
@@ -36,8 +38,7 @@ interface CheckoutContextType {
 	subtotal: number
 	deliveryFee: number
 	setDeliveryFee: React.Dispatch<React.SetStateAction<number>>
-	vouchers: Voucher[]
-	setVouchers: React.Dispatch<React.SetStateAction<Voucher[]>>
+	discount: number
 	setDiscount: React.Dispatch<React.SetStateAction<number>>
 	total: number
 	setTotal: React.Dispatch<React.SetStateAction<number>>
@@ -45,10 +46,10 @@ interface CheckoutContextType {
 	setSelectedVoucher: React.Dispatch<React.SetStateAction<Voucher | null>>
 	appliedVoucher: Voucher | null
 	setAppliedVoucher: React.Dispatch<React.SetStateAction<Voucher | null>>
+	vouchers: Voucher[]
+	setVouchers: React.Dispatch<React.SetStateAction<Voucher[]>>
 	isLoadingVouchers: boolean
 	setIsLoadingVouchers: React.Dispatch<React.SetStateAction<boolean>>
-	calculateDiscountValue: (voucher: Partial<Voucher>) => number
-	isVoucherApplicable: (voucher: Partial<Voucher>) => boolean
 }
 
 export const CheckoutContext = createContext<CheckoutContextType>({
@@ -57,8 +58,7 @@ export const CheckoutContext = createContext<CheckoutContextType>({
 	subtotal: 0,
 	deliveryFee: 20000,
 	setDeliveryFee: () => {},
-	vouchers: [],
-	setVouchers: () => {},
+	discount: 0,
 	setDiscount: () => {},
 	total: 0,
 	setTotal: () => {},
@@ -66,15 +66,17 @@ export const CheckoutContext = createContext<CheckoutContextType>({
 	setSelectedVoucher: () => {},
 	appliedVoucher: null,
 	setAppliedVoucher: () => {},
+	vouchers: [],
+	setVouchers: () => {},
 	isLoadingVouchers: false,
 	setIsLoadingVouchers: () => {},
-	calculateDiscountValue: () => 0,
-	isVoucherApplicable: () => false,
 })
 
 export default function CheckoutLayout() {
 	const [checkoutItems, setCheckoutItems] = useState<CartItem[]>([])
 	const [deliveryFee, setDeliveryFee] = useState(20000)
+	const [discount, setDiscount] = useState(0)
+	const [total, setTotal] = useState(0)
 	const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null)
 	const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null)
 	const [vouchers, setVouchers] = useState<Voucher[]>([])
@@ -83,17 +85,24 @@ export default function CheckoutLayout() {
 
 	// Calculate subtotal from checkout items
 	const subtotal = useMemo(() => {
+		if (!checkoutItems || checkoutItems.length === 0) return 0
+
 		return checkoutItems.reduce((total, item) => {
-			const price = item.prices[item.selectedSizeIndex]
+			const unitPrice = Math.round(
+				(item.prices[item.selectedSizeIndex] *
+					(100 - item.discountPercentage)) /
+					100
+			)
 			const quantity = item.quantity
-			return total + price * quantity
+			return total + unitPrice * quantity
 		}, 0)
 	}, [checkoutItems])
 
-	// Calculate total from subtotal, delivery fee, and discount
-	const total = useMemo(() => {
-		return subtotal + deliveryFee - (appliedVoucher?.discount_value || 0)
-	}, [subtotal, deliveryFee, appliedVoucher])
+	// Update total when dependencies change
+	useEffect(() => {
+		const newTotal = subtotal + deliveryFee - discount
+		setTotal(newTotal)
+	}, [subtotal, deliveryFee, discount])
 
 	// Fetch checkout items from AsyncStorage
 	useEffect(() => {
@@ -115,71 +124,26 @@ export default function CheckoutLayout() {
 		fetchCheckoutItems()
 	}, [])
 
-	/**-------------------------------- Calculate voucher discout value ------------------------------------------- */
-	const calculateDiscountValue = (voucher: Partial<Voucher>) => {
-		let discountValue = 0
+	// Update discount when applied voucher changes
+	useEffect(() => {
+		if (appliedVoucher) {
+			console.log('Applied voucher changed:', appliedVoucher)
 
-		switch (voucher.voucher_fields) {
-			case 'birthday_gift':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percentage') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
+			// Use discount value calculated by the backend
+			if (appliedVoucher.discount_value) {
+				setDiscount(appliedVoucher.discount_value)
+			}
 
-			case 'freeship':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				} else if (voucher.voucher_type === 'percentage') {
-					discountValue = (Number(voucher.voucher_value) * deliveryFee) / 100
-				}
-				break
-
-			case 'loyal_customer':
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				}
-				if (voucher.voucher_type === 'percentage') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
-
-			default:
-				if (voucher.voucher_type === 'cash') {
-					discountValue = Number(voucher.voucher_value)
-				}
-				if (voucher.voucher_type === 'percentage') {
-					discountValue = (Number(voucher.voucher_value) * subtotal) / 100
-				}
-				break
+			// Save to AsyncStorage for persistence
+			// try {
+			// 	AsyncStorage.setItem('appliedVoucher', JSON.stringify(appliedVoucher))
+			// } catch (error) {
+			// 	console.error('Error saving voucher:', error)
+			// }
+		} else {
+			setDiscount(0)
 		}
-
-		const maxDiscountRule = voucher.voucher_rules?.find(
-			(rule) => rule.voucher_rule_type === 'max_discount'
-		)
-		if (maxDiscountRule) {
-			discountValue = Math.min(
-				discountValue,
-				Number(maxDiscountRule.voucher_rule_value)
-			)
-		}
-
-		return discountValue
-	}
-
-	/**-------------------------------- Check if a voucher is applicable based on the rules ------------------------------------------- */
-	const isVoucherApplicable = (voucher: Partial<Voucher>) => {
-		const minRule = voucher.voucher_rules?.find(
-			(rule) => rule.voucher_rule_type === 'min_bill_price'
-		)
-		const minAmount = minRule ? parseInt(minRule.voucher_rule_value) : 0
-		if (subtotal < minAmount) {
-			return false
-		}
-
-		return true
-	}
+	}, [appliedVoucher])
 
 	const contextValue = {
 		checkoutItems,
@@ -187,8 +151,10 @@ export default function CheckoutLayout() {
 		subtotal,
 		deliveryFee,
 		setDeliveryFee,
+		discount,
+		setDiscount,
 		total,
-		setTotal: (newTotal: number) => {}, // This is a computed value, so the setter is a no-op
+		setTotal,
 		selectedVoucher,
 		setSelectedVoucher,
 		appliedVoucher,
@@ -197,16 +163,14 @@ export default function CheckoutLayout() {
 		setVouchers,
 		isLoadingVouchers,
 		setIsLoadingVouchers,
-		calculateDiscountValue,
-		isVoucherApplicable,
 	}
 
 	return (
 		<CheckoutContext.Provider value={contextValue}>
 			<Stack screenOptions={{ headerShown: false }}>
-				{/* Main checkout screens */}
-				<Stack.Screen name="order/checkout" />
-				<Stack.Screen name="order/voucher" />
+				<Stack.Screen name="/order/(checkout)/checkout" />
+				<Stack.Screen name="/order/(checkout)/voucher" />
+				<Stack.Screen name="/input-address" />
 			</Stack>
 		</CheckoutContext.Provider>
 	)
