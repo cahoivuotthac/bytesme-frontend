@@ -205,3 +205,36 @@ export const formatVoucherValue = (voucher: Voucher) => {
 	}
 	return "";
 };
+
+/**
+ * Parses a gift product voucher value string into structured data
+ *
+ * @param voucherValue The voucher_value string (e.g. '3:1' or '1:1,5:2:M')
+ * @returns Array of gift products with product ID, quantity, and optional size
+ */
+export const parseGiftProductVoucher = (voucherValue: string) => {
+	if (!voucherValue) return [];
+
+	// Split by comma to handle multiple products
+	const productStrings = voucherValue.split(",");
+
+	return productStrings
+		.map((productStr) => {
+			// Split by colon to get product parts
+			const parts = productStr.trim().split(":");
+
+			if (parts.length < 2) {
+				return { product_id: 0, quantity: 0 };
+			}
+
+			// Basic format: productId:quantity
+			const product_id = parseInt(parts[0], 10);
+			const quantity = parseInt(parts[1], 10);
+
+			// Check if size is specified (format: productId:quantity:size)
+			const size = parts.length > 2 ? parts[2] : undefined;
+
+			return { product_id, quantity, size };
+		})
+		.filter((product) => product.product_id > 0 && product.quantity > 0);
+};

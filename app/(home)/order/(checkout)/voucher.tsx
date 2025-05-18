@@ -17,12 +17,12 @@ import { useTranslation } from '@/providers/locale'
 import { useAlert } from '@/hooks/useAlert'
 import { CheckoutContext, Voucher } from './_layout'
 import { voucherAPI } from '@/utils/api'
+import { formatDate } from '@/utils/display'
+import { formatVoucherValue } from '@/utils/vouchers'
 import ZigzagBorder from '@/components/shared/ZigzagBorder'
 import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
 import VoucherRuleDisplay from '@/components/shared/VoucherRuleDisplay'
-import { formatDate } from '@/utils/display'
-import { formatVoucherValue } from '@/utils/vouchers'
 
 // Helper function to format date
 
@@ -307,9 +307,12 @@ const VoucherItem = ({
 						>
 							<Text style={styles.detailTitle}>{voucher.voucher_name}</Text>
 							<Text style={styles.detailCode}>{voucher.voucher_code}</Text>
-							<Text style={styles.detailDescription}>
-								{voucher.voucher_description}
-							</Text>
+							{/* Cheat: if voucher type if gift product, we don't show this to avoid duplicate info */}
+							{voucher.voucher_type !== 'gift_product' && (
+								<Text style={styles.detailDescription}>
+									{voucher.voucher_description}
+								</Text>
+							)}
 
 							<View style={styles.voucherValueContainer}>
 								<Text style={styles.voucherValueLabel}>

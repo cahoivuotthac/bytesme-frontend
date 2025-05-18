@@ -127,6 +127,13 @@ export const voucherAPI = {
 		return APIClient.post("/user/vouchers/apply", { code: voucherCode });
 	},
 
+	getGiftProducts: (voucherCode: string) => {
+		return APIClient.get(
+			"/voucher/gift-products?" +
+				new URLSearchParams({ voucher_code: voucherCode }).toString()
+		);
+	},
+
 	removeVoucher: () => {
 		return APIClient.post("/user/vouchers/remove");
 	},

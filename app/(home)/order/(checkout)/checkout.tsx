@@ -6,7 +6,6 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	SafeAreaView,
-	Dimensions,
 	Image,
 	FlatList,
 } from 'react-native'
@@ -48,24 +47,24 @@ const PAYMENT_METHODS: PaymentMethod[] = [
 		icon: 'cash-outline',
 		iconColor: '#C67C4E',
 	},
-	{
-		id: 'card',
-		name: 'Master Card\n**** **** **** 7122',
-		icon: 'card-outline',
-		iconColor: '#DF7A82',
-	},
+	// {
+	// 	id: 'card',
+	// 	name: 'Master Card\n**** **** **** 7122',
+	// 	icon: 'card-outline',
+	// 	iconColor: '#DF7A82',
+	// },
 	{
 		id: 'momo',
 		name: 'Ví MoMo\n093*****72 | 868.000 VNĐ',
 		icon: 'wallet-outline',
 		iconColor: '#A94FD3',
 	},
-	{
-		id: 'vnpay',
-		name: 'VNPay\n**** **** **** 7122',
-		icon: 'wallet-outline',
-		iconColor: '#0066CC',
-	},
+	// {
+	// 	id: 'vnpay',
+	// 	name: 'VNPay\n**** **** **** 7122',
+	// 	icon: 'wallet-outline',
+	// 	iconColor: '#0066CC',
+	// },
 	{
 		id: 'vietqr',
 		name: 'VietQR\n**** **** **** 7122',
@@ -93,6 +92,7 @@ export default function CheckoutScreen() {
 		vouchers,
 		setVouchers,
 		setIsLoadingVouchers,
+		giftProducts,
 	} = useContext(CheckoutContext)
 
 	// State
@@ -352,6 +352,10 @@ export default function CheckoutScreen() {
 					break
 			}
 			console.log('Order placed successfully:', params)
+
+			router.replace({
+				pathname: '/(home)/order/(checkout)/order-placed',
+			})
 		} catch (err) {
 			console.error('Error placing order:', err)
 			showError(t('orderFailed'))
@@ -557,14 +561,47 @@ export default function CheckoutScreen() {
 						)}
 					</View>
 
-					{appliedVoucher?.discount_value &&
-						appliedVoucher?.voucher_fields !== 'freeship' && (
-							<View style={styles.summaryRow}>
-								<Text style={styles.summaryLabel}>{t('discount')}</Text>
-								<Text style={styles.discountValue}>
-									-{formatPrice(appliedVoucher.discount_value, locale)}
-								</Text>
-							</View>
+					{appliedVoucher?.discount_value
+						? appliedVoucher?.voucher_fields !== 'freeship' && (
+								<View style={styles.summaryRow}>
+									<Text style={styles.summaryLabel}>{t('discount')}</Text>
+									<Text style={styles.discountValue}>
+										-{formatPrice(appliedVoucher.discount_value, locale)}
+									</Text>
+								</View>
+						  )
+						: null}
+
+					{/* Gift Products Section */}
+					{appliedVoucher?.voucher_type === 'gift_product' &&
+						giftProducts &&
+						giftProducts.length > 0 && (
+							<>
+								<View style={styles.giftProductsHeaderRow}>
+									<Text style={styles.giftProductsHeader}>
+										{t('giftProducts') || 'Gift Products'}
+									</Text>
+									<Ionicons name="gift-outline" size={20} color="#C67C4E" />
+								</View>
+
+								{giftProducts.map((product, index) => (
+									<View
+										key={`gift-${product.product_id}-${index}`}
+										style={styles.giftProductRow}
+									>
+										<View style={styles.giftProductIcon}>
+											<Ionicons name="gift" size={16} color="#C67C4E" />
+										</View>
+										<Text style={styles.giftProductText} numberOfLines={1}>
+											{product.product_name || `Product #${product.product_id}`}
+											{product.size ? ` (${product.size})` : ''}
+										</Text>
+										<Text style={styles.giftProductQuantity}>
+											x{product.quantity}
+										</Text>
+									</View>
+								))}
+							</>
 						)}
 
 					<View style={styles.divider} />
@@ -1030,5 +1067,47 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontFamily: 'Inter-Medium',
 		color: '#C67C4E',
+	},
+	giftProductsHeaderRow: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginTop: 8,
+		marginBottom: 8,
+		paddingTop: 8,
+		borderTopWidth: 1,
+		borderTopColor: '#F5F5F5',
+	},
+	giftProductsHeader: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#474747',
+	},
+	giftProductRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+		paddingLeft: 8,
+	},
+	giftProductIcon: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: '#FFF0CA',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 8,
+	},
+	giftProductText: {
+		flex: 1,
+		fontSize: 13,
+		fontFamily: 'Inter-Regular',
+		color: '#968B7B',
+	},
+	giftProductQuantity: {
+		fontSize: 13,
+		fontFamily: 'Inter-Medium',
+		color: '#C67C4E',
+		marginLeft: 8,
 	},
 })
