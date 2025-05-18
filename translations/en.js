@@ -203,6 +203,51 @@ export default {
 	confirmPaymentMethod: "Confirm payment method",
 	yourOrder: "Review your order",
 	confirmPlaceOrder: "Confirm and place order",
+	
+	// Order Placed screen
+	orderCompleted: "Completed!",
+	orderReceivedMessage: "Your order has been received. Please wait just a few minutes! ^^",
+	orderDetails: "Order Details",
+	orderNumber: "Order Number",
+	orderDate: "Order Date",
+	trackOrder: "Track Order",
+	backToHome: "Back to Home",
+	backToMenu: "Back to Menu",
+
+	// Order Tracking
+	orderTracking: "Order Tracking",
+	loadingOrderDetails: "Loading order details...",
+	orderNotFound: "Order not found",
+	orderItems: "Order Items",
+	additionalNotes: "Additional Notes",
+	paymentStatus: "Payment Status",
+	paid: "Paid",
+	unpaid: "Unpaid",
+	cashOnDelivery: "Cash on Delivery",
+	banking: "Banking",
+	cancelOrder: "Cancel Order",
+	trackAnotherOrder: "Track Another Order",
+	cannotCancelOrder: "This order cannot be cancelled",
+	cancelOrderTitle: "Cancel Order",
+	cancelOrderMessage: "Are you sure you want to cancel this order?",
+	orderCancelledSuccess: "Order has been successfully cancelled",
+	errorCancellingOrder: "Error cancelling order. Please try again.",
+	errorFetchingOrder: "Error fetching order details",
+	estimatedDeliveryTime: "Estimated delivery time: {time}",
+	preparingYourOrder: "Preparing your order...",
+	
+	// Order statuses
+	orderStatusPending: "Pending",
+	orderStatusDelivering: "Delivering",
+	orderStatusDelivered: "Delivered",
+	orderStatusCancelled: "Cancelled",
+	orderStatusPendingDesc: "Your order has been received and is being prepared",
+	orderStatusDeliveringDesc: "Your order is on the way",
+	orderStatusDeliveredDesc: "Your order has been delivered",
+	orderStatusCancelledDesc: "Your order has been cancelled",
+	orderStatusChangedToDelivering: "Your order is now being delivered!",
+	orderStatusChangedToDelivered: "Your order has been delivered!",
+	orderStatusChangedToCancelled: "Your order has been cancelled",
 
 	// Vouchers
 	bytesmeVoucher: "Bytesme Voucher",
@@ -219,6 +264,7 @@ export default {
 	firstOrderOnly: "First order only",
 	freeShipping: "Free shipping",
 	percentageOff: "{percent}% off",
+	giftProducts: "Gift Products",
 
 	// Voucher rules and conditions
 	moreVouchers: "Discover vouchers",
