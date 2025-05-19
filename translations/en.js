@@ -203,10 +203,11 @@ export default {
 	confirmPaymentMethod: "Confirm payment method",
 	yourOrder: "Review your order",
 	confirmPlaceOrder: "Confirm and place order",
-	
+
 	// Order Placed screen
 	orderCompleted: "Completed!",
-	orderReceivedMessage: "Your order has been received. Please wait just a few minutes! ^^",
+	orderReceivedMessage:
+		"Your order has been received. Please wait just a few minutes! ^^",
 	orderDetails: "Order Details",
 	orderNumber: "Order Number",
 	orderDate: "Order Date",
@@ -235,13 +236,15 @@ export default {
 	errorFetchingOrder: "Error fetching order details",
 	estimatedDeliveryTime: "Estimated delivery time: {time}",
 	preparingYourOrder: "Preparing your order...",
-	
+	feedbackOrder: "Feedback on your order",
+
 	// Order statuses
 	orderStatusPending: "Pending",
 	orderStatusDelivering: "Delivering",
 	orderStatusDelivered: "Delivered",
 	orderStatusCancelled: "Cancelled",
-	orderStatusPendingDesc: "Your order has been received and is being prepared",
+	orderStatusPendingDesc:
+		"Your order has been received and is being prepared",
 	orderStatusDeliveringDesc: "Your order is on the way",
 	orderStatusDeliveredDesc: "Your order has been delivered",
 	orderStatusCancelledDesc: "Your order has been cancelled",

@@ -1,11 +1,12 @@
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import URLs from "@/constants/URLs";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 // import Config from "@/constants/Config";
 
 export const APIClient = axios.create({
 	withCredentials: true, // Important
-	baseURL: URLs.serverAddress,
+	baseURL: URLs.serverBaseUrl,
 	timeout: 5000,
 	headers: {
 		"Content-Type": "application/json",
@@ -169,5 +170,14 @@ export const orderAPI = {
 		});
 
 		return response;
+	},
+
+	getOrderDetails: (orderId: number) => {
+		return APIClient.get(
+			"/order/details?" +
+				new URLSearchParams({
+					order_id: orderId.toString(),
+				}).toString()
+		);
 	},
 };

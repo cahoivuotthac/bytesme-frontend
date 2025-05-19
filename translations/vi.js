@@ -244,6 +244,7 @@ export default {
 	errorFetchingOrder: "Lỗi khi tải thông tin đơn hàng",
 	estimatedDeliveryTime: "Thời gian giao hàng dự kiến: {time}",
 	preparingYourOrder: "Đang chuẩn bị đơn hàng của bạn...",
+	feedbackOrder: "Để lại đánh giá cho đơn hàng",
 	
 	// Order statuses
 	orderStatusPending: "Đang chờ xử lý",

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import {
 	StyleSheet,
 	View,
@@ -21,12 +21,12 @@ export default function OrderPlacedScreen() {
 
 	// Navigate to order tracking page
 	const navigateToOrderTracking = () => {
-		router.navigate('/order/tracking')
+		router.push({ pathname: '/order/tracking' })
 	}
 
 	// Navigate back to home/menu
 	const navigateToHome = () => {
-		router.navigate('/(home)/')
+		router.replace('/(home)/product')
 	}
 
 	return (

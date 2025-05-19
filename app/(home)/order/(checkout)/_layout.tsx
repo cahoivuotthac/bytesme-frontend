@@ -1,8 +1,20 @@
 import React, { createContext, useState, useEffect, useMemo } from 'react'
 import { Stack } from 'expo-router'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CartItem } from '@/app/(home)/(profile)/cart'
 import { useAlert } from '@/hooks/useAlert'
+import { voucherAPI } from '@/utils/api'
+import { configureEcho } from '@laravel/echo-react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import URLs from '@/constants/URLs'
+
+// Interface for product information from API
+export interface ProductInfo {
+	product_id: number
+	product_name: string
+	product_image: string
+	size?: string
+	quantity: number
+}
 
 // Interface for voucher rule
 export interface VoucherRule {
@@ -22,7 +34,7 @@ export interface Voucher {
 	voucher_fields: string // e.g. 'freeship', 'birthday_gift', etc.
 	voucher_start_date: string
 	voucher_end_date: string
-	voucher_type: string // 'cash', 'percentage', etc.
+	voucher_type: string // 'cash', 'percentage', 'gift_product', etc.
 	voucher_value: string
 	voucher_rules?: VoucherRule[]
 	isSelected?: boolean
@@ -50,6 +62,12 @@ interface CheckoutContextType {
 	setVouchers: React.Dispatch<React.SetStateAction<Voucher[]>>
 	isLoadingVouchers: boolean
 	setIsLoadingVouchers: React.Dispatch<React.SetStateAction<boolean>>
+	giftProducts: ProductInfo[]
+	setGiftProducts: React.Dispatch<React.SetStateAction<ProductInfo[]>>
+	isLoadingGiftProducts: boolean
+	setIsLoadingGiftProducts: React.Dispatch<React.SetStateAction<boolean>>
+	orderId?: number
+	setOrderId: React.Dispatch<React.SetStateAction<number | undefined>>
 }
 
 export const CheckoutContext = createContext<CheckoutContextType>({
@@ -70,6 +88,12 @@ export const CheckoutContext = createContext<CheckoutContextType>({
 	setVouchers: () => {},
 	isLoadingVouchers: false,
 	setIsLoadingVouchers: () => {},
+	giftProducts: [],
+	setGiftProducts: () => {},
+	isLoadingGiftProducts: false,
+	setIsLoadingGiftProducts: () => {},
+	orderId: undefined,
+	setOrderId: () => {},
 })
 
 export default function CheckoutLayout() {
@@ -81,7 +105,14 @@ export default function CheckoutLayout() {
 	const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null)
 	const [vouchers, setVouchers] = useState<Voucher[]>([])
 	const [isLoadingVouchers, setIsLoadingVouchers] = useState(false)
+	const [giftProducts, setGiftProducts] = useState<ProductInfo[]>([])
+	const [isLoadingGiftProducts, setIsLoadingGiftProducts] = useState(false)
+	const [orderId, setOrderId] = useState<number | undefined>(undefined)
 	const { showError } = useAlert()
+
+	useEffect(() => {
+		return () => {} // Cleanup
+	}, [])
 
 	// Calculate subtotal from checkout items
 	const subtotal = useMemo(() => {
@@ -124,9 +155,15 @@ export default function CheckoutLayout() {
 		fetchCheckoutItems()
 	}, [])
 
-	// Update discount when applied voucher changes
+	// Handle applied voucher changes
 	useEffect(() => {
-		if (appliedVoucher) {
+		const update = async (appliedVoucher: Voucher | null) => {
+			if (!appliedVoucher) {
+				setDiscount(0)
+				setGiftProducts([])
+				return
+			}
+
 			console.log('Applied voucher changed:', appliedVoucher)
 
 			// Use discount value calculated by the backend
@@ -134,15 +171,21 @@ export default function CheckoutLayout() {
 				setDiscount(appliedVoucher.discount_value)
 			}
 
-			// Save to AsyncStorage for persistence
-			// try {
-			// 	AsyncStorage.setItem('appliedVoucher', JSON.stringify(appliedVoucher))
-			// } catch (error) {
-			// 	console.error('Error saving voucher:', error)
-			// }
-		} else {
-			setDiscount(0)
+			// Handle gift products if this is a gift_product voucher
+			if (appliedVoucher.voucher_type === 'gift_product') {
+				const giftProducts = (
+					await voucherAPI.getGiftProducts(appliedVoucher.voucher_code)
+				).data as ProductInfo[]
+				console.log('Gift products:', giftProducts)
+
+				setGiftProducts(giftProducts)
+			} else {
+				// Clear gift products if voucher is not gift_product type
+				setGiftProducts([])
+			}
 		}
+
+		update(appliedVoucher)
 	}, [appliedVoucher])
 
 	const contextValue = {
@@ -163,6 +206,12 @@ export default function CheckoutLayout() {
 		setVouchers,
 		isLoadingVouchers,
 		setIsLoadingVouchers,
+		giftProducts,
+		setGiftProducts,
+		isLoadingGiftProducts,
+		setIsLoadingGiftProducts,
+		orderId,
+		setOrderId,
 	}
 
 	return (
@@ -171,6 +220,8 @@ export default function CheckoutLayout() {
 				<Stack.Screen name="/order/(checkout)/checkout" />
 				<Stack.Screen name="/order/(checkout)/voucher" />
 				<Stack.Screen name="/input-address" />
+				<Stack.Screen name="/order/(checkout)/order-placed" />
+				<Stack.Screen name="/order/(checkout)/tracking" />
 			</Stack>
 		</CheckoutContext.Provider>
 	)

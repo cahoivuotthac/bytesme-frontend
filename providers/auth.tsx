@@ -63,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			try {
 				response = await APIClient.get('/auth/user')
 				console.log('Auth token retrieved from storage is still valid')
+				console.log('Current user:', response.data)
 			} catch (error: any) {
 				if (error?.response?.status === 401) {
 					console.error('Token retrieved from storage have expired:', error)

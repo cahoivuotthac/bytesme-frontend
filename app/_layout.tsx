@@ -3,7 +3,6 @@ import { Stack, Slot } from 'expo-router'
 import { useColorScheme, ActivityIndicator, View } from 'react-native'
 import { useFonts } from 'expo-font'
 import FontAwesome from '@expo/vector-icons/FontAwesome'
-
 import {
 	ThemeProvider,
 	DarkTheme,
@@ -12,9 +11,10 @@ import {
 import { AuthProvider, useAuth } from '@/providers/auth'
 import { LocaleProvider } from '@/providers/locale'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { EchoProvider } from '@/providers/EchoProvider'
 
 export default function RootLayout() {
-	const [loaded, error] = useFonts({
+	const [fontsLoaded, error] = useFonts({
 		SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
 		'Inter-Regular': require('../assets/fonts/Inter-Regular.ttf'),
 		'Inter-Medium': require('../assets/fonts/Inter-Medium.ttf'),
@@ -29,7 +29,7 @@ export default function RootLayout() {
 	}, [error])
 
 	// Wait for fonts to load
-	if (!loaded) {
+	if (!fontsLoaded) {
 		return null
 	}
 
@@ -37,7 +37,9 @@ export default function RootLayout() {
 		<SafeAreaProvider>
 			<LocaleProvider>
 				<AuthProvider>
-					<Slot />
+					<EchoProvider>
+						<Slot />
+					</EchoProvider>
 				</AuthProvider>
 			</LocaleProvider>
 		</SafeAreaProvider>

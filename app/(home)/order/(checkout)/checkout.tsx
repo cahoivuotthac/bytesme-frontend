@@ -93,6 +93,7 @@ export default function CheckoutScreen() {
 		setVouchers,
 		setIsLoadingVouchers,
 		giftProducts,
+		setOrderId,
 	} = useContext(CheckoutContext)
 
 	// State
@@ -345,7 +346,8 @@ export default function CheckoutScreen() {
 		try {
 			switch (selectedPaymentMethodId) {
 				case 'cod':
-					await orderAPI.placeOrder({ ...params })
+					const { order_id } = (await orderAPI.placeOrder({ ...params })).data
+					setOrderId(order_id)
 					break
 				case 'vnpay':
 					await orderAPI.placeOrder({ ...params })
