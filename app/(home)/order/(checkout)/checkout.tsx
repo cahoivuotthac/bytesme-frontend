@@ -596,7 +596,7 @@ export default function CheckoutScreen() {
 										</View>
 										<Text style={styles.giftProductText} numberOfLines={1}>
 											{product.product_name || `Product #${product.product_id}`}
-											{product.size ? ` (${product.size})` : ''}
+											{product.size !== 'Standard' ? ` (${product.size})` : ''}
 										</Text>
 										<Text style={styles.giftProductQuantity}>
 											x{product.quantity}

@@ -12,7 +12,7 @@ export interface ProductInfo {
 	product_id: number
 	product_name: string
 	product_image: string
-	size?: string
+	size: string
 	quantity: number
 }
 
