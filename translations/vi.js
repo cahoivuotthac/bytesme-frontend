@@ -9,6 +9,7 @@ export default {
 	phone: "Số điện thoại",
 	apply: "Áp dụng",
 	cancel: "Hủy",
+	close: "Đóng",
 	confirm: "Xác nhận",
 
 	// Product Cards
@@ -238,7 +239,7 @@ export default {
 	trackAnotherOrder: "Theo dõi đơn hàng khác",
 	cannotCancelOrder: "Không thể hủy đơn hàng này",
 	cancelOrderTitle: "Hủy đơn hàng",
-	cancelOrderMessage: "Bạn có chắc chắn muốn hủy đơn hàng này không?",
+	cancelOrderMessage: "Xác nhận hủy đơn ?",
 	orderCancelledSuccess: "Đơn hàng đã được hủy thành công",
 	errorCancellingOrder: "Lỗi khi hủy đơn hàng. Vui lòng thử lại.",
 	errorFetchingOrder: "Lỗi khi tải thông tin đơn hàng",

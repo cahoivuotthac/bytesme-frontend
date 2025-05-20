@@ -172,6 +172,34 @@ export const orderAPI = {
 		return response;
 	},
 
+	cancelOrder: async (orderId: number) => {
+		return APIClient.post("/order/cancel", {
+			order_id: orderId,
+		});
+	},
+
+	sendFeedback: async (params: {
+		orderId: number;
+		content: string;
+		rating: number;
+		improveTags?: string[];
+		isAnonymous?: boolean;
+		images?: string[];
+	}) => {
+		const payload = {
+			order_id: params.orderId,
+			content: params.content,
+			rating: params.rating,
+			is_anonymous: params.isAnonymous,
+			improve_tags: params.improveTags,
+		};
+		console.log("payload", payload);
+
+		return APIClient.post("/order/feedback", payload, {
+			headers: { "Content-Type": "application/json" },
+		});
+	},
+
 	getOrderDetails: (orderId: number) => {
 		return APIClient.get(
 			"/order/details?" +

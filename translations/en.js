@@ -8,6 +8,7 @@ export default {
 	apply: "Apply",
 	cancel: "Cancel",
 	confirm: "Confirm",
+	close: "Close",
 
 	// Product Cards
 	discount: "Discount",
@@ -230,7 +231,7 @@ export default {
 	trackAnotherOrder: "Track Another Order",
 	cannotCancelOrder: "This order cannot be cancelled",
 	cancelOrderTitle: "Cancel Order",
-	cancelOrderMessage: "Are you sure you want to cancel this order?",
+	cancelOrderMessage: "Confirm order cancellation?",
 	orderCancelledSuccess: "Order has been successfully cancelled",
 	errorCancellingOrder: "Error cancelling order. Please try again.",
 	errorFetchingOrder: "Error fetching order details",
