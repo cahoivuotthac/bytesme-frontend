@@ -162,6 +162,18 @@ export default {
 	cart: "Giỏ hàng",
 	favorites: "Yêu thích",
 
+	// Profile Page
+	general: "Tổng quan",
+	preferences: "Tùy chỉnh",
+	editProfile: "Chỉnh sửa",
+	theme: "Giao diện",
+	comingSoon: "Sắp ra mắt",
+	language: "Ngôn ngữ",
+	logout: "Đăng xuất",
+	logoutError: "Lỗi khi đăng xuất. Vui lòng thử lại.",
+	logoutConfirmation: "Bạn có chắc muốn đăng xuất?",
+	logoutSuccess: "Đăng xuất thành công",
+
 	// Wishlist
 	noFavorites: "Chưa có sản phẩm yêu thích",
 	browseProducts: "Duyệt sản phẩm",
@@ -213,10 +225,11 @@ export default {
 	confirmPaymentMethod: "Xác nhận phương thức thanh toán",
 	yourOrder: "Xem lại đơn hàng của bạn",
 	confirmPlaceOrder: "Xác nhận đặt hàng",
-	
+
 	// Order Placed screen
 	orderCompleted: "Hoàn tất!",
-	orderReceivedMessage: "Đơn hàng của bạn đã được tiếp nhận. Hãy chờ đợi ít phút nhé! ^^",
+	orderReceivedMessage:
+		"Đơn hàng của bạn đã được tiếp nhận. Hãy chờ đợi ít phút nhé! ^^",
 	orderDetails: "Chi Tiết Đơn Hàng",
 	orderNumber: "Mã đơn hàng",
 	orderDate: "Ngày đặt hàng",
@@ -246,13 +259,14 @@ export default {
 	estimatedDeliveryTime: "Thời gian giao hàng dự kiến: {time}",
 	preparingYourOrder: "Đang chuẩn bị đơn hàng của bạn...",
 	feedbackOrder: "Để lại đánh giá cho đơn hàng",
-	
+
 	// Order statuses
 	orderStatusPending: "Đang chờ xử lý",
 	orderStatusDelivering: "Đang giao hàng",
 	orderStatusDelivered: "Đã giao hàng",
 	orderStatusCancelled: "Đã hủy",
-	orderStatusPendingDesc: "Đơn hàng của bạn đã được tiếp nhận và đang được chuẩn bị",
+	orderStatusPendingDesc:
+		"Đơn hàng của bạn đã được tiếp nhận và đang được chuẩn bị",
 	orderStatusDeliveringDesc: "Đơn hàng của bạn đang được giao",
 	orderStatusDeliveredDesc: "Đơn hàng của bạn đã được giao thành công",
 	orderStatusCancelledDesc: "Đơn hàng của bạn đã bị hủy",
@@ -305,4 +319,31 @@ export default {
 	dangTaiVoucher: "Đang tải voucher...",
 	dangTai: "Đang tải...",
 	xemThem: "Xem thêm",
+
+	// Feedback Page
+	anonymousUser: "Người dùng ẩn danh",
+	maxImagesReached: "Chỉ được tải lên tối đa 3 ảnh",
+	permissionDenied: "Bạn cần cấp quyền để tải ảnh lên",
+	pleaseRateOrder: "Vui lòng đánh giá đơn hàng",
+	feedbackSubmitSuccess: "Đánh giá của bạn đã được gửi thành công!",
+	feedbackSubmitError: "Không thể gửi đánh giá. Vui lòng thử lại sau.",
+	terrible: "Tệ",
+	bad: "Không tốt",
+	okay: "Bình thường",
+	good: "Tốt",
+	excellent: "Xuất sắc",
+	shareExperienceUsername: "{name} ơi, ",
+	shareExperience:
+		"hãy tâm sự với Bytesme biết trải nghiệm của bạn với lần đặt hàng này nhé! ^^",
+	areasToImprove: "Bytesme cần cải thiện thêm về:",
+	feedbackContentPlaceholder: "Chia sẻ trải nghiệm của bạn...",
+	uploadImages: "Đăng tải hình ảnh:",
+	submitAnonymously: "Đánh giá ẩn danh",
+	submit: "Tiếp tục",
+
+	// Improvement area labels
+	flavour: "Cải thiện hương vị",
+	actOfService: "Phục vụ tận tình",
+	packaging: "Đóng gói đẹp hơn",
+	deliveryTime: "Thời gian giao hàng",
 };

@@ -159,6 +159,18 @@ export default {
 	cart: "Cart",
 	favorites: "Favorites",
 
+	// Profile Page
+	general: "General",
+	preferences: "Preferences",
+	editProfile: "Edit Profile",
+	theme: "Theme",
+	comingSoon: "Coming Soon",
+	language: "Language",
+	logout: "Logout",
+	logoutError: "Error logging out. Please try again.",
+	logoutConfirmation: "Are you sure you want to log out?",
+	logoutSuccess: "Logged out successfully",
+
 	// Wishlist
 	noFavorites: "No favorite items yet",
 	browseProducts: "Browse Products",
@@ -304,4 +316,30 @@ export default {
 	xemThem: "See more",
 	percentageOff: "{percent}% off",
 	freeShipping: "Free shipping",
+
+	// Feedback Page
+	anonymousUser: "Anonymous User",
+	maxImagesReached: "You can only upload up to 3 images",
+	permissionDenied: "You need permission to upload images",
+	pleaseRateOrder: "Please rate your order",
+	feedbackSubmitSuccess: "Your feedback has been submitted successfully!",
+	feedbackSubmitError: "Unable to submit feedback. Please try again later.",
+	terrible: "Terrible",
+	bad: "Bad",
+	okay: "Okay",
+	good: "Good",
+	excellent: "Excellent",
+	shareExperienceUsername: "Dear {name}, ",
+	shareExperience: "please share with us how your order experience was! ^^",
+	areasToImprove: "Bytesme can improve on:",
+	feedbackContentPlaceholder: "Share your experience here...",
+	uploadImages: "Upload images:",
+	submitAnonymously: "Submit anonymously",
+	submit: "Continue",
+
+	// Improvement area labels
+	flavour: "Food/drink flavor",
+	actOfService: "Service attitude",
+	packaging: "Packaging",
+	deliveryTime: "Delivery time",
 };
