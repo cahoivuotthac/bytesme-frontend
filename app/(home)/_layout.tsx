@@ -60,7 +60,10 @@ export default function HomeLayout() {
 			<Stack
 				screenOptions={{
 					headerShown: false,
-					contentStyle: getContentStyle(),
+					// Remove the bottom padding so content extends under the bottom bar
+					contentStyle: {
+						backgroundColor: '#FFFFFF',
+					},
 					animation: 'slide_from_right',
 					animationDuration: 200,
 					animationTypeForReplace: 'push',
@@ -90,7 +93,6 @@ export default function HomeLayout() {
 
 			{/* Render BottomBar conditionally based on current screen */}
 			{shouldShowBottomBar() && (
-				// Spacer
 				<>
 					<View style={styles.spacerStyle} />
 					<BottomBar style={styles.bottomBarStyle} />

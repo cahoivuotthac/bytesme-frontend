@@ -19,15 +19,25 @@ export default function ProfileLayout() {
 		}
 	}, [pathname, t])
 
+	const noTopNavbarPath = [
+		'/profile',
+		'/edit-profile',
+		// '/profile/notifications',
+	]
+	const shouldShowTopNavbar = () => {
+		return !noTopNavbarPath.some((path) => pathname.includes(path))
+	}
+
 	return (
 		<View style={styles.container}>
 			{/* Top navbar with dynamic title */}
-			<View style={styles.header}>
-				<NavButton direction="back" size={32} />
-				<Text style={styles.headerTitle}>{headerTitle}</Text>
-				<View style={styles.placeholderView} />
-			</View>
-
+			{shouldShowTopNavbar() && (
+				<View style={styles.header}>
+					<NavButton direction="back" size={32} />
+					<Text style={styles.headerTitle}>{headerTitle}</Text>
+					<View style={styles.placeholderView} />
+				</View>
+			)}
 			<Stack
 				screenOptions={{
 					headerShown: false,

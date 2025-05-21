@@ -20,7 +20,7 @@ import DishDecoration from '@/components/shared/DishDecoration'
 import { useAlert } from '@/hooks/useAlert'
 
 // Default profile image if user has no profile photo
-const DEFAULT_PROFILE_IMAGE =
+const DEFAULT_AVATAR =
 	'https://ui-avatars.com/api/?name=Bytesme+User&background=C67C4E&color=fff'
 
 export default function ProfileMainScreen() {
@@ -34,7 +34,7 @@ export default function ProfileMainScreen() {
 	// User info
 	const userFullName = authState?.user?.fullName || 'Bytesme User'
 	const userEmail = authState?.user?.email || 'customer@bytesme.vn'
-	const profileImage = authState?.user?.profileImage || DEFAULT_PROFILE_IMAGE
+	const avatar = authState?.user?.avatar || DEFAULT_AVATAR
 
 	// Handle language toggle
 	const toggleLanguage = () => {
@@ -94,20 +94,11 @@ export default function ProfileMainScreen() {
 				{/* Profile Card */}
 				<View style={styles.profileCard}>
 					<View style={styles.profilePhotoContainer}>
-						{typeof profileImage === 'string' &&
-						profileImage.startsWith('http') ? (
-							<DishDecoration
-								imageSource={{ uri: profileImage }}
-								size={100}
-								containerStyle={styles.profilePhoto}
-							/>
-						) : (
-							<DishDecoration
-								imageSource={require('@/assets/images/logo.png')}
-								size={100}
-								containerStyle={styles.profilePhoto}
-							/>
-						)}
+						<DishDecoration
+							imageSource={avatar || DEFAULT_AVATAR}
+							size={100}
+							containerStyle={styles.profilePhoto}
+						/>
 					</View>
 
 					<View style={styles.profileInfo}>
