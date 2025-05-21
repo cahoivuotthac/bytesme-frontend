@@ -60,7 +60,7 @@ export default function ProfileMainScreen() {
 
 	// Navigate to other screens
 	const navigateToEditProfile = () => {
-		router.push('/user/edit-profile')
+		router.push('/(home)/(profile)/edit-profile')
 	}
 
 	const navigateToCart = () => {

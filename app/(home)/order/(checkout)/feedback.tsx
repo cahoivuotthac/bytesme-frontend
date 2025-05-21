@@ -25,6 +25,7 @@ import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
 import { orderAPI } from '@/utils/api'
 import * as ImagePicker from 'expo-image-picker'
+import * as FileSystem from 'expo-file-system'
 import DishDecoration from '@/components/shared/DishDecoration'
 import { CheckoutContext } from './_layout'
 import { useAuth } from '@/providers/auth'
@@ -73,6 +74,8 @@ export default function FeedbackScreen() {
 		}
 	}
 
+	console.log('Tracking Order: ', trackingOrder)
+
 	useEffect(() => {
 		console.log('Selected improve tags changed:', selectedImproveTags)
 	}, [selectedImproveTags])
@@ -120,13 +123,23 @@ export default function FeedbackScreen() {
 		}
 
 		const result = await ImagePicker.launchImageLibraryAsync({
+			// mediaTypes: ['images'],
 			mediaTypes: ['images'],
-			allowsEditing: true,
+			allowsEditing: false,
 			aspect: [1, 1],
 			quality: 0.7,
+			// base64: false,
 		})
 
 		if (!result.canceled && result.assets && result.assets.length > 0) {
+			const asset = result.assets[0]
+			if (asset.file) {
+				setImages([...images, asset.file])
+			} else {
+				setImages([...images, asset.uri])
+			}
+
+			console.log('Picked image:', result.assets[0])
 			setImages([...images, result.assets[0].uri])
 		}
 	}
@@ -148,14 +161,33 @@ export default function FeedbackScreen() {
 		setIsSubmitting(true)
 
 		console.log('selected improve tags: ', selectedImproveTags)
+		console.log('images: ', images)
 		try {
-			await orderAPI.sendFeedback({
-				orderId: trackingOrder!.order_id,
-				content: feedback,
-				rating,
-				isAnonymous,
-				improveTags: selectedImproveTags,
+			// Convert images to base64
+			const formData = new FormData()
+			if (!trackingOrder || trackingOrder.order_id == null) {
+				showError(t('orderNotFound'))
+				setIsSubmitting(false)
+				return
+			}
+			formData.append('order_id', String(trackingOrder.order_id))
+			formData.append('content', feedback)
+			formData.append('rating', String(rating))
+			formData.append('is_anonymous', String(isAnonymous))
+			formData.append('improve_tags', JSON.stringify(selectedImproveTags))
+
+			images.forEach((uri, idx) => {
+				const name = uri.split('/').pop() || `image_${idx}.jpg`
+				const type = 'image/jpeg'
+				formData.append('images', {
+					uri,
+					name,
+					type,
+				} as any)
 			})
+
+			// Update your API call to use FormData
+			await orderAPI.sendFeedback(formData)
 
 			showSuccess(t('feedbackSubmitSuccess'), () =>
 				router.replace('/(home)/product')
@@ -215,24 +247,36 @@ export default function FeedbackScreen() {
 						{t('shareExperience')}
 					</Text>
 
-					{trackingOrder?.items && trackingOrder.items.length > 0 && (
-						<View style={styles.orderItemsContainer}>
-							<ScrollView horizontal showsHorizontalScrollIndicator={false}>
-								{trackingOrder.items.map((item, index) => (
-									<View key={index} style={styles.orderItemCircle}>
-										<DishDecoration
-											imageSource={{ uri: item.product_image }}
-											size={80}
-											containerStyle={styles.dishContainer}
-										/>
-										<Text style={styles.dishName} numberOfLines={2}>
-											{item.product_name}
-										</Text>
-									</View>
-								))}
-							</ScrollView>
-						</View>
-					)}
+					{trackingOrder?.order_items &&
+						trackingOrder.order_items.length > 0 && (
+							<View style={styles.orderItemsContainer}>
+								<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+									{trackingOrder.order_items.map((item, index) => (
+										<View
+											key={index}
+											style={[
+												styles.orderItemCircle,
+												{
+													marginLeft: index === 0 ? 0 : -24, // Negative margin for overlap
+													zIndex: trackingOrder.order_items.length - index, // Ensure correct stacking order
+												},
+											]}
+										>
+											<DishDecoration
+												imageSource={{
+													uri: item.product.product_images[0].product_image_url,
+												}}
+												size={80}
+												containerStyle={styles.dishContainer}
+											/>
+											<Text style={styles.dishName} numberOfLines={2}>
+												{item.product.product_name}
+											</Text>
+										</View>
+									))}
+								</ScrollView>
+							</View>
+						)}
 				</View>
 
 				{/* Rating Stars */}

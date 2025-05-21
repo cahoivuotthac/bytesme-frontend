@@ -31,11 +31,8 @@ import { CheckoutContext } from './_layout'
 import { useContext } from 'react'
 import URLs from '@/constants/URLs'
 
-// Define the order status type
-type OrderStatus = 'pending' | 'delivering' | 'delivered' | 'cancelled'
-
 // Order status data with colors and labels for the vintage aesthetic
-const ORDER_STATUS_DATA = {
+const ORDER_STATUS_DISPLAY = {
 	pending: {
 		color: '#D6A87B', // Warm brown
 		trackColor: '#D6A87B33',
@@ -67,34 +64,6 @@ const ORDER_STATUS_DATA = {
 }
 
 // Order interface based on the schema
-interface Order {
-	order_id: number
-	user_id: number
-	voucher_id: number | null
-	order_provisional_price: number
-	order_deliver_cost: number
-	order_deliver_time: string | null
-	order_deliver_address: string
-	order_total_price: number
-	order_payment_date: string | null
-	order_payment_method: string
-	order_is_paid: boolean
-	order_status: OrderStatus
-	order_additional_note: string | null
-	created_at: string
-	updated_at: string
-	items?: OrderItem[]
-}
-
-// Order item interface
-interface OrderItem {
-	product_id: number
-	product_name: string
-	product_image: string
-	product_quantity: number
-	product_price: number
-	product_size: string
-}
 
 export default function OrderTrackingScreen() {
 	const { t, locale } = useTranslation()
@@ -102,12 +71,12 @@ export default function OrderTrackingScreen() {
 		useAlert()
 	const params = useLocalSearchParams()
 	const { authState } = useAuth()
-	const { orderId } = useContext(CheckoutContext)
+	const { orderId, trackingOrder, setTrackingOrder } =
+		useContext(CheckoutContext)
 
 	console.log('Order ID in tracking page:', orderId)
 
 	// State
-	const [order, setOrder] = useState<Order | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [isCancelling, setIsCancelling] = useState(false)
 
@@ -125,7 +94,7 @@ export default function OrderTrackingScreen() {
 
 		try {
 			// Update order status on event
-			setOrder((prevOrder) => {
+			setTrackingOrder((prevOrder) => {
 				if (!prevOrder) return null
 				return { ...prevOrder, order_status: event.newStatus }
 			})
@@ -163,7 +132,7 @@ export default function OrderTrackingScreen() {
 				setIsLoading(true)
 				// Get order details from API
 				const orderDetails = (await orderAPI.getOrderDetails(orderId)).data
-				setOrder(orderDetails)
+				setTrackingOrder(orderDetails)
 			} catch (error) {
 				console.error('Error fetching order details:', error)
 				showError(t('errorFetchingOrder'))
@@ -177,7 +146,7 @@ export default function OrderTrackingScreen() {
 
 	// Function to handle cancelling an order
 	const handleCancelOrder = async () => {
-		if (!order || order.order_status !== 'pending') {
+		if (!trackingOrder || trackingOrder.order_status !== 'pending') {
 			showError(t('cannotCancelOrder'))
 			return
 		}
@@ -189,10 +158,10 @@ export default function OrderTrackingScreen() {
 				try {
 					setIsCancelling(true)
 					// Call API to cancel the order
-					await orderAPI.cancelOrder(orderId)
+					await orderAPI.cancelOrder(orderId!)
 
 					// Update local state since Echo event might be delayed
-					setOrder((prevOrder) => {
+					setTrackingOrder((prevOrder) => {
 						if (!prevOrder) return null
 						return { ...prevOrder, order_status: 'cancelled' }
 					})
@@ -205,24 +174,24 @@ export default function OrderTrackingScreen() {
 					setIsCancelling(false)
 				}
 			},
-			t('cancelOrderMessage')
+			t('close')
 		)
 	}
 
 	// Get status data based on current order status
 	const getStatusData = () => {
-		if (!order) return ORDER_STATUS_DATA.pending
-		const statusData = ORDER_STATUS_DATA[order.order_status]
-		console.log('order status in getStatusData:', order.order_status)
+		if (!trackingOrder) return ORDER_STATUS_DISPLAY.pending
+		const statusData = ORDER_STATUS_DISPLAY[trackingOrder.order_status]
+		console.log('order status in getStatusData:', trackingOrder.order_status)
 		console.log('Status data:', statusData)
 		return statusData
 	}
 
 	// Calculate delivery progress percentage
 	const getProgressPercentage = () => {
-		if (!order) return 0
+		if (!trackingOrder) return 0
 
-		switch (order.order_status) {
+		switch (trackingOrder.order_status) {
 			case 'pending':
 				return 25
 			case 'delivering':
@@ -262,7 +231,7 @@ export default function OrderTrackingScreen() {
 
 	// Check if order can be cancelled
 	const canCancelOrder = () => {
-		return order?.order_status === 'pending'
+		return trackingOrder?.order_status === 'pending'
 	}
 
 	const statusData = getStatusData()
@@ -293,7 +262,7 @@ export default function OrderTrackingScreen() {
 					<ActivityIndicator size="large" color="#D6A87B" />
 					<Text style={styles.loadingText}>{t('loadingOrderDetails')}</Text>
 				</View>
-			) : !order ? (
+			) : !trackingOrder ? (
 				<View style={styles.errorContainer}>
 					<Ionicons name="alert-circle-outline" size={64} color="#C97064" />
 					<Text style={styles.errorText}>{t('orderNotFound')}</Text>
@@ -318,7 +287,7 @@ export default function OrderTrackingScreen() {
 						<View style={styles.statusHeader}>
 							<View style={styles.orderIdContainer}>
 								<Text style={styles.orderIdLabel}>{t('orderNumber')}</Text>
-								<Text style={styles.orderId}>#{order.order_id}</Text>
+								<Text style={styles.orderId}>#{trackingOrder.order_id}</Text>
 							</View>
 
 							<View
@@ -326,9 +295,9 @@ export default function OrderTrackingScreen() {
 									styles.statusBadge,
 									{
 										backgroundColor:
-											order.order_status === 'delivered'
+											trackingOrder.order_status === 'delivered'
 												? '#ECFCE5'
-												: order.order_status === 'cancelled'
+												: trackingOrder.order_status === 'cancelled'
 												? '#FFE5E5'
 												: '#FFF3E0',
 									},
@@ -339,9 +308,9 @@ export default function OrderTrackingScreen() {
 										styles.statusText,
 										{
 											color:
-												order.order_status === 'delivered'
+												trackingOrder.order_status === 'delivered'
 													? '#007E25'
-													: order.order_status === 'cancelled'
+													: trackingOrder.order_status === 'cancelled'
 													? '#E74C3C'
 													: '#FF9F67',
 										},
@@ -361,9 +330,9 @@ export default function OrderTrackingScreen() {
 										{
 											width: `${progressPercentage}%`,
 											backgroundColor:
-												order.order_status === 'cancelled'
+												trackingOrder.order_status === 'cancelled'
 													? '#E74C3C'
-													: order.order_status === 'delivered'
+													: trackingOrder.order_status === 'delivered'
 													? '#4CAF50'
 													: '#FF9F67',
 										},
@@ -378,9 +347,9 @@ export default function OrderTrackingScreen() {
 										styles.statusIconCircle,
 										{
 											backgroundColor:
-												order.order_status === 'delivered'
+												trackingOrder.order_status === 'delivered'
 													? '#4CAF50'
-													: order.order_status === 'cancelled'
+													: trackingOrder.order_status === 'cancelled'
 													? '#E74C3C'
 													: '#FF9F67',
 										},
@@ -401,15 +370,15 @@ export default function OrderTrackingScreen() {
 						</View>
 
 						{/* Estimated delivery time with vibrant design */}
-						{order.order_status === 'pending' && (
+						{trackingOrder.order_status === 'pending' && (
 							<View style={styles.deliveryTimeContainer}>
 								<View style={styles.deliveryTimeIconContainer}>
 									<Ionicons name="time-outline" size={22} color="#FF9F67" />
 								</View>
 								<Text style={styles.deliveryTimeText}>
-									{order.order_deliver_time
+									{trackingOrder.order_deliver_time
 										? t('estimatedDeliveryTime', {
-												time: formatDate(order.order_deliver_time),
+												time: formatDate(trackingOrder.order_deliver_time),
 										  })
 										: t('preparingYourOrder')}
 								</Text>
@@ -431,7 +400,7 @@ export default function OrderTrackingScreen() {
 									<Text style={styles.orderInfoLabel}>{t('orderDate')}</Text>
 								</View>
 								<Text style={styles.orderInfoValue}>
-									{formatDate(order.created_at)}
+									{formatDate(trackingOrder.created_at)}
 								</Text>
 							</View>
 
@@ -447,8 +416,14 @@ export default function OrderTrackingScreen() {
 										{t('deliveryAddress')}
 									</Text>
 								</View>
-								<Text style={styles.orderInfoValue}>
-									{order.order_deliver_address}
+								<Text
+									style={styles.orderInfoValue}
+									numberOfLines={2}
+									ellipsizeMode="tail"
+								>
+									{trackingOrder.order_deliver_address.length > 35
+										? trackingOrder.order_deliver_address.slice(0, 35) + '...'
+										: trackingOrder.order_deliver_address}
 								</Text>
 							</View>
 
@@ -465,7 +440,7 @@ export default function OrderTrackingScreen() {
 									</Text>
 								</View>
 								<Text style={[styles.orderInfoValue, styles.highlightedText]}>
-									{order.order_payment_method === 'COD'
+									{trackingOrder.order_payment_method === 'COD'
 										? t('cashOnDelivery')
 										: t('banking')}
 								</Text>
@@ -488,7 +463,7 @@ export default function OrderTrackingScreen() {
 										style={[
 											styles.paymentStatusDot,
 											{
-												backgroundColor: order.order_is_paid
+												backgroundColor: trackingOrder.order_is_paid
 													? '#4CAF50'
 													: '#FF9F67',
 											},
@@ -497,20 +472,24 @@ export default function OrderTrackingScreen() {
 									<Text
 										style={[
 											styles.paymentStatusText,
-											{ color: order.order_is_paid ? '#4CAF50' : '#FF9F67' },
+											{
+												color: trackingOrder.order_is_paid
+													? '#4CAF50'
+													: '#FF9F67',
+											},
 										]}
 									>
-										{order.order_is_paid ? t('paid') : t('unpaid')}
+										{trackingOrder.order_is_paid ? t('paid') : t('unpaid')}
 									</Text>
 								</View>
 							</View>
 						</View>
 
 						{/* Order items with vibrant styling */}
-						{order.items && order.items.length > 0 && (
+						{trackingOrder.items && trackingOrder.items.length > 0 && (
 							<View style={styles.orderItemsContainer}>
 								<Text style={styles.sectionTitle}>{t('orderItems')}</Text>
-								{order.items.map((item, index) => (
+								{trackingOrder.items.map((item, index) => (
 									<View
 										key={`${item.product_id}-${index}`}
 										style={styles.orderItem}
@@ -548,27 +527,27 @@ export default function OrderTrackingScreen() {
 							<View style={styles.summaryRow}>
 								<Text style={styles.summaryLabel}>{t('subtotal')}</Text>
 								<Text style={styles.summaryValue}>
-									{formatPrice(order.order_provisional_price, locale)}
+									{formatPrice(trackingOrder.order_provisional_price, locale)}
 								</Text>
 							</View>
 
 							<View style={styles.summaryRow}>
 								<Text style={styles.summaryLabel}>{t('deliveryFee')}</Text>
 								<Text style={styles.summaryValue}>
-									{formatPrice(order.order_deliver_cost, locale)}
+									{formatPrice(trackingOrder.order_deliver_cost, locale)}
 								</Text>
 							</View>
 
 							{/* If there was a discount applied (voucher) */}
-							{order.voucher_id && (
+							{trackingOrder.voucher_id && (
 								<View style={styles.summaryRow}>
 									<Text style={styles.summaryLabel}>{t('discount')}</Text>
 									<Text style={styles.discountValue}>
 										-
 										{formatPrice(
-											order.order_provisional_price +
-												order.order_deliver_cost -
-												order.order_total_price,
+											trackingOrder.order_provisional_price +
+												trackingOrder.order_deliver_cost -
+												trackingOrder.order_total_price,
 											locale
 										)}
 									</Text>
@@ -580,18 +559,18 @@ export default function OrderTrackingScreen() {
 							<View style={styles.totalRow}>
 								<Text style={styles.totalLabel}>{t('total')}</Text>
 								<Text style={styles.totalValue}>
-									{formatPrice(order.order_total_price, locale)}
+									{formatPrice(trackingOrder.order_total_price, locale)}
 								</Text>
 							</View>
 						</View>
 
 						{/* Additional notes with vibrant styling */}
-						{order.order_additional_note && (
+						{trackingOrder.order_additional_note && (
 							<View style={styles.notesContainer}>
 								<Text style={styles.sectionTitle}>{t('additionalNotes')}</Text>
 								<View style={styles.notesTextContainer}>
 									<Text style={styles.notesText}>
-										{order.order_additional_note}
+										{trackingOrder.order_additional_note}
 									</Text>
 								</View>
 							</View>
@@ -627,7 +606,7 @@ export default function OrderTrackingScreen() {
 
 						<LinearGradient
 							colors={
-								order.order_status === 'delivered'
+								trackingOrder.order_status === 'delivered'
 									? ['#66BB6A', '#4CAF50']
 									: ['#FFA779', '#FF9F67']
 							}
@@ -637,11 +616,19 @@ export default function OrderTrackingScreen() {
 						>
 							<Button
 								text={
-									order?.order_status === 'delivered'
+									trackingOrder?.order_status === 'delivered'
 										? t('feedbackOrder')
 										: t('backToHome')
 								}
-								onPress={navigateToOrderHistory}
+								onPress={() => {
+									if (trackingOrder?.order_status === 'delivered') {
+										router.navigate('/(home)/order/(checkout)/feedback')
+									} else if (trackingOrder.order_status === 'cancelled') {
+										router.navigate('/(home)/product') // go to home
+									} else if (trackingOrder.order_status === 'pending') {
+										router.navigate('/(home)/product') // go to home
+									}
+								}}
 								backgroundColor="transparent"
 								style={styles.backToHomeButton}
 								textStyle={styles.buttonText}

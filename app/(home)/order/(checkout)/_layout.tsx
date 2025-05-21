@@ -68,6 +68,39 @@ interface CheckoutContextType {
 	setIsLoadingGiftProducts: React.Dispatch<React.SetStateAction<boolean>>
 	orderId?: number
 	setOrderId: React.Dispatch<React.SetStateAction<number | undefined>>
+	trackingOrder: Order | null
+	setTrackingOrder: React.Dispatch<React.SetStateAction<Order | null>>
+}
+
+// Define the order status type
+type OrderStatus = 'pending' | 'delivering' | 'delivered' | 'cancelled'
+
+interface Order {
+	order_id: number
+	user_id: number
+	voucher_id: number | null
+	order_provisional_price: number
+	order_deliver_cost: number
+	order_deliver_time: string | null
+	order_deliver_address: string
+	order_total_price: number
+	order_payment_date: string | null
+	order_payment_method: string
+	order_is_paid: boolean
+	order_status: OrderStatus
+	order_additional_note: string | null
+	created_at: string
+	updated_at: string
+	order_items: OrderItem[]
+}
+
+// Order item interface
+interface OrderItem {
+	product_id: number
+	order_items_id: number
+	order_items_quantity: number
+	order_items_unitprice: number
+	product: Record<string, any>
 }
 
 export const CheckoutContext = createContext<CheckoutContextType>({
@@ -94,6 +127,8 @@ export const CheckoutContext = createContext<CheckoutContextType>({
 	setIsLoadingGiftProducts: () => {},
 	orderId: undefined,
 	setOrderId: () => {},
+	trackingOrder: null,
+	setTrackingOrder: () => {},
 })
 
 export default function CheckoutLayout() {
@@ -108,6 +143,7 @@ export default function CheckoutLayout() {
 	const [giftProducts, setGiftProducts] = useState<ProductInfo[]>([])
 	const [isLoadingGiftProducts, setIsLoadingGiftProducts] = useState(false)
 	const [orderId, setOrderId] = useState<number | undefined>(undefined)
+	const [trackingOrder, setTrackingOrder] = useState<any>(null)
 	const { showError } = useAlert()
 
 	useEffect(() => {
@@ -212,6 +248,8 @@ export default function CheckoutLayout() {
 		setIsLoadingGiftProducts,
 		orderId,
 		setOrderId,
+		trackingOrder,
+		setTrackingOrder,
 	}
 
 	return (
@@ -222,6 +260,7 @@ export default function CheckoutLayout() {
 				<Stack.Screen name="/input-address" />
 				<Stack.Screen name="/order/(checkout)/order-placed" />
 				<Stack.Screen name="/order/(checkout)/tracking" />
+				<Stack.Screen name="/order/(checkout)/feedback" />
 			</Stack>
 		</CheckoutContext.Provider>
 	)
