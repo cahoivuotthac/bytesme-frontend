@@ -59,6 +59,18 @@ export const getWishlist = () => {
 };
 
 export const cartAPI = {
+	addItemToCart: async (
+		productId: number,
+		quantity: number,
+		selectedSize: string
+	) => {
+		return await APIClient.post("/user/cart/add", {
+			product_id: productId,
+			quantity: quantity,
+			selected_size: selectedSize,
+		});
+	},
+
 	getCartItems: async () => {
 		return await APIClient.get("/user/cart");
 	},
@@ -158,17 +170,35 @@ export const addressAPI = {
 		return APIClient.post("/user/addresses/remove", {
 			user_address_id: userAddressId,
 		});
-	}
+	},
 };
 
 export const voucherAPI = {
-	getVouchers: (selectedItemIds: number[], offset: number, limit: number) => {
+	getVouchers: (
+		selectedItemIds: number[],
+		offset: number,
+		limit: number,
+		voucherCode?: string
+	) => {
+		let searchParams = new URLSearchParams({
+			selected_item_ids: selectedItemIds.join(","),
+			offset: offset.toString(),
+			limit: limit.toString(),
+		});
+
+		if (voucherCode) {
+			searchParams.append("voucher_code", voucherCode);
+		}
+
+		return APIClient.get("/voucher?" + searchParams.toString());
+	},
+
+	isVoucherApplicable: (voucherCode: string, selected_item_ids: string) => {
 		return APIClient.get(
-			"/voucher?" +
+			"/voucher/is-applicable?" +
 				new URLSearchParams({
-					selected_item_ids: selectedItemIds.join(","),
-					offset: offset.toString(),
-					limit: limit.toString(),
+					voucher_code: voucherCode,
+					selected_item_ids: selected_item_ids,
 				}).toString()
 		);
 	},
