@@ -20,6 +20,7 @@ import { formatPrice } from '@/utils/display'
 import NavButton from '@/components/shared/NavButton'
 import VoucherSection from '@/components/shared/VoucherSection'
 import Button from '@/components/ui/Button'
+import { AxiosError } from 'axios'
 
 interface UserAddress {
 	userAddressId: number
@@ -304,21 +305,54 @@ export default function CheckoutScreen() {
 	}
 
 	// Handle manual voucher application in VoucherSection component
-	const handleApplyVoucherCode = (code: string) => {
+	const handleApplyVoucherCode = async (code: string) => {
 		setApplyingVoucher(true)
 
-		// Simulate API call
-		setTimeout(() => {
-			setApplyingVoucher(false)
-			// setPromoCode(code)
-			showInfo(`Applying voucher: ${code}`)
-
-			// Find matching voucher from mock data
-			const matchedVoucher = vouchers.find((v) => v.voucher_code === code)
-			if (matchedVoucher) {
-				handleSelectQuickVoucher(matchedVoucher)
+		const matchedVoucher = vouchers.find((v) => v.voucher_code === code)
+		if (matchedVoucher) {
+			if (matchedVoucher.is_applicable) {
+				setAppliedVoucher(matchedVoucher)
+				setSelectedVoucher(matchedVoucher)
+				showSuccess(t('voucherApplied'))
+				setApplyingVoucher(false)
+				return
+			} else {
+				showInfo(t('voucherNotApplicable'))
+				setApplyingVoucher(false)
+				return
 			}
-		}, 800)
+		}
+
+		// If voucher not available off-line
+		try {
+			// setPromoCode(code)
+
+			const fetchedVouchers = await (
+				await voucherAPI.getVouchers(
+					checkoutItems.map((item) => item.productId),
+					0,
+					0,
+					code
+				)
+			).data
+			const voucher = fetchedVouchers[0]
+			// Find matching voucher from voucher lists
+			if (voucher.is_applicable) {
+				showInfo(t('voucherApplied'))
+				setAppliedVoucher(voucher)
+			} else {
+				showInfo(t('voucherNotApplicable'))
+			}
+		} catch (err) {
+			console.error('Error applying voucher via code:', err)
+			if (err instanceof AxiosError && err?.response?.status === 404) {
+				showError(t('voucherNotFound'))
+			} else {
+				showError(t('voucherApplyError'))
+			}
+		} finally {
+			setApplyingVoucher(false)
+		}
 	}
 
 	// Handle place order
