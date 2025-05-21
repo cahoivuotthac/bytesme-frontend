@@ -91,25 +91,74 @@ export const addressAPI = {
 
 	addAddress: ({
 		urbanName,
+		urbanCode,
 		suburbName,
+		suburbCode,
 		quarterName,
+		quarterCode,
 		fullAddress,
 		isDefaultAddress,
 	}: {
 		urbanName: string;
+		urbanCode: string;
 		suburbName: string;
+		suburbCode: string;
 		quarterName: string | null;
+		quarterCode: string | null;
 		fullAddress: string;
 		isDefaultAddress: boolean;
 	}) => {
 		return APIClient.post("/user/addresses/add", {
 			urban_name: urbanName,
+			urban_code: urbanCode,
 			suburb_name: suburbName,
+			suburb_code: suburbCode,
 			quarter_name: quarterName,
+			quarter_code: quarterCode,
 			full_address: fullAddress,
 			is_default_address: isDefaultAddress,
 		});
 	},
+
+	updateAddress: async ({
+		userAddressId,
+		urbanName,
+		urbanCode,
+		suburbName,
+		suburbCode,
+		quarterName,
+		quarterCode,
+		fullAddress,
+		isDefaultAddress,
+	}: {
+		userAddressId: number;
+		urbanName: string;
+		urbanCode: string;
+		suburbName: string;
+		suburbCode: string;
+		quarterName: string | null;
+		quarterCode: string | null;
+		fullAddress: string;
+		isDefaultAddress: boolean;
+	}) => {
+		return APIClient.post("/user/addresses/update", {
+			user_address_id: userAddressId,
+			urban_name: urbanName,
+			urban_code: urbanCode,
+			suburb_name: suburbName,
+			suburb_code: suburbCode,
+			quarter_name: quarterName,
+			quarter_code: quarterCode,
+			full_address: fullAddress,
+			is_default_address: isDefaultAddress,
+		});
+	},
+
+	removeAddress: async (userAddressId: number) => {
+		return APIClient.post("/user/addresses/remove", {
+			user_address_id: userAddressId,
+		});
+	}
 };
 
 export const voucherAPI = {
@@ -178,25 +227,9 @@ export const orderAPI = {
 		});
 	},
 
-	sendFeedback: async (params: {
-		orderId: number;
-		content: string;
-		rating: number;
-		improveTags?: string[];
-		isAnonymous?: boolean;
-		images?: string[];
-	}) => {
-		const payload = {
-			order_id: params.orderId,
-			content: params.content,
-			rating: params.rating,
-			is_anonymous: params.isAnonymous,
-			improve_tags: params.improveTags,
-		};
-		console.log("payload", payload);
-
-		return APIClient.post("/order/feedback", payload, {
-			headers: { "Content-Type": "application/json" },
+	sendFeedback: async (formData: FormData) => {
+		return APIClient.post("/order/feedback", formData, {
+			// headers: { "Content-Type": "multipart/form-data" },
 		});
 	},
 

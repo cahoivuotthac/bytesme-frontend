@@ -64,6 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				response = await APIClient.get('/auth/user')
 				console.log('Auth token retrieved from storage is still valid')
 				console.log('Current user:', response.data)
+				// Refresh-user on start
+				setAuthState({
+					...authState,
+					user: response.data,
+				})
 			} catch (error: any) {
 				if (error?.response?.status === 401) {
 					console.error('Token retrieved from storage have expired:', error)
@@ -228,13 +233,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const refreshUser = async (): Promise<void> => {
 		try {
 			const response = await APIClient.get('/auth/user')
-
+			console.log('New user data:', response.data)
 			if (response.status === 200) {
-				setAuthState({
-					...defaultAuthState,
-					user: response.data.user,
+				const newAuthState = {
+					...authState,
+					user: response.data,
 					isLoading: false,
-				})
+				}
+				setAuthState(newAuthState)
+				await persistAuthState(newAuthState) // persist
 			}
 		} catch (error) {
 			console.error('Error refreshing user data:', error)

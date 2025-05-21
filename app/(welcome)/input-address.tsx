@@ -104,7 +104,7 @@ export default function InputAddressScreen() {
 	const [isCurrentLocation, setIsCurrentLocation] = useState(false)
 
 	// Address selection data
-	const [provinceList, setProvinceList] = useState<AddressItem[]>([])
+	const [urbanList, setUrbanList] = useState<AddressItem[]>([])
 	const [suburbList, setSuburbList] = useState<AddressItem[]>([])
 	const [quarterList, setQuarterList] = useState<AddressItem[]>([])
 
@@ -132,13 +132,16 @@ export default function InputAddressScreen() {
 
 	const skipAddressItemResetRef = useRef(false)
 
+	// Get route params
+	const params = useLocalSearchParams()
+	const receivedAddress = params.pleaseLoadThisAddress
+	const isEdit = Boolean(params.isEdit) // Convert string param to boolean
+	console.log('isEdit: ', isEdit)
 	const navigateBackPath =
-		(useLocalSearchParams().navigateBackPath as string) || '/(home)/product'
+		(params.navigateBackPath as string) || '/(home)/product'
 
-	// Load provinces from JSON on component mount
-	useEffect(() => {
-		loadUrbanList()
-	}, [])
+	// Store the address ID when in edit mode
+	const [userAddressId, setUserAddressId] = useState<number | null>(null)
 
 	const handleSelectUrban = (urban: AddressItem) => {
 		loadSuburbList(urban.code)
@@ -176,7 +179,10 @@ export default function InputAddressScreen() {
 		skipAddressItemResetRef.current = false
 	})
 
-	// Load provinces from local JSON
+	// Load urbans from local JSON on component mount
+	useEffect(() => {
+		loadUrbanList()
+	}, [])
 	const loadUrbanList = () => {
 		setLoadingUrbanList(true)
 		try {
@@ -186,7 +192,7 @@ export default function InputAddressScreen() {
 					name: province.name_with_type,
 				})
 			)
-			setProvinceList(urbanList)
+			setUrbanList(urbanList)
 		} catch (error) {
 			console.error('Error loading urban list:', error)
 			showError(t('errorLoadingProvinces') || 'Error loading urban list')
@@ -270,7 +276,7 @@ export default function InputAddressScreen() {
 	}
 
 	// Filter provinces based on search
-	const filteredProvinces = provinceList.filter((province) =>
+	const filteredProvinces = urbanList.filter((province) =>
 		province.name.toLowerCase().includes(urbanSearch.toLowerCase())
 	)
 
@@ -284,12 +290,46 @@ export default function InputAddressScreen() {
 		ward.name.toLowerCase().includes(quarterSearch.toLowerCase())
 	)
 
-	// In a useEffect to see when state actually changes
 	useEffect(() => {
-		console.log('State updated:', {
-			selectedAddress,
-		})
-	}, [selectedAddress])
+		console.log('Loading address data, isEdit:', isEdit)
+		if (urbanList.length > 0 && receivedAddress) {
+			// Find selected urban
+			const parsedReceivedAddress = JSON.parse(receivedAddress.toString())
+			const urban: AddressItem = {
+				name: parsedReceivedAddress.urban_name,
+				code: parsedReceivedAddress.urban_code,
+			}
+			const suburb: AddressItem = {
+				name: parsedReceivedAddress.suburb_name,
+				code: parsedReceivedAddress.suburb_code,
+			}
+			const quarter: AddressItem = {
+				name: parsedReceivedAddress.quarter_name,
+				code: parsedReceivedAddress.quarter_code,
+			}
+
+			// Debug
+			console.log('Parsed received address:', parsedReceivedAddress)
+
+			// Set the user_address_id when in edit mode
+			if (isEdit && parsedReceivedAddress.user_address_id) {
+				setUserAddressId(parsedReceivedAddress.user_address_id)
+				setIsDefaultAddress(parsedReceivedAddress.is_default_address || false)
+			}
+
+			setSelectedAddress({
+				urban,
+				suburb,
+				quarter,
+			})
+			setAddressDetails(parsedReceivedAddress.full_address)
+
+			// Load list
+			loadSuburbList(urban.code)
+			loadQuarterList(suburb.code)
+		}
+	}, [urbanList, receivedAddress, isEdit]) // ties to urbanList to know when the page has loaded
+	useEffect(() => {}, [urbansData, suburbList])
 
 	const handleGetCurrentLocation = async () => {
 		setIsLoading(true)
@@ -386,27 +426,34 @@ export default function InputAddressScreen() {
 			} = selectedAddress
 
 			// Format the complete address
-			const fullAddress = [
-				addressDetails,
-				selectedQuarter?.name,
-				selectedSuburb?.name,
-				selectedUrban?.name,
-			]
-				.filter(Boolean)
-				.join(', ')
 
-			await addressAPI.addAddress({
-				// name: t('defaultAddressName') || 'Home',
+			const addressData = {
 				urbanName: selectedUrban.name,
+				urbanCode: selectedUrban.code,
 				suburbName: selectedSuburb.name,
+				suburbCode: selectedSuburb.code,
 				quarterName: selectedQuarter?.name || null,
-				fullAddress,
+				quarterCode: selectedQuarter?.code || null,
+				fullAddress: addressDetails,
 				isDefaultAddress,
-			})
+			}
 
-			showSuccess(t('addressSaved') || 'Address saved successfully', () => {
-				router.replace(navigateBackPath as any)
-			})
+			if (isEdit && userAddressId) {
+				// Update existing address
+				await addressAPI.updateAddress({ ...addressData, userAddressId })
+				showSuccess(
+					t('addressUpdated') || 'Address updated successfully',
+					() => {
+						router.replace(navigateBackPath as any)
+					}
+				)
+			} else {
+				// Add new address
+				await addressAPI.addAddress(addressData)
+				showSuccess(t('addressSaved') || 'Address saved successfully', () => {
+					router.replace(navigateBackPath as any)
+				})
+			}
 		} catch (error) {
 			console.error('Error saving address:', error)
 			showError(t('addressSaveError') || 'Error saving address')
@@ -458,11 +505,16 @@ export default function InputAddressScreen() {
 					{/* Title and Subtitle */}
 					<View style={styles.titleContainer}>
 						<Text style={styles.title}>
-							{t('deliveryLocation') || 'Delivery Location'}
+							{isEdit
+								? t('editDeliveryLocation') || 'Edit Delivery Location'
+								: t('deliveryLocation') || 'Delivery Location'}
 						</Text>
 						<Text style={styles.subtitle}>
-							{t('deliveryLocationSubtitle') ||
-								'Please enter your delivery address'}
+							{isEdit
+								? t('editDeliveryLocationSubtitle') ||
+								  'Update your delivery address'
+								: t('deliveryLocationSubtitle') ||
+								  'Please enter your delivery address'}
 						</Text>
 					</View>
 
@@ -661,6 +713,8 @@ export default function InputAddressScreen() {
 							text={
 								isLoading
 									? t('processing') || 'Processing...'
+									: isEdit
+									? t('updateAddress') || 'Update Address'
 									: t('saveAddress') || 'Save Address'
 							}
 						/>
