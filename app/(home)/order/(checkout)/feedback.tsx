@@ -94,10 +94,22 @@ export default function FeedbackScreen() {
 					onPress={() => handleRatingChange(i)}
 					style={styles.starContainer}
 				>
-					<AntDesign
+					{/* <AntDesign
 						name={i <= rating ? 'star' : 'staro'}
 						size={28}
 						color={i <= rating ? '#F2994A' : '#D8D8D8'}
+					/> */}
+					<Image
+						source={
+							i <= rating
+								? require('@/assets/icons/feedback/pink-star-filled.png')
+								: require('@/assets/icons/feedback/pink-star.png')
+						}
+						style={{
+							width: 28,
+							height: 28,
+							// tintColor: i <= rating ? '#F2994A' : '#D88D8',
+						}}
 					/>
 				</TouchableOpacity>
 			)
@@ -241,7 +253,9 @@ export default function FeedbackScreen() {
 					{trackingOrder?.order_items &&
 						trackingOrder.order_items.length > 0 && (
 							<View style={{ alignItems: 'center', marginTop: 16 }}>
-								<View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+								<View
+									style={{ flexDirection: 'row', justifyContent: 'center' }}
+								>
 									{trackingOrder.order_items.map((item, index) => (
 										<View
 											key={index}
@@ -557,7 +571,7 @@ const styles = StyleSheet.create({
 	},
 	commentInput: {
 		backgroundColor: '#FFFFFF',
-		borderRadius: 12,
+		borderRadius: 8,
 		padding: 12,
 		height: 100,
 		fontSize: 14,
@@ -565,7 +579,7 @@ const styles = StyleSheet.create({
 		color: '#3C3C3C',
 		textAlignVertical: 'top',
 		borderWidth: 1,
-		borderColor: '#F0F0F0',
+		borderColor: '#C67C4E',
 	},
 	imageUploadSection: {
 		marginVertical: 16,
@@ -586,6 +600,7 @@ const styles = StyleSheet.create({
 		flexWrap: 'wrap',
 		marginHorizontal: 2,
 		alignItems: 'center', // Center items vertically
+		height: 100,
 	},
 	imagePreview: {
 		width: 80,

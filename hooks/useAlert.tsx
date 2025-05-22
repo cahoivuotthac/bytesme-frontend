@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react'
 import AlertDialog from '@/components/shared/AlertDialog'
+import { useTranslation } from '@/providers/locale'
 
 interface AlertOptions {
 	title?: string
@@ -18,6 +19,8 @@ export function useAlert() {
 		type: 'default',
 	})
 
+	const { t } = useTranslation()
+
 	const showAlert = useCallback((alertOptions: AlertOptions) => {
 		setOptions(alertOptions)
 		setVisible(true)
@@ -31,7 +34,7 @@ export function useAlert() {
 	const showError = useCallback(
 		(message: string, onConfirm?: () => void) => {
 			showAlert({
-				title: 'Lỗi',
+				title: t('error'),
 				message,
 				type: 'error',
 				onConfirm: () => {
@@ -46,7 +49,7 @@ export function useAlert() {
 	const showSuccess = useCallback(
 		(message: string, onConfirm?: () => void) => {
 			showAlert({
-				title: 'Thành công',
+				title: t('success'),
 				message,
 				type: 'success',
 				onConfirm: () => {
@@ -61,7 +64,7 @@ export function useAlert() {
 	const showInfo = useCallback(
 		(message: string, onConfirm?: () => void) => {
 			showAlert({
-				title: 'Thông tin',
+				title: t('info'),
 				message,
 				type: 'info',
 				onConfirm: () => {
@@ -76,7 +79,7 @@ export function useAlert() {
 	const showConfirm = useCallback(
 		(message: string, onConfirm: () => void, cancelText = 'Hủy') => {
 			showAlert({
-				title: 'Xác nhận',
+				title: t('confirm'),
 				message,
 				confirmText: 'Đồng ý',
 				cancelText,

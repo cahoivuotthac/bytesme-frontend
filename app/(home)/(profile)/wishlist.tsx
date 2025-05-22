@@ -178,6 +178,7 @@ export default function FavoritesScreen() {
 					size={80}
 					containerStyle={styles.dishContainer}
 					imageStyle={styles.dishImage}
+					resizeMode="cover"
 				/>
 			</View>
 

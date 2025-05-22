@@ -257,10 +257,13 @@ export const orderAPI = {
 		});
 	},
 
-	sendFeedback: async (formData: FormData) => {
-		return APIClient.post("/order/feedback", formData, {
-			// headers: { "Content-Type": "multipart/form-data" },
-		});
+	sendFeedback: async (params: {
+		order_id: number;
+		content: string;
+		rating: number;
+		images: string[]; // base64 images
+	}) => {
+		return APIClient.post("/order/feedback", params);
 	},
 
 	getOrderDetails: (orderId: number) => {

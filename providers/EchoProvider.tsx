@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js/react-native'
 import { useAuth } from './auth'
-import { APIClient, getCsrfToken } from '@/utils/api'
 
 // Create context to store the Echo instance
 const EchoContext = createContext<{
@@ -12,8 +11,6 @@ const EchoContext = createContext<{
 	echo: null,
 	isConfigured: false,
 })
-
-export const useEchoInstance = () => useContext(EchoContext)
 
 export function EchoProvider({ children }: { children: React.ReactNode }) {
 	const [echo, setEcho] = useState<Echo<any> | null>(null)
@@ -97,3 +94,5 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 		</EchoContext.Provider>
 	)
 }
+
+export const useEchoInstance = () => useContext(EchoContext)

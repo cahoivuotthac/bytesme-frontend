@@ -5,19 +5,17 @@ export function useEchoChannel(
 	channelName: string,
 	eventName: string,
 	isPrivate = true, // Default to private channels for Laravel authentication
-	callback: (data: any) => void
+	callback: (data: any) => void,
+	isEnabled = true // Flag to enable or disable the listener
 ) {
 	const { echo, isConfigured } = useEchoInstance()
 	const [isListening, setIsListening] = useState(false)
 	const channelRef = useRef<any>(null)
 
 	useEffect(() => {
-		if (!isConfigured || !echo || !channelName || !eventName) return
+		if (!isEnabled || !isConfigured || !echo || !channelName || !eventName) return
 
 		try {
-			// Create the channel - ensure proper format
-			let channel
-
 			console.log(
 				`Attempting to subscribe to ${
 					isPrivate ? 'private' : 'public'
@@ -25,24 +23,21 @@ export function useEchoChannel(
 			)
 
 			if (isPrivate) {
-				channel = echo.private(channelName)
+				channelRef.current = echo.private(channelName)
 			} else {
-				channel = echo.channel(channelName)
+				channelRef.current = echo.channel(channelName)
 			}
 
-			if (channel) {
-				channelRef.current = channel
+			if (channelRef.current) {
 				console.log(`🔊 Now listening to ${eventName} on ${channelName}`)
+				channelRef.current.listen(eventName, (event: any) => {
+					console.log(`🔔 Received notifcation on ${channelName}:`, event)
+					callback(event)
+				})
 				setIsListening(true)
 			} else {
 				console.error(`❌ Failed to create channel for ${channelName}`)
 			}
-
-			channelRef.current.listen(eventName, (event: any) => {
-				console.log('Received test event on public channel:', event)
-				console.log(`🔔 Received notifcation on ${channelName}:`, event)
-				callback(event)
-			})
 
 			// Cleanup listener when component unmounts or dependencies change
 			return () => {
@@ -51,7 +46,7 @@ export function useEchoChannel(
 						console.log(
 							`🔇 Stopping listener for ${eventName} on ${channelName}`
 						)
-						channel.stopListening(eventName)
+						channelRef.current.stopListening(eventName)
 
 						// Only leave if we have a valid echo instance
 						if (echo) {
@@ -70,7 +65,7 @@ export function useEchoChannel(
 		} catch (error) {
 			console.error(`Error setting up Echo channel ${channelName}:`, error)
 		}
-	}, [channelName, eventName, echo, isConfigured, isPrivate])
+	}, [channelName, eventName, echo, isConfigured, isPrivate, isEnabled])
 
-	return { isListening }
+	return { isListening, channel: channelRef.current }
 }

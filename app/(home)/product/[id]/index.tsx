@@ -18,9 +18,10 @@ import Button from '@/components/ui/Button'
 import RegularProductCard from '@/components/product/RegularProductCard'
 import { useTranslation } from '@/providers/locale'
 import ImageCarousel from '@/components/shared/ImageCarousel'
-import { APIClient } from '@/utils/api'
+import { APIClient, cartAPI } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import QuantityControl from '@/components/ui/QuantityControl'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 const { width, height } = Dimensions.get('window')
 
@@ -147,7 +148,9 @@ const SIMILAR_PRODUCTS = [
 ]
 
 export default function ProductDetailScreen() {
-	const { id: productId } = useLocalSearchParams()
+	const params = useLocalSearchParams()
+	const productId = Number(params.id)
+
 	const { t } = useTranslation()
 	const [isFavorite, setIsFavorite] = useState(PRODUCT.isFavorite)
 	const [selectedSize, setSelectedSize] = useState('M')
@@ -157,7 +160,7 @@ export default function ProductDetailScreen() {
 	const [reviewsModalVisible, setReviewsModalVisible] = useState(false)
 	const [selectedReviewImage, setSelectedReviewImage] = useState(null)
 
-	const { AlertComponent, showError } = useAlert()
+	const { AlertComponent, showError, showInfo } = useAlert()
 	const [productData, setProductData] = useState<ProductData>({} as any)
 
 	// Initialize data
@@ -221,11 +224,16 @@ export default function ProductDetailScreen() {
 	}
 
 	// Handle add to cart
-	const handleAddToCart = () => {
-		console.log(
-			`Added ${quantity} of ${PRODUCT.name} (${selectedSize}) to cart`
-		)
+	const handleAddToCart = async () => {
 		// Implementation would depend on your cart management system
+		try {
+			await cartAPI.addItemToCart(productId, quantity, selectedSize)
+			showInfo(t('addedToCart'))
+			setQuantity(1) // Reset quantity after adding to cart
+		} catch (err) {
+			console.error('Error adding to cart:', err)
+			showError(t('errorAddingToCart'))
+		}
 	}
 
 	// Toggle description modal
@@ -471,9 +479,20 @@ export default function ProductDetailScreen() {
 						</ScrollView>
 					</View>
 					{/* Add extra space at the bottom to account for the buttons */}
-					<View style={styles.bottomSpacer} />
+					<View style={styles.bottomButtonSpacer} />
 				</View>
 			</ScrollView>
+
+			{/* Add to Cart Button - Moved outside of ScrollView to be fixed at bottom */}
+			<View style={styles.addToCartContainer}>
+				<Button
+					text={t('addToCart')}
+					backgroundColor="#c67c4e"
+					textColor="#ffffff"
+					onPress={handleAddToCart}
+					style={styles.addToCartButton}
+				/>
+			</View>
 
 			{/* Description Modal */}
 			<Modal
@@ -556,13 +575,6 @@ export default function ProductDetailScreen() {
 									</TouchableOpacity>
 								))}
 							</View>
-
-							{/* <TouchableOpacity
-								style={styles.applyButton}
-								onPress={toggleSizeDropdown}
-							>
-								<Text style={styles.applyButtonText}>{t('apply')}</Text>
-							</TouchableOpacity> */}
 						</View>
 					</View>
 				</TouchableOpacity>
@@ -693,17 +705,6 @@ export default function ProductDetailScreen() {
 					/>
 				</TouchableOpacity>
 			</Modal>
-
-			{/* Add to Cart Button */}
-			<View style={styles.addToCartContainer}>
-				<Button
-					text={t('addToCart')}
-					backgroundColor="#c67c4e"
-					textColor="#ffffff"
-					onPress={handleAddToCart}
-					style={styles.addToCartButton}
-				/>
-			</View>
 		</SafeAreaView>
 	)
 }
@@ -896,7 +897,7 @@ const styles = StyleSheet.create({
 		width: width * 0.35,
 		marginRight: 15,
 	},
-	bottomSpacer: {
+	bottomButtonSpacer: {
 		height: height * 0.01, // Additional space at the bottom of the content
 	},
 	addToCartContainer: {
@@ -904,7 +905,7 @@ const styles = StyleSheet.create({
 		paddingVertical: 3,
 		backgroundColor: 'transparent',
 		position: 'absolute',
-		bottom: 12, // Space for the bottom bar
+		bottom: 80, // Space for the bottom bar
 		left: 0,
 		right: 0,
 		zIndex: 1000, // Ensure it's above the content

@@ -106,6 +106,7 @@ const RegularProductCard: React.FC<RegularProductCardProps> = ({
 					size={CARD_WIDTH * 0.7}
 					containerStyle={styles.dishContainer}
 					imageStyle={styles.dishImage}
+					resizeMode="cover"
 				/>
 			</View>
 

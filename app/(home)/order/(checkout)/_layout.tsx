@@ -255,12 +255,13 @@ export default function CheckoutLayout() {
 	return (
 		<CheckoutContext.Provider value={contextValue}>
 			<Stack screenOptions={{ headerShown: false }}>
+				<Stack.Screen name="/input-address" />
 				<Stack.Screen name="/order/(checkout)/checkout" />
 				<Stack.Screen name="/order/(checkout)/voucher" />
-				<Stack.Screen name="/input-address" />
 				<Stack.Screen name="/order/(checkout)/order-placed" />
 				<Stack.Screen name="/order/(checkout)/tracking" />
 				<Stack.Screen name="/order/(checkout)/feedback" />
+				<Stack.Screen name="/order/(checkout)/online-payment-pending" />
 			</Stack>
 		</CheckoutContext.Provider>
 	)

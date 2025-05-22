@@ -11,6 +11,10 @@ export default {
 	cancel: "Hủy",
 	close: "Đóng",
 	confirm: "Xác nhận",
+	accept: "Chấp nhận",
+	decline: "Từ chối",
+	error: "Đã có lỗi xảy ra",
+	sucess: "Thành công",
 
 	// Product Cards
 	discount: "Giảm giá",
@@ -267,6 +271,7 @@ export default {
 	discount: "Giảm giá",
 	placeOrder: "Đặt hàng",
 	shippingFee: "Phí giao hàng",
+	orderFailed: "Rất tiếc, đặt hàng không thành công",
 	confirmDeliveryAddress: "Xác nhận địa chỉ giao hàng",
 	confirmPaymentMethod: "Xác nhận phương thức thanh toán",
 	yourOrder: "Xem lại đơn hàng của bạn",
@@ -387,10 +392,34 @@ export default {
 	uploadImages: "Đăng tải hình ảnh:",
 	submitAnonymously: "Đánh giá ẩn danh",
 	submit: "Tiếp tục",
+	errorUploadingImage: 
+		"Rất tiếc, không thể tải ảnh lên.",
 
 	// Improvement area labels
 	flavour: "Cải thiện hương vị",
 	actOfService: "Phục vụ tận tình",
 	packaging: "Đóng gói đẹp hơn",
 	deliveryTime: "Thời gian giao hàng",
+
+	// Online Payment Pending Page
+	onlinePayment: "Thanh toán trực tuyến",
+	momoPaymentMethod: "Thanh toán bằng ví Momo",
+	vnpayPaymentMethod: "Thanh toán bằng ví VNPay",
+	processingPayment: "Vui lòng hoàn tất thanh toán ở cổng ngoài...",
+	paymentPendingInfo:
+		"Vui lòng hoàn tất thanh toán qua dịch vụ bên ngoài (ví dụ: MoMo, VNPay). Đừng đóng trang này. Chúng tôi sẽ cập nhật trạng thái đơn hàng khi nhận được xác nhận thanh toán.",
+	paymentSuccess: "Đã xác nhận thanh toán!",
+	paymentFailed: "Chưa hoàn tất thanh toán",
+	paymentFailedMessage:
+		"Đơn hàng đã bị hủy do chưa hoàn tất thanh toán. Bạn có thể thử lại hoặc đặt đơn mới.",
+	redirectingToOrderStatus: "Đang chuyển đến trạng thái đơn hàng...",
+	showQrCode: "Mã QR thanh toán",
+	tryAgain: "Thử lại",
+	returnToShopping: "Quay về thực đơn",
+	openMomoToPay: "Thanh toán trong ứng dụng MoMo",
+	openVnPayToPay: "Thanh toán trong ứng dụng VNPay",
+	scanQrWithMomoOrBankApp: "Quét mã QR bằng ứng dụng MoMo hoặc ngân hàng",
+	connecting: "Đang chờ xác nhận thanh toán...",
+	paymentTimeout:
+		"Thời gian thanh toán đã hết. Đơn hàng của bạn sẽ bị hủy, vui lòng thử lại hoặc đặt hàng mới.",
 };

@@ -376,22 +376,39 @@ export default function CheckoutScreen() {
 			payment_method_id: selectedPaymentMethodId,
 			voucher_code: appliedVoucher?.voucher_code || null,
 			selected_item_ids: checkoutItems.map((item) => item.productId),
+			language: locale
 		}
 		try {
 			switch (selectedPaymentMethodId) {
-				case 'cod':
-					const { order_id } = (await orderAPI.placeOrder({ ...params })).data
-					setOrderId(order_id)
+				case 'cod': {
+					const { order_id: cod_order_id } = (
+						await orderAPI.placeOrder({ ...params })
+					).data
+					setOrderId(cod_order_id)
+					router.replace({
+						pathname: '/(home)/order/(checkout)/order-placed',
+					})
 					break
-				case 'vnpay':
-					await orderAPI.placeOrder({ ...params })
+				}
+				case 'momo':
+				case 'vnpay': {
+					const { pay_urls: payUrls, order_id: online_order_id } = (
+						await orderAPI.placeOrder({ ...params })
+					).data
+					console.log('payUrls:', payUrls)
+					console.log('order_id:', online_order_id)
+					setOrderId(online_order_id)
+					router.replace({
+						pathname: '(home)/order/(checkout)/online-payment-pending',
+						params: {
+							payUrls: JSON.stringify(payUrls),
+							paymentMethodId: selectedPaymentMethodId,
+						},
+					})
 					break
+				}
 			}
 			console.log('Order placed successfully:', params)
-
-			router.replace({
-				pathname: '/(home)/order/(checkout)/order-placed',
-			})
 		} catch (err) {
 			console.error('Error placing order:', err)
 			showError(t('orderFailed'))

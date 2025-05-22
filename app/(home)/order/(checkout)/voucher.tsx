@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
 	},
 	buttonContainer: {
 		position: 'absolute',
-		bottom: 0,
+		bottom: 70,
 		left: 0,
 		right: 0,
 		backgroundColor: '#FFFFFF',

@@ -23,6 +23,7 @@ import { addToWishlist, cartAPI, removeFromWishlist } from '@/utils/api'
 import DashedLine from 'react-native-dashed-line'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { formatPrice } from '@/utils/display'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window')
@@ -99,7 +100,7 @@ export default function CartScreen() {
 					prices: item.product.product_unit_price.prices,
 					sizes: item.product.product_unit_price.sizes,
 					quantity: item.cart_items_quantity,
-					imageUrl: item.product.product_images[0].image_url, // @TODO: fill images into db later
+					imageUrl: item.product.product_images[0].product_image_url, // @TODO: fill images into db later
 					isSelected:
 						(await AsyncStorage.getItem(
 							`cartItemsSelected/${item.product_id}`
@@ -342,6 +343,9 @@ export default function CartScreen() {
 							imageSource={{ uri: item.imageUrl }}
 							containerStyle={styles.dishContainer}
 							imageStyle={styles.dishImage}
+							resizeMode="contain"
+							adjustForBowl={true}
+							imageScale={1.4}
 						/>
 					</TouchableOpacity>
 
@@ -523,6 +527,7 @@ export default function CartScreen() {
 					</View>
 				</>
 			)}
+			<BottomSpacer />
 		</SafeAreaView>
 	)
 }
@@ -652,7 +657,7 @@ const styles = StyleSheet.create({
 		marginRight: 12,
 	},
 	dishContainer: {
-		backgroundColor: '#EDE9E0',
+		backgroundColor: '#FFFFFF',
 		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.5,

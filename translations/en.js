@@ -8,7 +8,11 @@ export default {
 	apply: "Apply",
 	cancel: "Cancel",
 	confirm: "Confirm",
+	accept: "Accept",
+	decline: "Decline",
 	close: "Close",
+	error: "An issue occurred",
+	success: "Success",
 
 	// Product Cards
 	discount: "Discount",
@@ -262,6 +266,7 @@ export default {
 	confirmPaymentMethod: "Confirm payment method",
 	yourOrder: "Review your order",
 	confirmPlaceOrder: "Confirm and place order",
+	orderFailed: "Sorry, your order could not be placed",
 
 	// Order Placed screen
 	orderCompleted: "Completed!",
@@ -383,10 +388,32 @@ export default {
 	uploadImages: "Upload images:",
 	submitAnonymously: "Submit anonymously",
 	submit: "Continue",
+	errorUploadingImage: "Rất tiếc, không thể tải ảnh lên.",
 
 	// Improvement area labels
 	flavour: "Food/drink flavor",
 	actOfService: "Service attitude",
 	packaging: "Packaging",
 	deliveryTime: "Delivery time",
+
+	// Online Payment Pending Page
+	onlinePayment: "Smart Online Payment",
+	momoPaymentMethod: "Pay with Momo wallet",
+	vnpayPaymentMethod: "Pay with VNPay wallet",
+	openMomoToPay: "Open Momo app to pay",
+	openVnPayToPay: "Open VNPay app to pay",
+	processingPayment: "Waiting for your payment...",
+	paymentPendingInfo:
+		"Please complete your payment in the external service (e.g. MoMo, VNPay). Do not close this page. We will update your order status once payment is confirmed.",
+	paymentSuccess: "Payment confirmed!",
+	paymentFailed: "Payment not completed",
+	paymentFailedMessage:
+		"Your order was cancelled because payment was not completed. You can try again or place a new order.",
+	redirectingToOrderStatus: "Redirecting to your order status...",
+	tryAgain: "Try Again",
+	returnToShopping: "Return to Menu",
+	showQrCode: "Show payment QR code",
+	connecting: "Waiting for payment confirmation...",
+	paymentTimeout:
+		"Payment timeout, your order will likely be canclled in a moment",
 };
