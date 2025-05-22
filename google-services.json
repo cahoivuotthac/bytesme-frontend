@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "895067022871",
+    "project_id": "bytesme-bakery",
+    "storage_bucket": "bytesme-bakery.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895067022871:android:4620a31ba16f91f51a9e52",
+        "android_client_info": {
+          "package_name": "com.bytesme.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNpQ0OUK-cNcyJBrAXb3e0KGnfB_U3PSM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
