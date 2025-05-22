@@ -25,13 +25,12 @@ import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
 import { orderAPI } from '@/utils/api'
 import * as ImagePicker from 'expo-image-picker'
-import * as FileSystem from 'expo-file-system'
 import DishDecoration from '@/components/shared/DishDecoration'
 import { CheckoutContext } from './_layout'
 import { useAuth } from '@/providers/auth'
 import { useMemo } from 'react'
-import { RouterStore } from 'expo-router/build/global-state/router-store'
 import { useEffect } from 'react'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 export default function FeedbackScreen() {
 	const { t, locale } = useTranslation()
@@ -128,19 +127,20 @@ export default function FeedbackScreen() {
 			allowsEditing: false,
 			aspect: [1, 1],
 			quality: 0.7,
-			// base64: false,
+			base64: true,
 		})
 
 		if (!result.canceled && result.assets && result.assets.length > 0) {
-			const asset = result.assets[0]
-			if (asset.file) {
-				setImages([...images, asset.file])
-			} else {
-				setImages([...images, asset.uri])
+			const imageAsset = result.assets[0]
+			console.log('image asset: ', imageAsset)
+
+			// Make sure we have base64 data
+			if (!imageAsset.base64) {
+				showError(t(''))
 			}
 
-			console.log('Picked image:', result.assets[0])
-			setImages([...images, result.assets[0].uri])
+			const base64str = `data:image/jpeg;base64,${imageAsset.base64}`
+			setImages([...images, base64str])
 		}
 	}
 
@@ -163,31 +163,22 @@ export default function FeedbackScreen() {
 		console.log('selected improve tags: ', selectedImproveTags)
 		console.log('images: ', images)
 		try {
-			// Convert images to base64
-			const formData = new FormData()
 			if (!trackingOrder || trackingOrder.order_id == null) {
 				showError(t('orderNotFound'))
 				setIsSubmitting(false)
 				return
 			}
-			formData.append('order_id', String(trackingOrder.order_id))
-			formData.append('content', feedback)
-			formData.append('rating', String(rating))
-			formData.append('is_anonymous', String(isAnonymous))
-			formData.append('improve_tags', JSON.stringify(selectedImproveTags))
 
-			images.forEach((uri, idx) => {
-				const name = uri.split('/').pop() || `image_${idx}.jpg`
-				const type = 'image/jpeg'
-				formData.append('images', {
-					uri,
-					name,
-					type,
-				} as any)
-			})
+			const payload = {
+				order_id: trackingOrder.order_id,
+				content: feedback,
+				rating,
+				is_anonymous: isAnonymous,
+				improve_tags: selectedImproveTags,
+				images, // images are already base64 strings
+			}
 
-			// Update your API call to use FormData
-			await orderAPI.sendFeedback(formData)
+			await orderAPI.sendFeedback(payload)
 
 			showSuccess(t('feedbackSubmitSuccess'), () =>
 				router.replace('/(home)/product')
@@ -249,32 +240,46 @@ export default function FeedbackScreen() {
 
 					{trackingOrder?.order_items &&
 						trackingOrder.order_items.length > 0 && (
-							<View style={styles.orderItemsContainer}>
-								<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+							<View style={{ alignItems: 'center', marginTop: 16 }}>
+								<View style={{ flexDirection: 'row', justifyContent: 'center' }}>
 									{trackingOrder.order_items.map((item, index) => (
 										<View
 											key={index}
-											style={[
-												styles.orderItemCircle,
-												{
-													marginLeft: index === 0 ? 0 : -24, // Negative margin for overlap
-													zIndex: trackingOrder.order_items.length - index, // Ensure correct stacking order
-												},
-											]}
+											style={{
+												marginLeft: index === 0 ? 0 : -24,
+												zIndex: trackingOrder.order_items.length - index,
+											}}
 										>
 											<DishDecoration
 												imageSource={{
 													uri: item.product.product_images[0].product_image_url,
 												}}
 												size={80}
-												containerStyle={styles.dishContainer}
 											/>
-											<Text style={styles.dishName} numberOfLines={2}>
-												{item.product.product_name}
-											</Text>
 										</View>
 									))}
-								</ScrollView>
+								</View>
+								{/* Product names below images, centered */}
+								<Text
+									style={{
+										fontSize: 13,
+										color: '#5D4037',
+										fontFamily: 'Inter-Medium',
+										textAlign: 'center',
+										marginTop: 8,
+									}}
+									numberOfLines={1}
+								>
+									{(() => {
+										const names = trackingOrder.order_items.map(
+											(item: any) => item.product.product_name
+										)
+										const displayNames = names.slice(0, 2).join(', ')
+										return names.length > 2
+											? displayNames + ', ...'
+											: displayNames
+									})()}
+								</Text>
 							</View>
 						)}
 				</View>
@@ -409,6 +414,7 @@ export default function FeedbackScreen() {
 					</LinearGradient>
 				</View>
 			</View>
+			<BottomSpacer height={90} />
 		</SafeAreaView>
 	)
 }
@@ -648,19 +654,20 @@ const styles = StyleSheet.create({
 	},
 	bottomContainer: {
 		position: 'absolute',
-		bottom: 0,
+		bottom: 80,
 		left: 0,
 		right: 0,
-		backgroundColor: 'transparent',
+		backgroundColor: 'white',
 		paddingVertical: 16,
 		paddingHorizontal: 20,
+		opacity: 0.9,
 		// borderTopWidth: 1,
 		// borderTopColor: '#F5F5F5',
 		// shadowColor: '#000',
 		// shadowOffset: { width: 0, height: -2 },
 		// shadowOpacity: 0.1,
 		// shadowRadius: 4,
-		// elevation: 4,
+		elevation: 4,
 	},
 	bottomInnerContainer: {
 		flexDirection: 'row',
