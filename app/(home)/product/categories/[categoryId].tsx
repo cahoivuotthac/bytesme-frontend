@@ -24,57 +24,50 @@ const { width } = Dimensions.get('window')
 
 // Category banner images mapping
 const CATEGORY_BANNERS = {
-	bingsu: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800',
-	'cakes-pastries':
-		'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800',
-	'layered-cakes':
-		'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800',
-	bread: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
-	'cold-cream-cakes':
-		'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800',
-	cookies: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800',
-	'seasonal-special':
-		'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800',
-	'product-sets':
-		'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=800',
-	'iced-drinks':
-		'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800',
-	tea: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800',
-	'chocolate-cacao':
-		'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=800',
-	coffee: 'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=800',
+	1: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800',
+	3: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800',
+	4: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800',
+	5: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+	6: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800',
+	7: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800',
+	8: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800',
+	9: 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=800',
+	10: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800',
+	11: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800',
+	12: 'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=800',
+	13: 'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=800',
 }
 
 // Category description mapping
 const CATEGORY_DESC_KEYS = {
-	bingsu: 'categoryDesc_bingsu',
-	'cakes-pastries': 'categoryDesc_cakesPastries',
-	'layered-cakes': 'categoryDesc_layeredCakesCrispyBread',
-	bread: 'categoryDesc_bread',
-	'cold-cream-cakes': 'categoryDesc_coldCreamCakes',
-	cookies: 'categoryDesc_cookies',
-	'seasonal-special': 'categoryDesc_seasonalSpecial',
-	'product-sets': 'categoryDesc_productSets',
-	'iced-drinks': 'categoryDesc_icedDrinks',
-	tea: 'categoryDesc_tea',
-	'chocolate-cacao': 'categoryDesc_chocolateCacao',
-	coffee: 'categoryDesc_coffee',
+	1: 'categoryDesc_bingsu',
+	3: 'categoryDesc_cakesPastries',
+	4: 'categoryDesc_layeredCakesCrispyBread',
+	5: 'categoryDesc_bread',
+	6: 'categoryDesc_coldCreamCakes',
+	7: 'categoryDesc_cookies',
+	8: 'categoryDesc_seasonalSpecial',
+	9: 'categoryDesc_productSets',
+	10: 'categoryDesc_icedDrinks',
+	11: 'categoryDesc_tea',
+	12: 'categoryDesc_chocolateCacao',
+	13: 'categoryDesc_coffee',
 }
 
 // Category name mapping
 const CATEGORY_NAME_KEYS = {
-	bingsu: 'bingsu',
-	'cakes-pastries': 'cakesPastries',
-	'layered-cakes': 'layeredCakesCrispyBread',
-	bread: 'bread',
-	'cold-cream-cakes': 'coldCreamCakes',
-	cookies: 'cookies',
-	'seasonal-special': 'seasonalSpecial',
-	'product-sets': 'productSets',
-	'iced-drinks': 'icedDrinks',
-	tea: 'tea',
-	'chocolate-cacao': 'chocolateCacao',
-	coffee: 'coffee',
+	1: 'bingsu',
+	3: 'cakesPastries',
+	4: 'layeredCakesCrispyBread',
+	5: 'bread',
+	6: 'coldCreamCakes',
+	7: 'cookies',
+	8: 'seasonalSpecial',
+	9: 'productSets',
+	10: 'icedDrinks',
+	11: 'tea',
+	12: 'chocolateCacao',
+	13: 'coffee',
 }
 
 // Mock products data - In real app, this would come from API
@@ -134,7 +127,8 @@ const MOCK_PRODUCTS = [
 ]
 
 export default function CategoryScreen() {
-	const { categoryId } = useLocalSearchParams<{ categoryId: string }>()
+	const params = useLocalSearchParams()
+	const categoryId = Number(params.categoryId)
 	const { t } = useTranslation()
 
 	const [products, setProducts] = useState(MOCK_PRODUCTS)
