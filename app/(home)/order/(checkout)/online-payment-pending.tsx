@@ -11,6 +11,8 @@ import {
 	Easing,
 	ActivityIndicator,
 	Platform,
+	Linking,
+	Modal,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons, MaterialIcons } from '@expo/vector-icons'
@@ -20,6 +22,8 @@ import { useEchoChannel } from '@/hooks/useEchoChannel'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAlert } from '@/hooks/useAlert'
 import { useMemo } from 'react'
+import QRCode from 'react-native-qrcode-svg'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 const ACCENT_ORANGE = '#FF9F67' // Slightly deeper orange for better contrast
 const SOFT_ORANGE = '#FFE5D0'
@@ -38,7 +42,7 @@ interface OnlinePaymentEvent {
 
 export default function OnlinePaymentPendingScreen() {
 	const { t } = useTranslation()
-	const { orderId } = useContext(CheckoutContext)
+	const { orderId, setOrderId } = useContext(CheckoutContext)
 	const { AlertComponent, showInfo, showError, showSuccess } = useAlert()
 
 	const params = useLocalSearchParams()
@@ -75,7 +79,6 @@ export default function OnlinePaymentPendingScreen() {
 	const [paymentStatus, setPaymentStatus] = useState<
 		'pending' | 'success' | 'failed'
 	>('pending')
-	// const [paymentMethod, setPaymentMethod] = useState<string>('')
 
 	// Handle Payment types
 	const payUrls = JSON.parse(params.payUrls as string) as {
@@ -83,6 +86,15 @@ export default function OnlinePaymentPendingScreen() {
 		mobile: string // Deep link for mobile (opens Momo app), e.g momo  ://app?action=payWithApp&isScanQR=false&serviceType=app&sid=TU9NT3wxMDAwMDEx&v=3.0
 		web: string // A web-based payment link provided by the payment gateway
 	}
+
+	// Cancel order handler
+	const handleCancelOrder = () => {
+		setOrderId(undefined)
+		router.replace('/(home)/product')
+	}
+
+	// Modal state for QR code
+	const [qrModalVisible, setQrModalVisible] = useState(false)
 
 	// Start animations
 	useEffect(() => {
@@ -363,6 +375,63 @@ export default function OnlinePaymentPendingScreen() {
 							<Text style={styles.orderIdLabel}>{t('orderNumber')}</Text>
 							<Text style={styles.orderIdValue}>#{orderId}</Text>
 						</View>
+						{/* QR code and payment actions */}
+						<View style={styles.qrSection}>
+							<TouchableOpacity
+								style={styles.showQrButton}
+								onPress={() => setQrModalVisible(true)}
+								activeOpacity={0.85}
+							>
+								<Text style={styles.showQrButtonText}>{t('showQrCode')}</Text>
+							</TouchableOpacity>
+							<LinearGradient
+								colors={['#F48FB1', '#E573B7']}
+								style={styles.momoButton}
+								start={{ x: 0, y: 0 }}
+								end={{ x: 1, y: 1 }}
+							>
+								<TouchableOpacity
+									style={{ width: '100%', alignItems: 'center' }}
+									onPress={() => Linking.openURL(payUrls.mobile)}
+									activeOpacity={0.85}
+								>
+									<Text style={styles.momoButtonText}>
+										{t('openMomoToPay')}
+									</Text>
+								</TouchableOpacity>
+							</LinearGradient>
+							<TouchableOpacity
+								style={styles.cancelButton}
+								onPress={handleCancelOrder}
+								activeOpacity={0.85}
+							>
+								<Text style={styles.cancelButtonText}>{t('cancelOrder')}</Text>
+							</TouchableOpacity>
+						</View>
+						{/* QR Modal */}
+						<Modal
+							visible={qrModalVisible}
+							animationType="slide"
+							transparent={true}
+							onRequestClose={() => setQrModalVisible(false)}
+						>
+							<View style={styles.modalOverlay}>
+								<View style={styles.qrModalContent}>
+									<Text style={styles.modalTitle}>
+										{t('scanQrWithMomoOrBankApp')}
+									</Text>
+									<QRCode value={payUrls.qr} size={220} />
+									<TouchableOpacity
+										style={styles.closeModalButton}
+										onPress={() => setQrModalVisible(false)}
+									>
+										<Text style={styles.closeModalButtonText}>
+											{t('close')}
+										</Text>
+									</TouchableOpacity>
+								</View>
+							</View>
+						</Modal>
 						{/* Animated loading dots */}
 						<View style={styles.loadingDotsContainer}>
 							<Animated.View
@@ -406,6 +475,7 @@ export default function OnlinePaymentPendingScreen() {
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
 			{renderContent()}
+			<BottomSpacer />
 		</SafeAreaView>
 	)
 }
@@ -431,7 +501,7 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		top: 0,
 		width: '100%',
-		height: '30%',
+		height: '18%',
 		justifyContent: 'center',
 		alignItems: 'center',
 		borderBottomLeftRadius: 24,
@@ -681,5 +751,106 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Medium',
 		fontSize: 16,
 		color: ACCENT_ORANGE,
+	},
+	qrSection: {
+		alignItems: 'center',
+		marginVertical: 24,
+		width: '100%',
+	},
+	qrHintText: {
+		marginTop: 12,
+		color: TEXT,
+		fontSize: 15,
+		textAlign: 'center',
+		marginBottom: 12,
+		fontFamily: 'Inter-Medium',
+	},
+	momoButton: {
+		backgroundColor: '#A50064',
+		borderRadius: 24,
+		paddingVertical: 14,
+		paddingHorizontal: 32,
+		marginTop: 8,
+		marginBottom: 8,
+		alignItems: 'center',
+		width: '80%',
+		shadowColor: '#A50064',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	momoButtonText: {
+		color: '#FFF',
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+		letterSpacing: 0.2,
+	},
+	cancelButton: {
+		backgroundColor: '#FFE5E5',
+		borderRadius: 24,
+		paddingVertical: 12,
+		paddingHorizontal: 32,
+		marginTop: 4,
+		alignItems: 'center',
+		width: '80%',
+		borderWidth: 1,
+		borderColor: '#FF6B6B',
+	},
+	cancelButtonText: {
+		color: '#FF6B6B',
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+		letterSpacing: 0.2,
+	},
+	showQrButton: {
+		backgroundColor: '#FF9F67',
+		borderRadius: 12,
+		paddingVertical: 12,
+		paddingHorizontal: 24,
+		marginBottom: 12,
+		alignItems: 'center',
+	},
+	showQrButtonText: {
+		color: '#FFF',
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
+	},
+	modalOverlay: {
+		flex: 1,
+		backgroundColor: 'rgba(0,0,0,0.4)',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	qrModalContent: {
+		backgroundColor: '#FFF',
+		borderRadius: 20,
+		padding: 28,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.15,
+		shadowRadius: 8,
+		elevation: 8,
+		marginHorizontal: 24,
+	},
+	modalTitle: {
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 18,
+		color: '#C67C4E',
+		marginBottom: 18,
+		textAlign: 'center',
+	},
+	closeModalButton: {
+		marginTop: 24,
+		backgroundColor: '#FF9F67',
+		borderRadius: 10,
+		paddingVertical: 10,
+		paddingHorizontal: 32,
+	},
+	closeModalButtonText: {
+		color: '#FFF',
+		fontFamily: 'Inter-SemiBold',
+		fontSize: 16,
 	},
 })
