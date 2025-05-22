@@ -35,11 +35,33 @@ export default {
 
 	// Product Categories
 	all: "All",
-	coffee: "Coffee",
-	pastry: "Pastry",
+	bingsu: "Bingsu",
+	cakesPastries: "Cakes & Pastries",
+	layeredCakesCrispyBread: "Layered Cakes & Crispy Bread",
+	bread: "Bread",
+	coldCreamCakes: "Cold Cream Cakes",
+	cookies: "Cookies",
+	seasonalSpecial: "Seasonal & Special Items",
+	productSets: "Product Sets",
+	icedDrinks: "Iced Drinks",
 	tea: "Tea",
-	coldDrinks: "Cold Drinks",
-	cake: "Cake",
+	chocolateCacao: "Chocolate & Cacao",
+	coffee: "Coffee",
+	availableProducts: "Available Products",
+
+	// Category descriptions
+	categoryDesc_bingsu: "Experience the unique flavors of Korean shaved ice with diverse toppings, bringing a cool and delightful sensation in every bite.",
+	categoryDesc_cakesPastries: "Exquisite collection of cakes and pastries crafted from premium ingredients, perfect for all special occasions.",
+	categoryDesc_layeredCakesCrispyBread: "Soft layered cakes and crispy baked goods that deliver an exceptional taste experience.",
+	categoryDesc_bread: "Fresh bread baked daily, from traditional loaves to innovative new flavors.",
+	categoryDesc_coldCreamCakes: "Cool cream cakes perfect for hot summer days or when you want to enjoy a special dessert.",
+	categoryDesc_cookies: "Crispy cookies in various flavors, perfect to enjoy with tea or coffee.",
+	categoryDesc_seasonalSpecial: "Seasonal specialties and exclusive products that bring new culinary experiences.",
+	categoryDesc_productSets: "Carefully curated product sets, perfect for gifting or enjoying with family and friends.",
+	categoryDesc_icedDrinks: "Refreshing iced drinks and cold beverages to cool down and energize your day.",
+	categoryDesc_tea: "Premium tea collection from around the world, bringing moments of perfect relaxation.",
+	categoryDesc_chocolateCacao: "High-quality chocolate and cacao, from rich to sweet, satisfying all chocolate lovers.",
+	categoryDesc_coffee: "Freshly roasted coffee, from bold espresso to smooth milk coffee, serving all coffee enthusiasts.",
 
 	// Product Sections
 	bestSellers: "Best Sellers",

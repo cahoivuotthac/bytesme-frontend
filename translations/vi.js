@@ -37,11 +37,45 @@ export default {
 
 	// Product Categories
 	all: "Tất cả",
-	coffee: "Cà phê",
-	pastry: "Bánh ngọt",
+	bingsu: "Bingsu",
+	cakesPastries: "Bánh kem/ngọt",
+	layeredCakesCrispyBread: "Bánh ngàn lớp/nướng giòn",
+	bread: "Bánh mì",
+	coldCreamCakes: "Bánh kem lạnh",
+	cookies: "Bánh quy",
+	seasonalSpecial: "Món theo mùa & đặc biệt",
+	productSets: "Combo sản phẩm",
+	icedDrinks: "Giải khát mát lạnh",
 	tea: "Trà",
-	coldDrinks: "Đồ uống lạnh",
-	cake: "Bánh kem",
+	chocolateCacao: "Sôcôla & Cacao",
+	coffee: "Cà phê",
+	availableProducts: "Sản phẩm có sẵn",
+
+	// Category descriptions
+	categoryDesc_bingsu:
+		"Trải nghiệm hương vị độc đáo của đá bào Hàn Quốc với các topping đa dạng, mang đến cảm giác mát lạnh và thú vị trong từng miếng.",
+	categoryDesc_cakesPastries:
+		"Bộ sưu tập bánh kem và bánh ngọt tinh tế, được chế biến từ những nguyên liệu cao cấp, hoàn hảo cho mọi dịp đặc biệt.",
+	categoryDesc_layeredCakesCrispyBread:
+		"Những chiếc bánh ngàn lớp mềm mịn và bánh nướng giòn rụm, mang đến trải nghiệm vị giác tuyệt vời.",
+	categoryDesc_bread:
+		"Bánh mì tươi ngon được nướng hàng ngày, từ bánh mì truyền thống đến những hương vị sáng tạo mới mẻ.",
+	categoryDesc_coldCreamCakes:
+		"Bánh ngọt kem lạnh mát mẻ, lý tưởng cho những ngày hè nóng bức hoặc khi bạn muốn thưởng thức một món tráng miệng đặc biệt.",
+	categoryDesc_cookies:
+		"Bánh quy giòn tan với nhiều hương vị khác nhau, hoàn hảo để thưởng thức cùng trà hoặc cà phê.",
+	categoryDesc_seasonalSpecial:
+		"Những món đặc biệt theo mùa và các sản phẩm độc quyền, mang đến trải nghiệm ẩm thực mới lạ.",
+	categoryDesc_productSets:
+		"Bộ sản phẩm được tuyển chọn kỹ lưỡng, phù hợp để tặng quà hoặc thưởng thức cùng gia đình, bạn bè.",
+	categoryDesc_icedDrinks:
+		"Thức uống đá xay và đồ uống lạnh tươi mát, giúp giải nhiệt và bổ sung năng lượng cho cả ngày.",
+	categoryDesc_tea:
+		"Bộ sưu tập trà cao cấp từ khắp nơi trên thế giới, mang đến những giây phút thư giãn tuyệt vời.",
+	categoryDesc_chocolateCacao:
+		"Chocolate và cacao chất lượng cao, từ đậm đà đến ngọt ngào, thỏa mãn mọi khẩu vị yêu chocolate.",
+	categoryDesc_coffee:
+		"Cà phê rang xay tươi ngon, từ espresso đậm đà đến những ly cà phê sữa mềm mại, phục vụ tất cả những tín đồ cà phê.",
 
 	// Product Sections
 	bestSellers: "Bán chạy nhất",
@@ -392,8 +426,7 @@ export default {
 	uploadImages: "Đăng tải hình ảnh:",
 	submitAnonymously: "Đánh giá ẩn danh",
 	submit: "Tiếp tục",
-	errorUploadingImage: 
-		"Rất tiếc, không thể tải ảnh lên.",
+	errorUploadingImage: "Rất tiếc, không thể tải ảnh lên.",
 
 	// Improvement area labels
 	flavour: "Cải thiện hương vị",

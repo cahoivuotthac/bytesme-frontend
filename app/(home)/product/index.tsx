@@ -56,34 +56,69 @@ const HOT_PRODUCTS_CAROUSEL = [
 // Mock data
 const CATEGORIES = [
 	{
-		id: 'all',
+		id: '0',
 		name: 'all',
 		image: require('@/assets/icons/categories/dishes.png'),
 	},
 	{
-		id: 'coffee',
-		name: 'coffee',
-		image: require('@/assets/icons/categories/coffee.png'),
+		id: '1',
+		name: 'bingsu',
+		image: require('@/assets/icons/categories/bingsu.png'),
 	},
 	{
-		id: 'pastry',
-		name: 'pastry',
-		image: require('@/assets/icons/categories/pastry.png'),
+		id: '3',
+		name: 'cakesPastries',
+		image: require('@/assets/icons/categories/cake.png'),
 	},
 	{
-		id: 'tea',
+		id: '4',
+		name: 'layeredCakesCrispyBread',
+		image: require('@/assets/icons/categories/layer-cake.png'),
+	},
+	{
+		id: '5',
+		name: 'bread',
+		image: require('@/assets/icons/categories/bread.png'),
+	},
+	{
+		id: '6',
+		name: 'coldCreamCakes',
+		image: require('@/assets/icons/categories/cold-cream-cake.png'),
+	},
+	{
+		id: '7',
+		name: 'cookies',
+		image: require('@/assets/icons/categories/cookie.png'),
+	},
+	{
+		id: '8',
+		name: 'seasonalSpecial',
+		image: require('@/assets/icons/categories/seasonal-dish.png'),
+	},
+	{
+		id: '9',
+		name: 'productSets',
+		image: require('@/assets/icons/categories/combo.png'),
+	},
+	{
+		id: '10',
+		name: 'icedDrinks',
+		image: require('@/assets/icons/categories/cold-drink.png'),
+	},
+	{
+		id: '11',
 		name: 'tea',
 		image: require('@/assets/icons/categories/tea.png'),
 	},
 	{
-		id: 'colddrinks',
-		name: 'coldDrinks',
-		image: require('@/assets/icons/categories/cold-drink.png'),
+		id: '12',
+		name: 'chocolateCacao',
+		image: require('@/assets/icons/categories/cocoa.png'),
 	},
 	{
-		id: 'cake',
-		name: 'cake',
-		image: require('@/assets/icons/categories/cake.png'),
+		id: '13',
+		name: 'coffee',
+		image: require('@/assets/icons/categories/coffee.png'),
 	},
 ]
 
@@ -233,7 +268,13 @@ export default function ProductScreen() {
 
 	// Select a category
 	const handleSelectCategory = (categoryId: string) => {
-		setActiveCategory(categoryId)
+		if (categoryId === 'all') {
+			setActiveCategory(categoryId)
+			// Stay on current page for "all" category
+		} else {
+			// Navigate to specific category page
+			router.push(`/(home)/product/categories/${categoryId}`)
+		}
 	}
 
 	return (
@@ -317,10 +358,24 @@ export default function ProductScreen() {
 				<View style={styles.sectionContainer}>
 					<View style={styles.sectionTitleContainer}>
 						<View style={styles.sectionTitleWrapper}>
-							<Image
-								source={require('@/assets/icons/badges/best-seller.png')}
-								style={styles.sectionIcon}
-							/>
+							<View
+								style={{
+									width: 40,
+									height: 40,
+									borderRadius: 20,
+									backgroundColor: '#FFF3E0',
+									justifyContent: 'center',
+									alignItems: 'center',
+									marginRight: 10,
+									elevation: 2,
+									shadowColor: '#C67C4E',
+									shadowOffset: { width: 0, height: 2 },
+									shadowOpacity: 0.08,
+									shadowRadius: 4,
+								}}
+							>
+								<Ionicons name="trending-up" size={22} color="#C67C4E" />
+							</View>
 							<Text style={styles.sectionTitle}>{t('bestSellers')}</Text>
 						</View>
 						<View style={styles.viewAllButton}>
@@ -356,10 +411,24 @@ export default function ProductScreen() {
 				<View style={styles.sectionContainer}>
 					<View style={styles.sectionTitleContainer}>
 						<View style={styles.sectionTitleWrapper}>
-							<Image
-								source={require('@/assets/icons/badges/highest-rated.png')}
-								style={styles.sectionIcon}
-							/>
+							<View
+								style={{
+									width: 40,
+									height: 40,
+									borderRadius: 20,
+									backgroundColor: '#FFF3E0',
+									justifyContent: 'center',
+									alignItems: 'center',
+									marginRight: 10,
+									elevation: 2,
+									shadowColor: '#C67C4E',
+									shadowOffset: { width: 0, height: 2 },
+									shadowOpacity: 0.08,
+									shadowRadius: 4,
+								}}
+							>
+								<Ionicons name="star" size={22} color="#C67C4E" />
+							</View>
 							<Text style={styles.sectionTitle}>{t('highestRated')}</Text>
 						</View>
 						<View style={styles.viewAllButton}>
@@ -393,10 +462,24 @@ export default function ProductScreen() {
 				<View style={styles.sectionContainer}>
 					<View style={styles.sectionTitleContainer}>
 						<View style={styles.sectionTitleWrapper}>
-							<Image
-								source={require('@/assets/icons/badges/best-seller.png')}
-								style={styles.sectionIcon}
-							/>
+							<View
+								style={{
+									width: 40,
+									height: 40,
+									borderRadius: 20,
+									backgroundColor: '#FFF3E0',
+									justifyContent: 'center',
+									alignItems: 'center',
+									marginRight: 10,
+									elevation: 2,
+									shadowColor: '#C67C4E',
+									shadowOffset: { width: 0, height: 2 },
+									shadowOpacity: 0.08,
+									shadowRadius: 4,
+								}}
+							>
+								<Ionicons name="pricetag" size={22} color="#C67C4E" />
+							</View>
 							<Text style={styles.sectionTitle}>{t('discounted')}</Text>
 						</View>
 						<View style={styles.viewAllButton}>
@@ -430,10 +513,24 @@ export default function ProductScreen() {
 				<View style={[styles.sectionContainer, styles.lastSection]}>
 					<View style={styles.sectionTitleContainer}>
 						<View style={styles.sectionTitleWrapper}>
-							<Image
-								source={require('@/assets/icons/badges/best-seller.png')}
-								style={styles.sectionIcon}
-							/>
+							<View
+								style={{
+									width: 40,
+									height: 40,
+									borderRadius: 20,
+									backgroundColor: '#FFF3E0',
+									justifyContent: 'center',
+									alignItems: 'center',
+									marginRight: 10,
+									elevation: 2,
+									shadowColor: '#C67C4E',
+									shadowOffset: { width: 0, height: 2 },
+									shadowOpacity: 0.08,
+									shadowRadius: 4,
+								}}
+							>
+								<Ionicons name="compass" size={22} color="#C67C4E" />
+							</View>
 							<Text style={styles.sectionTitle}>{t('explore')}</Text>
 						</View>
 						<View style={styles.viewAllButton}>
