@@ -600,11 +600,11 @@ const styles = StyleSheet.create({
 		flexWrap: 'wrap',
 		marginHorizontal: 2,
 		alignItems: 'center', // Center items vertically
-		height: 100,
+		height: 80,
 	},
 	imagePreview: {
-		width: 80,
-		height: 80,
+		width: 60,
+		height: 60,
 		borderRadius: 30,
 		margin: 4,
 		position: 'relative',

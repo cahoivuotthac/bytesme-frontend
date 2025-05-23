@@ -15,6 +15,7 @@ export default {
 	decline: "Từ chối",
 	error: "Đã có lỗi xảy ra",
 	sucess: "Thành công",
+	info: "Thông báo",
 
 	// Product Cards
 	discount: "Giảm giá",
@@ -53,11 +54,11 @@ export default {
 
 	// Category descriptions
 	categoryDesc_bingsu:
-		"Trải nghiệm hương vị độc đáo của đá bào Hàn Quốc với các topping đa dạng, mang đến cảm giác mát lạnh và thú vị trong từng miếng.",
+		"Món tráng miệng mát lạnh nổi tiếng từ Hàn Quốc, gồm đá bào mịn kết hợp với các loại topping như trái cây tươi, sữa đặc, kem và đậu đỏ.",
 	categoryDesc_cakesPastries:
-		"Bộ sưu tập bánh kem và bánh ngọt tinh tế, được chế biến từ những nguyên liệu cao cấp, hoàn hảo cho mọi dịp đặc biệt.",
+		"Các loại bánh mềm mịn, ngọt ngào như bánh gato, mousse, chiffon với nhiều hương vị hấp dẫn.",
 	categoryDesc_layeredCakesCrispyBread:
-		"Những chiếc bánh ngàn lớp mềm mịn và bánh nướng giòn rụm, mang đến trải nghiệm vị giác tuyệt vời.",
+		"Bánh ngàn lớp, tart và bánh pie thơm lừng với lớp vỏ giòn rụm, nhân kem, trái cây hoặc thịt mặn đậm đà.",
 	categoryDesc_bread:
 		"Bánh mì tươi ngon được nướng hàng ngày, từ bánh mì truyền thống đến những hương vị sáng tạo mới mẻ.",
 	categoryDesc_coldCreamCakes:
@@ -199,6 +200,10 @@ export default {
 	seeAllReviews: "Xem tất cả đánh giá",
 	errorAddingToCart:
 		"Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại.",
+	errorFetchingProductDetails:
+		"Không thể tải thông tin sản phẩm. Vui lòng thử lại.",
+	errorFetchingProductFeedbacks:
+		"Không thể tải đánh giá sản phẩm. Vui lòng thử lại.",
 
 	// Profile layout
 	profile: "Hồ sơ",
@@ -455,4 +460,16 @@ export default {
 	connecting: "Đang chờ xác nhận thanh toán...",
 	paymentTimeout:
 		"Thời gian thanh toán đã hết. Đơn hàng của bạn sẽ bị hủy, vui lòng thử lại hoặc đặt hàng mới.",
+
+	// Pinterest Product Card Descrpitions
+	pinterestDesc_1: "Ngon tuyệt vời, thử ngay hôm nay!",
+	pinterestDesc_2: "Bánh mềm, vị ngọt dịu, phù hợp mọi lứa tuổi.",
+	pinterestDesc_3: "Đặc biệt cho mùa hè, giải nhiệt cực đã.",
+	pinterestDesc_4: "Nguyên liệu tự nhiên, không chất bảo quản.",
+	pinterestDesc_5: "Khuyến mãi hấp dẫn, số lượng có hạn!",
+	pinterestDesc_6: "Vị kem mịn, topping đa dạng.",
+	pinterestDesc_7: "Bánh tươi mới mỗi ngày.",
+	pinterestDesc_8: "Phù hợp cho tiệc sinh nhật và sự kiện.",
+	pinterestDesc_9: "Được yêu thích bởi mọi khách hàng.",
+	pinterestDesc_10: "Không thể bỏ lỡ!",
 };

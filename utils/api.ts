@@ -172,6 +172,31 @@ export const productAPI = {
 		);
 	},
 
+	getProductFeedbacks: async (
+		productId: number,
+		offset: number,
+		limit: number
+	) => {
+		return APIClient.get(
+			"/product/feedbacks?" +
+				new URLSearchParams({
+					product_id: productId.toString(),
+					offset: offset.toString(),
+					limit: limit.toString(),
+				}).toString()
+		);
+	},
+
+	getSimilarProducts: async (productId: number, limit: number) => {
+		return APIClient.get(
+			"/product/similar-products?" +
+				new URLSearchParams({
+					product_id: productId.toString(),
+					limit: limit.toString(),
+				}).toString()
+		);
+	},
+
 	getProductsByCategory: (
 		categoryId: number,
 		offset: number,

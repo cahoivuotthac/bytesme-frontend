@@ -10,6 +10,7 @@ import {
 	StatusBar,
 	Dimensions,
 	Modal,
+	ActivityIndicator,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons, AntDesign, Feather, MaterialIcons } from '@expo/vector-icons'
@@ -18,159 +19,121 @@ import Button from '@/components/ui/Button'
 import RegularProductCard from '@/components/product/RegularProductCard'
 import { useTranslation } from '@/providers/locale'
 import ImageCarousel from '@/components/shared/ImageCarousel'
-import { APIClient, cartAPI } from '@/utils/api'
+import { APIClient, cartAPI, productAPI } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import QuantityControl from '@/components/ui/QuantityControl'
 import BottomSpacer from '@/components/shared/BottomSpacer'
 
 const { width, height } = Dimensions.get('window')
 
-interface ProductData {
-	product_id: string
-	name: string
-	sizes: []
-	prices: number[]
-	images: string[]
-	overall_ratings: number
-	is_favorite: boolean
-}
-
-// Mock product data - in real app this would be fetched based on the ID
-const PRODUCT = {
-	id: '1',
-	name: 'Yakisoba Noodles',
-	description:
-		'Matcha Latte được làm từ Matcha và sữa, có thể uống được ở cả nóng và lạnh',
-	longDescription: `Matcha Latte được làm từ Matcha và sữa, có thể uống được ở cả nóng và lạnh.
-Matcha Latte – Sự hòa quyện tinh tế giữa truyền thống và hiện đại.
-Với hương thơm dịu nhẹ và vị ngọt thanh đặc trưng, Matcha Latte mang đến cảm giác thư giãn và sảng khoái trong từng ngụm. Bột matcha nguyên chất từ lá trà xanh Nhật Bản kết hợp cùng sữa tươi mịn màng tạo nên một thức uống không chỉ ngon miệng mà còn tốt cho sức khỏe. Dành cho những ai yêu thích sự tinh tế và cần chút "xanh mát" cho ngày mới thêm năng lượng.`,
-	price: 10,
-	rating: 4.8,
-	reviews: 124,
-	images: [
-		{
-			id: '1',
-			imageUrl:
-				'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-			title: '', // Empty title to avoid display
-		},
-		{
-			id: '2',
-			imageUrl:
-				'https://images.unsplash.com/photo-1632666806308-a0dd67a85ff7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-			title: '', // Empty title to avoid display
-		},
-		{
-			id: '3',
-			imageUrl:
-				'https://images.unsplash.com/photo-1617196035154-1e7e6e28b300?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-			title: '', // Empty title to avoid display
-		},
-	],
-	sizes: ['S', 'M', 'L'],
-	isFavorite: false,
-	// Reviews data with images
-	reviewsData: [
-		{
-			id: '1',
-			userName: 'Afsar Hossen',
-			userEmail: 'Imshuvo97@gmail.com',
-			userAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-			rating: 4.5,
-			text: 'Bánh có vị rất ngon, tôi thích sự kết hợp hương vị matcha và sữa. Sẽ mua lại!',
-			date: '2024-04-28',
-			images: [
-				{
-					id: 'rev-img-1',
-					imageUrl:
-						'https://images.unsplash.com/photo-1582651550657-86a00126121a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-				},
-				{
-					id: 'rev-img-2',
-					imageUrl:
-						'https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-				},
-				{
-					id: 'rev-img-3',
-					imageUrl:
-						'https://images.unsplash.com/photo-1565599837634-889309cdb15b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-				},
-			],
-		},
-		{
-			id: '2',
-			userName: 'Sarah Johnson',
-			userEmail: 'sarah.j@example.com',
-			userAvatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-			rating: 5,
-			text: 'Tuyệt vời! Đây là món ăn yêu thích của tôi tại cửa hàng này.',
-			date: '2024-04-25',
-			images: [
-				{
-					id: 'rev-img-4',
-					imageUrl:
-						'https://images.unsplash.com/photo-1612203985729-70726954388c?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-				},
-			],
-		},
-	],
-}
-
-// Mock similar products
-const SIMILAR_PRODUCTS = [
-	{
-		productId: 2,
-		name: 'Yakisoba Noodles',
-		price: 10,
-		imageUrl:
-			'https://images.unsplash.com/photo-1552611052-33e04de081de?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-		rating: 4.2,
-		isFavorite: false,
-	},
-	{
-		productId: 3,
-		name: 'Yakisoba Noodles',
-		price: 10,
-		imageUrl:
-			'https://images.unsplash.com/photo-1585032226651-759b368d7246?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-		rating: 4.5,
-		isFavorite: true,
-	},
-	{
-		productId: 4,
-		name: 'Yakisoba Noodles',
-		price: 10,
-		imageUrl:
-			'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-		rating: 4.7,
-		isFavorite: false,
-	},
-]
-
 export default function ProductDetailScreen() {
 	const params = useLocalSearchParams()
 	const productId = Number(params.id)
 
 	const { t } = useTranslation()
-	const [isFavorite, setIsFavorite] = useState(PRODUCT.isFavorite)
+	const [product, setProduct] = useState<any>(null)
+	const [isFavorite, setIsFavorite] = useState(false)
 	const [selectedSize, setSelectedSize] = useState('M')
 	const [quantity, setQuantity] = useState(1)
 	const [descriptionModalVisible, setDescriptionModalVisible] = useState(false)
 	const [sizeDropdownVisible, setSizeDropdownVisible] = useState(false)
 	const [reviewsModalVisible, setReviewsModalVisible] = useState(false)
-	const [selectedReviewImage, setSelectedReviewImage] = useState(null)
+	const [selectedReviewImage, setSelectedReviewImage] = useState('')
+	const [feedbackPageNum, setFeedbackPageNum] = useState(1)
+	const [feedbacks, setFeedbacks] = useState<any[]>([])
+	const [feedbackLoading, setFeedbackLoading] = useState(false)
+	const [feedbackHasMore, setFeedbackHasMore] = useState(true)
+	const FEEDBACK_PAGE_SIZE = 10
+	const [similarProducts, setSimilarProducts] = useState<any[]>([])
+	const SIMILAR_PRODUCTS_LIMIT = 5
 
 	const { AlertComponent, showError, showInfo } = useAlert()
-	const [productData, setProductData] = useState<ProductData>({} as any)
 
-	// Initialize data
-	useEffect(() => {
-		if (!productData) {
-			return
+	// Function to fetch product details
+	const fetchProductDetails = async () => {
+		try {
+			const response = await productAPI.getProductDetails(productId)
+			console.log('Fetched products: ', response.data)
+			setProduct(response.data)
+			setIsFavorite(response.data.is_favorited)
+			if (response.data.sizes && response.data.sizes.length > 0) {
+				setSelectedSize(response.data.sizes[0])
+			}
+		} catch (error) {
+			console.error('Error fetching product details:', error)
+			showError(t('errorFetchingProductDetails'))
 		}
+	}
 
-		setIsFavorite(productData.is_favorite)
-	}, [productData])
+	// Function to fetch feedbacks (reviews)
+	const transformFeedback = (fb: any) => ({
+		id: fb.order_feedback_id,
+		userName: fb.user?.name || t('anonymousUser'),
+		userAvatar: fb.user?.avatar,
+		// userEmail: '', // If you have email, map it here
+		rating: fb.num_star,
+		text: fb.feedback_content || '',
+		date: fb.created_at ? new Date(fb.created_at).toLocaleDateString() : '',
+		images: (fb.feedback_images || []).map((img: any, idx: number) => ({
+			id: idx,
+			imageUrl: img.feedback_image,
+		})),
+	})
+
+	const fetchProductFeedbacks = async (
+		offset = 0,
+		limit = FEEDBACK_PAGE_SIZE,
+		append = false
+	) => {
+		setFeedbackLoading(true)
+		try {
+			const response = await productAPI.getProductFeedbacks(
+				productId,
+				offset,
+				limit
+			)
+			const newFeedbacks = (response.data.product_feedbacks || []).map(
+				transformFeedback
+			)
+			console.log('newFeedback: ', newFeedbacks)
+			const hasMore =
+				response.data.has_more !== undefined
+					? response.data.has_more
+					: newFeedbacks.length === limit
+			if (append) {
+				setFeedbacks((prev) => [...prev, ...newFeedbacks])
+			} else {
+				setFeedbacks(newFeedbacks)
+			}
+			setFeedbackHasMore(hasMore)
+		} catch (err) {
+			console.error('Error fetching feedbacks:', err)
+			showError(t('errorFetchingProductDetails'))
+		} finally {
+			setFeedbackLoading(false)
+		}
+	}
+
+	// Fucntion to fetch similar products
+	const fetchSimilarProducts = async () => {
+		try {
+			const response = await productAPI.getSimilarProducts(
+				productId,
+				SIMILAR_PRODUCTS_LIMIT
+			)
+			setSimilarProducts(response.data)
+		} catch (error) {
+			console.error('Error fetching similar products:', error)
+			showError(t('errorFetchingProductDetails'))
+		}
+	}
+
+	useEffect(() => {
+		if (productId) {
+			fetchProductDetails()
+			fetchProductFeedbacks(0, 5) // only fetch 5 on initial load
+		}
+	}, [productId])
 
 	// Handle quantity changes
 	const incrementQuantity = () => {
@@ -214,7 +177,7 @@ export default function ProductDetailScreen() {
 	}
 
 	// View review image in full screen
-	const viewReviewImage = (imageUrl) => {
+	const viewReviewImage = (imageUrl: string) => {
 		setSelectedReviewImage(imageUrl)
 	}
 
@@ -244,416 +207,188 @@ export default function ProductDetailScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
-
 			<StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-			<ScrollView
-				style={styles.scrollView}
-				showsVerticalScrollIndicator={false}
-				contentContainerStyle={styles.scrollViewContent}
-			>
-				{/* Product Image Section - Now using ImageCarousel for multiple images */}
-				<View style={styles.imageContainer}>
-					<ImageCarousel
-						items={PRODUCT.images}
-						height={350}
-						autoPlayInterval={0} // Disable auto-play
-						showTextOverlay={false} // Hide text overlay
-						enableNavigation={false} // Disable navigation on press
-						borderRadius={30} // Match the bottom radius in the design
-						style={styles.carousel}
-					/>
-
-					{/* Back Button */}
-					<View style={styles.backButtonContainer}>
-						<NavButton
-							direction="back"
-							onPress={() => router.back()}
-							size={40}
-							backgroundColor="#FFFFFF"
-							iconColor="#C67C4E"
-							style={styles.backButton}
-						/>
-					</View>
-
-					{/* Favorite Button */}
-					<TouchableOpacity
-						style={styles.favoriteButton}
-						onPress={toggleFavorite}
-					>
-						<Ionicons
-							name={isFavorite ? 'heart' : 'heart-outline'}
-							size={24}
-							color={isFavorite ? '#C67C4E' : '#C67C4E'}
-						/>
-					</TouchableOpacity>
-				</View>
-
-				{/* Product Details Section */}
-				<View style={styles.detailsContainer}>
-					{/* Product Name */}
-					<Text style={styles.productName}>{PRODUCT.name}</Text>
-					{/* Rating */}
-					<View style={styles.ratingContainer}>
-						<View style={styles.starContainer}>
-							{[1, 2, 3, 4, 5].map((star) => (
-								<AntDesign
-									key={star}
-									name="star"
-									size={16}
-									color={
-										star <= Math.floor(PRODUCT.rating) ? '#F3603F' : '#E0E0E0'
-									}
-									style={{ marginRight: 2 }}
-								/>
-							))}
-						</View>
-						<Text style={styles.ratingText}>{PRODUCT.rating}</Text>
-						<Text style={styles.reviewsText}>
-							({PRODUCT.reviews} {t('ratings')})
-						</Text>
-					</View>
-					{/* Size Selection */}
-					<View style={styles.sizeSelectionContainer}>
-						<TouchableOpacity
-							style={styles.sizeDropdown}
-							onPress={toggleSizeDropdown}
-						>
-							<Text style={styles.sizeText}>
-								{t('size')} {selectedSize}
-							</Text>
-							<MaterialIcons
-								name="keyboard-arrow-down"
-								size={20}
-								color="#BEBDBA"
-							/>
-						</TouchableOpacity>
-					</View>
-
-					{/* Quantity Selector and Price */}
-					<View style={styles.quantityPriceContainer}>
-						<QuantityControl
-							value={quantity}
-							onIncrement={incrementQuantity}
-							onDecrement={decrementQuantity}
-							size="large"
-							style={styles.quantityControlCustom}
-						/>
-
-						<Text style={styles.priceText}>${PRODUCT.price.toFixed(2)}</Text>
-					</View>
-					{/* Description Section */}
-					<TouchableOpacity
-						style={styles.sectionContainer}
-						onPress={toggleDescriptionModal}
-						activeOpacity={0.7}
-					>
-						<Text style={styles.sectionTitle}>
-							{t('description').toUpperCase()}
-						</Text>
-						<Text style={styles.descriptionText}>{PRODUCT.description}</Text>
-						<View style={styles.readMoreContainer}>
-							<Text style={styles.readMoreText}>{t('readMore')}</Text>
-							<MaterialIcons
-								name="keyboard-arrow-right"
-								size={18}
-								color="#C67C4E"
-							/>
-						</View>
-					</TouchableOpacity>
-					<View style={styles.divider} />
-					{/* Reviews Section */}
-					<View style={styles.sectionContainer}>
-						<Text style={styles.sectionTitle}>
-							{t('reviews').toUpperCase()}
-						</Text>
-
-						{PRODUCT.reviewsData.map((review, index) => (
-							<View
-								key={`review-${review.id}`}
-								style={[
-									styles.reviewItem,
-									index > 0 && styles.reviewItemBorder,
-								]}
-							>
-								{/* Reviewer Information */}
-								<View style={styles.reviewerContainer}>
-									{/* Profile Image */}
-									<View style={styles.profileImageContainer}>
-										<Image
-											source={{ uri: review.userAvatar }}
-											style={styles.profileImage}
-										/>
-									</View>
-
-									{/* Reviewer Details */}
-									<View style={styles.reviewerDetails}>
-										<Text style={styles.reviewerName}>{review.userName}</Text>
-										<Text style={styles.reviewerEmail}>{review.userEmail}</Text>
-
-										{/* User Rating */}
-										<View style={styles.userRatingContainer}>
-											{[1, 2, 3, 4, 5].map((star) => (
-												<AntDesign
-													key={`star-${review.id}-${star}`}
-													name="star"
-													size={14}
-													color={
-														star <= Math.floor(review.rating)
-															? '#F3603F'
-															: '#E0E0E0'
-													}
-													style={{ marginRight: 2 }}
-												/>
-											))}
-											<Text style={styles.reviewDate}>{review.date}</Text>
-										</View>
-									</View>
-								</View>
-
-								{/* Review Text */}
-								<View style={styles.reviewTextContainer}>
-									<Text style={styles.reviewText}>{review.text}</Text>
-								</View>
-
-								{/* Review Images */}
-								{review.images && review.images.length > 0 && (
-									<ScrollView
-										horizontal
-										showsHorizontalScrollIndicator={false}
-										style={styles.reviewImagesContainer}
-										contentContainerStyle={styles.reviewImagesContent}
-									>
-										{review.images.map((image) => (
-											<TouchableOpacity
-												key={`review-img-${image.id}`}
-												activeOpacity={0.9}
-												style={styles.reviewImageWrapper}
-												onPress={() => viewReviewImage(image.imageUrl)}
-											>
-												<Image
-													source={{ uri: image.imageUrl }}
-													style={styles.reviewImage}
-													resizeMode="cover"
-												/>
-											</TouchableOpacity>
-										))}
-									</ScrollView>
-								)}
-							</View>
-						))}
-
-						{/* See All Reviews Button */}
-						<TouchableOpacity
-							style={styles.seeAllReviewsButton}
-							onPress={toggleReviewsModal}
-						>
-							<Text style={styles.seeAllReviewsText}>{t('seeAllReviews')}</Text>
-							<MaterialIcons
-								name="keyboard-arrow-right"
-								size={18}
-								color="#C67C4E"
-							/>
-						</TouchableOpacity>
-					</View>
-					<View style={styles.divider} />
-					{/* Similar Products Section */}
-					<View style={styles.sectionContainer}>
-						<Text style={styles.similarProductsTitle}>
-							{t('similarProducts').toUpperCase()}
-						</Text>
-
-						<ScrollView
-							horizontal
-							showsHorizontalScrollIndicator={false}
-							contentContainerStyle={styles.similarProductsScrollContent}
-						>
-							{SIMILAR_PRODUCTS.map((product) => (
-								<RegularProductCard
-									key={product.productId}
-									product={product}
-									onToggleFavorite={() => {}}
-									style={styles.similarProductCard}
-								/>
-							))}
-						</ScrollView>
-					</View>
-					{/* Add extra space at the bottom to account for the buttons */}
-					<View style={styles.bottomButtonSpacer} />
-				</View>
-			</ScrollView>
-
-			{/* Add to Cart Button - Moved outside of ScrollView to be fixed at bottom */}
-			<View style={styles.addToCartContainer}>
-				<Button
-					text={t('addToCart')}
-					backgroundColor="#c67c4e"
-					textColor="#ffffff"
-					onPress={handleAddToCart}
-					style={styles.addToCartButton}
-				/>
-			</View>
-
-			{/* Description Modal */}
-			<Modal
-				animationType="slide"
-				transparent={true}
-				visible={descriptionModalVisible}
-				onRequestClose={toggleDescriptionModal}
-			>
-				<View style={styles.modalContainer}>
-					<View style={styles.modalContent}>
-						{/* Modal Header */}
-						<View style={styles.modalHeader}>
-							<TouchableOpacity
-								style={styles.closeButton}
-								onPress={toggleDescriptionModal}
-							>
-								<Ionicons name="close" size={24} color="#000" />
-							</TouchableOpacity>
-							<Text style={styles.modalTitle}>{t('description')}</Text>
-							<View style={{ width: 24 }} />
-						</View>
-
-						{/* Modal Body with Scrollable Content */}
-						<ScrollView
-							style={styles.modalBody}
-							showsVerticalScrollIndicator={false}
-						>
-							<View style={styles.modalTitleContainer}>
-								<View style={styles.modalTitleDecoration} />
-								<Text style={styles.productTitleInModal}>{PRODUCT.name}</Text>
-							</View>
-
-							<Text style={styles.fullDescription}>
-								{PRODUCT.longDescription}
-							</Text>
-						</ScrollView>
-					</View>
-				</View>
-			</Modal>
-
-			{/* Size Selection Modal */}
-			<Modal
-				animationType="fade"
-				transparent={true}
-				visible={sizeDropdownVisible}
-				onRequestClose={toggleSizeDropdown}
-			>
-				<TouchableOpacity
-					style={styles.sizeModalOverlay}
-					activeOpacity={1}
-					onPress={toggleSizeDropdown}
+			{!product ? (
+				<View
+					style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
 				>
-					<View style={styles.sizeModalContainer}>
-						<View style={styles.sizeModalContent}>
-							<View style={styles.sizeModalHeader}>
-								<Text style={styles.sizeModalTitle}>{t('selectSize')}</Text>
-								<TouchableOpacity onPress={toggleSizeDropdown}>
-									<Ionicons name="close" size={24} color="#383838" />
-								</TouchableOpacity>
-							</View>
+					<ActivityIndicator size="large" color="#C67C4E" />
+				</View>
+			) : (
+				<ScrollView
+					style={styles.scrollView}
+					showsVerticalScrollIndicator={false}
+					contentContainerStyle={styles.scrollViewContent}
+				>
+					{/* Product Image Section */}
+					<View style={styles.imageContainer}>
+						<ImageCarousel
+							items={
+								product?.image_urls?.map((url: string, idx: number) => ({
+									id: String(idx),
+									imageUrl: url,
+									title: '',
+								})) || []
+							}
+							height={350}
+							autoPlayInterval={0}
+							showTextOverlay={false}
+							enableNavigation={false}
+							borderRadius={30}
+							style={styles.carousel}
+						/>
+						<View style={styles.backButtonContainer}>
+							<NavButton
+								direction="back"
+								onPress={() => router.back()}
+								size={40}
+								backgroundColor="#FFFFFF"
+								iconColor="#C67C4E"
+								style={styles.backButton}
+							/>
+						</View>
+						<TouchableOpacity
+							style={styles.favoriteButton}
+							onPress={toggleFavorite}
+						>
+							<Ionicons
+								name={isFavorite ? 'heart' : 'heart-outline'}
+								size={24}
+								color="#C67C4E"
+							/>
+						</TouchableOpacity>
+					</View>
 
-							<View style={styles.sizeOptionsContainer}>
-								{PRODUCT.sizes.map((size) => (
-									<TouchableOpacity
-										key={size}
-										style={[
-											styles.sizeOption,
-											selectedSize === size && styles.selectedSizeOption,
-										]}
-										onPress={() => handleSelectSize(size)}
-									>
-										<Text
-											style={[
-												styles.sizeOptionText,
-												selectedSize === size && styles.selectedSizeOptionText,
-											]}
-										>
-											{size}
-										</Text>
-									</TouchableOpacity>
+					{/* Product Details Section */}
+					<View style={styles.detailsContainer}>
+						<Text style={styles.productName}>{product?.product_name}</Text>
+						<View style={styles.ratingContainer}>
+							<View style={styles.starContainer}>
+								{[1, 2, 3, 4, 5].map((star) => (
+									<AntDesign
+										key={star}
+										name="star"
+										size={16}
+										color={
+											product &&
+											star <= Math.floor(product.product_overall_stars)
+												? '#F3603F'
+												: '#E0E0E0'
+										}
+										style={{ marginRight: 2 }}
+									/>
 								))}
 							</View>
+							<Text style={styles.ratingText}>
+								{product?.product_overall_stars?.toFixed(1) || ''}
+							</Text>
+							<Text style={styles.reviewsText}>
+								({product?.product_total_ratings || 0} {t('ratings')})
+							</Text>
 						</View>
-					</View>
-				</TouchableOpacity>
-			</Modal>
-
-			{/* Reviews Modal */}
-			<Modal
-				animationType="slide"
-				transparent={true}
-				visible={reviewsModalVisible}
-				onRequestClose={toggleReviewsModal}
-			>
-				<View style={styles.modalContainer}>
-					<View style={styles.modalContent}>
-						{/* Modal Header */}
-						<View style={styles.modalHeader}>
-							<TouchableOpacity
-								style={styles.closeButton}
-								onPress={toggleReviewsModal}
-							>
-								<Ionicons name="close" size={24} color="#000" />
-							</TouchableOpacity>
-							<Text style={styles.modalTitle}>{t('reviews')}</Text>
-							<View style={{ width: 24 }} />
-						</View>
-
-						{/* Modal Body with Scrollable Content */}
-						<ScrollView
-							style={styles.modalBody}
-							showsVerticalScrollIndicator={false}
-						>
-							{PRODUCT.reviewsData.map((review) => (
-								<View
-									key={`modal-review-${review.id}`}
-									style={styles.reviewItem}
+						{/* Size Selection */}
+						{product?.sizes && (
+							<View style={styles.sizeSelectionContainer}>
+								<TouchableOpacity
+									style={styles.sizeDropdown}
+									onPress={toggleSizeDropdown}
 								>
-									{/* Reviewer Information */}
-									<View style={styles.reviewerContainer}>
-										{/* Profile Image */}
-										<View style={styles.profileImageContainer}>
-											<Image
-												source={{ uri: review.userAvatar }}
-												style={styles.profileImage}
-											/>
+									<Text style={styles.sizeText}>
+										{t('size')} {selectedSize}
+									</Text>
+									<MaterialIcons
+										name="keyboard-arrow-down"
+										size={20}
+										color="#BEBDBA"
+									/>
+								</TouchableOpacity>
+							</View>
+						)}
+						{/* Quantity Selector and Price */}
+						<View style={styles.quantityPriceContainer}>
+							<QuantityControl
+								value={quantity}
+								onIncrement={incrementQuantity}
+								onDecrement={decrementQuantity}
+								size="large"
+								style={styles.quantityControlCustom}
+							/>
+							<Text style={styles.priceText}>
+								{product?.prices && product.prices.length > 0
+									? `${product.prices[
+											product.sizes?.indexOf(selectedSize) ?? 0
+									  ]?.toLocaleString()}₫`
+									: ''}
+							</Text>
+						</View>
+						{/* Description Section */}
+						<TouchableOpacity
+							style={styles.sectionContainer}
+							onPress={toggleDescriptionModal}
+							activeOpacity={0.7}
+						>
+							<Text style={styles.sectionTitle}>
+								{t('description').toUpperCase()}
+							</Text>
+							<Text style={styles.descriptionText}>
+								{product?.product_description}
+							</Text>
+							<View style={styles.readMoreContainer}>
+								<Text style={styles.readMoreText}>{t('readMore')}</Text>
+								<MaterialIcons
+									name="keyboard-arrow-right"
+									size={18}
+									color="#C67C4E"
+								/>
+							</View>
+						</TouchableOpacity>
+						<View style={styles.divider} />
+						{/* Reviews Section */}
+						<View style={styles.sectionContainer}>
+							<Text style={styles.sectionTitle}>
+								{t('reviews').toUpperCase()}
+							</Text>
+
+							{feedbacks.slice(0, 2).map((review, index) => (
+								<View key={`review-${review.id}`} style={styles.reviewCard}>
+									<View style={styles.reviewHeaderRow}>
+										<View style={styles.avatarWrapper}>
+											{review.userAvatar ? (
+												<Image
+													source={{ uri: review.userAvatar }}
+													style={styles.avatarImage}
+												/>
+											) : (
+												<Text style={styles.avatarInitial}>
+													{review.userName?.[0]?.toUpperCase() || 'U'}
+												</Text>
+											)}
 										</View>
-
-										{/* Reviewer Details */}
-										<View style={styles.reviewerDetails}>
+										<View style={styles.reviewHeaderText}>
 											<Text style={styles.reviewerName}>{review.userName}</Text>
-											<Text style={styles.reviewerEmail}>
-												{review.userEmail}
-											</Text>
-
-											{/* User Rating */}
-											<View style={styles.userRatingContainer}>
+											<View style={styles.reviewRatingRow}>
 												{[1, 2, 3, 4, 5].map((star) => (
 													<AntDesign
-														key={`modal-star-${review.id}-${star}`}
+														key={`star-${review.id}-${star}`}
 														name="star"
 														size={14}
 														color={
 															star <= Math.floor(review.rating)
-																? '#F3603F'
+																? '#FFB300'
 																: '#E0E0E0'
 														}
-														style={{ marginRight: 2 }}
+														style={{ marginRight: 1 }}
 													/>
 												))}
 												<Text style={styles.reviewDate}>{review.date}</Text>
 											</View>
 										</View>
 									</View>
-
-									{/* Review Text */}
-									<View style={styles.reviewTextContainer}>
-										<Text style={styles.reviewText}>{review.text}</Text>
-									</View>
-
-									{/* Review Images */}
+									{review.text ? (
+										<View style={styles.reviewTextBubble}>
+											<Text style={styles.reviewText}>{review.text}</Text>
+										</View>
+									) : null}
 									{review.images && review.images.length > 0 && (
 										<ScrollView
 											horizontal
@@ -663,7 +398,7 @@ export default function ProductDetailScreen() {
 										>
 											{review.images.map((image) => (
 												<TouchableOpacity
-													key={`modal-review-img-${image.id}`}
+													key={`review-img-${image.id}`}
 													activeOpacity={0.9}
 													style={styles.reviewImageWrapper}
 													onPress={() => viewReviewImage(image.imageUrl)}
@@ -677,12 +412,292 @@ export default function ProductDetailScreen() {
 											))}
 										</ScrollView>
 									)}
+									{index < Math.min(1, feedbacks.length - 1) && (
+										<View style={styles.reviewDivider} />
+									)}
 								</View>
 							))}
-						</ScrollView>
+
+							{/* See All Reviews Button */}
+							<TouchableOpacity
+								style={styles.seeAllReviewsButton}
+								onPress={toggleReviewsModal}
+							>
+								<Text style={styles.seeAllReviewsText}>
+									{t('seeAllReviews')}
+								</Text>
+								<MaterialIcons
+									name="keyboard-arrow-right"
+									size={18}
+									color="#C67C4E"
+								/>
+							</TouchableOpacity>
+						</View>
+						<View style={styles.divider} />
+						{/* Similar Products Section */}
+						<View style={styles.sectionContainer}>
+							<Text style={styles.similarProductsTitle}>
+								{t('similarProducts').toUpperCase()}
+							</Text>
+
+							<ScrollView
+								horizontal
+								showsHorizontalScrollIndicator={false}
+								contentContainerStyle={styles.similarProductsScrollContent}
+							>
+								{product?.similarProducts?.map((product) => (
+									<RegularProductCard
+										key={product.productId}
+										product={product}
+										onToggleFavorite={() => {}}
+										style={styles.similarProductCard}
+									/>
+								))}
+							</ScrollView>
+						</View>
+						{/* Add extra space at the bottom to account for the buttons */}
+						<View style={styles.bottomButtonSpacer} />
 					</View>
-				</View>
-			</Modal>
+				</ScrollView>
+			)}
+
+			{/* Add to Cart Button - Moved outside of ScrollView to be fixed at bottom */}
+			<View style={styles.addToCartContainer}>
+				<Button
+					text={t('addToCart')}
+					backgroundColor="#c67c4e"
+					textColor="#ffffff"
+					onPress={handleAddToCart}
+					style={styles.addToCartButton}
+				/>
+			</View>
+
+			{/* Description Modal */}
+			{product && (
+				<Modal
+					animationType="slide"
+					transparent={true}
+					visible={descriptionModalVisible}
+					onRequestClose={toggleDescriptionModal}
+				>
+					<View style={styles.modalContainer}>
+						<View style={styles.modalContent}>
+							{/* Modal Header */}
+							<View style={styles.modalHeader}>
+								<TouchableOpacity
+									style={styles.closeButton}
+									onPress={toggleDescriptionModal}
+								>
+									<Ionicons name="close" size={24} color="#000" />
+								</TouchableOpacity>
+								<Text style={styles.modalTitle}>{t('description')}</Text>
+								<View style={{ width: 24 }} />
+							</View>
+
+							{/* Modal Body with Scrollable Content */}
+							<ScrollView
+								style={styles.modalBody}
+								showsVerticalScrollIndicator={false}
+							>
+								<View style={styles.modalTitleContainer}>
+									<View style={styles.modalTitleDecoration} />
+									<Text style={styles.productTitleInModal}>
+										{product.product_name}
+									</Text>
+								</View>
+
+								<Text style={styles.fullDescription}>
+									{product.product_description}
+								</Text>
+							</ScrollView>
+						</View>
+					</View>
+				</Modal>
+			)}
+
+			{/* Size Selection Modal */}
+			{product && (
+				<Modal
+					animationType="fade"
+					transparent={true}
+					visible={sizeDropdownVisible}
+					onRequestClose={toggleSizeDropdown}
+				>
+					<TouchableOpacity
+						style={styles.sizeModalOverlay}
+						activeOpacity={1}
+						onPress={toggleSizeDropdown}
+					>
+						<View style={styles.sizeModalContainer}>
+							<View style={styles.sizeModalContent}>
+								<View style={styles.sizeModalHeader}>
+									<Text style={styles.sizeModalTitle}>{t('selectSize')}</Text>
+									<TouchableOpacity onPress={toggleSizeDropdown}>
+										<Ionicons name="close" size={24} color="#383838" />
+									</TouchableOpacity>
+								</View>
+
+								<View style={styles.sizeOptionsContainer}>
+									{product.sizes.map((size) => (
+										<TouchableOpacity
+											key={size}
+											style={[
+												styles.sizeOption,
+												selectedSize === size && styles.selectedSizeOption,
+											]}
+											onPress={() => handleSelectSize(size)}
+										>
+											<Text
+												style={[
+													styles.sizeOptionText,
+													selectedSize === size &&
+														styles.selectedSizeOptionText,
+												]}
+											>
+												{size}
+											</Text>
+										</TouchableOpacity>
+									))}
+								</View>
+							</View>
+						</View>
+					</TouchableOpacity>
+				</Modal>
+			)}
+
+			{/* Reviews Modal */}
+			{product && (
+				<Modal
+					animationType="slide"
+					transparent={true}
+					visible={reviewsModalVisible}
+					onRequestClose={toggleReviewsModal}
+				>
+					<View style={styles.modalContainer}>
+						<View style={styles.modalContent}>
+							{/* Modal Header */}
+							<View style={styles.modalHeader}>
+								<TouchableOpacity
+									style={styles.closeButton}
+									onPress={toggleReviewsModal}
+								>
+									<Ionicons name="close" size={24} color="#000" />
+								</TouchableOpacity>
+								<Text style={styles.modalTitle}>{t('reviews')}</Text>
+								<View style={{ width: 24 }} />
+							</View>
+
+							{/* Modal Body with Scrollable Content */}
+							<ScrollView
+								style={styles.modalBody}
+								showsVerticalScrollIndicator={false}
+							>
+								{feedbacks.map((review, index) => (
+									<View
+										key={`modal-review-${review.id}`}
+										style={styles.reviewCard}
+									>
+										<View style={styles.reviewHeaderRow}>
+											<View style={styles.avatarWrapper}>
+												{review.userAvatar ? (
+													<Image
+														source={{ uri: review.userAvatar }}
+														style={styles.avatarImage}
+													/>
+												) : (
+													<Text style={styles.avatarInitial}>
+														{review.userName?.[0]?.toUpperCase() || 'U'}
+													</Text>
+												)}
+											</View>
+											<View style={styles.reviewHeaderText}>
+												<Text style={styles.reviewerName}>
+													{review.userName}
+												</Text>
+												<View style={styles.reviewRatingRow}>
+													{[1, 2, 3, 4, 5].map((star) => (
+														<AntDesign
+															key={`modal-star-${review.id}-${star}`}
+															name="star"
+															size={14}
+															color={
+																star <= Math.floor(review.rating)
+																	? '#FFB300'
+																	: '#E0E0E0'
+															}
+															style={{ marginRight: 1 }}
+														/>
+													))}
+													<Text style={styles.reviewDate}>{review.date}</Text>
+												</View>
+											</View>
+										</View>
+										{review.text ? (
+											<View style={styles.reviewTextBubble}>
+												<Text style={styles.reviewText}>{review.text}</Text>
+											</View>
+										) : null}
+										{review.images && review.images.length > 0 && (
+											<ScrollView
+												horizontal
+												showsHorizontalScrollIndicator={false}
+												style={styles.reviewImagesContainer}
+												contentContainerStyle={styles.reviewImagesContent}
+											>
+												{review.images.map((image) => (
+													<TouchableOpacity
+														key={`modal-review-img-${image.id}`}
+														activeOpacity={0.9}
+														style={styles.reviewImageWrapper}
+														onPress={() => viewReviewImage(image.imageUrl)}
+													>
+														<Image
+															source={{ uri: image.imageUrl }}
+															style={styles.reviewImage}
+															resizeMode="cover"
+														/>
+													</TouchableOpacity>
+												))}
+											</ScrollView>
+										)}
+										{index < feedbacks.length - 1 && (
+											<View style={styles.reviewDivider} />
+										)}
+									</View>
+								))}
+								{feedbackLoading && (
+									<ActivityIndicator
+										size="small"
+										color="#C67C4E"
+										style={{ marginVertical: 16 }}
+									/>
+								)}
+								{feedbackHasMore && !feedbackLoading && (
+									<TouchableOpacity
+										style={styles.seeAllReviewsButton}
+										onPress={() =>
+											fetchProductFeedbacks(
+												feedbacks.length,
+												FEEDBACK_PAGE_SIZE,
+												true
+											)
+										}
+									>
+										<Text style={styles.seeAllReviewsText}>
+											{t('viewMoreReviews')}
+										</Text>
+										<MaterialIcons
+											name="keyboard-arrow-down"
+											size={18}
+											color="#C67C4E"
+										/>
+									</TouchableOpacity>
+								)}
+							</ScrollView>
+						</View>
+					</View>
+				</Modal>
+			)}
 
 			{/* Review Image Fullscreen Modal */}
 			<Modal
@@ -717,6 +732,10 @@ const styles = StyleSheet.create({
 	scrollView: {
 		flex: 1,
 		backgroundColor: '#FFFFFF',
+	},
+	avatarImage: {
+		width: '100%',
+		height: '100%',
 	},
 	scrollViewContent: {
 		paddingBottom: 130, // Add padding to account for the Add to Cart button and bottom bar
@@ -981,47 +1000,91 @@ const styles = StyleSheet.create({
 		lineHeight: 24,
 		letterSpacing: 0.5,
 	},
-	reviewItem: {
-		marginBottom: 20,
+	reviewCard: {
+		backgroundColor: '#FFF',
+		borderRadius: 16,
+		padding: 16,
+		marginBottom: 18,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.06,
+		shadowRadius: 6,
+		elevation: 2,
 	},
-	reviewItemBorder: {
-		borderTopWidth: 1,
-		borderTopColor: '#E2E2E2',
-		paddingTop: 20,
-	},
-	userRatingContainer: {
+	reviewHeaderRow: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginTop: 5,
+		marginBottom: 8,
+	},
+	avatarWrapper: {
+		width: 38,
+		height: 38,
+		borderRadius: 19,
+		backgroundColor: '#F3E9D7',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 12,
+		overflow: 'hidden',
+	},
+	avatarInitial: {
+		fontSize: 18,
+		fontFamily: 'Inter-Bold',
+		color: '#C67C4E',
+	},
+	reviewHeaderText: {
+		flex: 1,
+	},
+	reviewerName: {
+		fontSize: 15,
+		fontFamily: 'Inter-Bold',
+		color: '#2D2D2D',
+		marginBottom: 2,
+	},
+	reviewRatingRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
 	},
 	reviewDate: {
 		fontSize: 12,
+		color: '#B0AFAF',
+		marginLeft: 8,
+	},
+	reviewTextBubble: {
+		backgroundColor: '#F6F3ED',
+		borderRadius: 10,
+		padding: 12,
+		marginTop: 4,
+		marginBottom: 4,
+	},
+	reviewText: {
+		fontSize: 14,
+		color: '#3D3D3D',
+		lineHeight: 20,
 		fontFamily: 'Inter-Regular',
-		color: '#7C7C7C',
-		marginLeft: 10,
 	},
 	reviewImagesContainer: {
-		marginTop: 15,
+		marginTop: 8,
 	},
 	reviewImagesContent: {
-		paddingVertical: 5,
+		paddingVertical: 2,
 	},
 	reviewImageWrapper: {
-		marginRight: 12,
-		borderRadius: 30,
+		marginRight: 10,
+		borderRadius: 12,
 		overflow: 'hidden',
 		borderWidth: 1,
-		borderColor: '#E2E2E2',
-		shadowColor: '#000',
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.1,
-		shadowRadius: 2,
-		elevation: 2,
+		borderColor: '#F3E9D7',
 	},
 	reviewImage: {
-		width: 120,
-		height: 120,
+		width: 80,
+		height: 80,
 		borderRadius: 12,
+		backgroundColor: '#F8F1E9',
+	},
+	reviewDivider: {
+		height: 1,
+		backgroundColor: '#F3E9D7',
+		marginVertical: 8,
 	},
 	seeAllReviewsButton: {
 		flexDirection: 'row',

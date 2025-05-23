@@ -25,18 +25,18 @@ const { width } = Dimensions.get('window')
 
 // Category banner images mapping
 const CATEGORY_BANNERS = {
-	1: 'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800',
-	3: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800',
-	4: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800',
-	5: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
-	6: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800',
-	7: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800',
-	8: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800',
+	1: 'https://aeonmall-review-rikkei.cdn.vccloud.vn/public/wp/16/promotions/TdTHwzfBPe1QC72AqMDTJqDelMd5jcy9Det72UgG.png',
+	3: 'https://live.staticflickr.com/65535/51930946831_b8448de032_z.jpg',
+	4: 'https://static.vecteezy.com/system/resources/previews/024/854/340/non_2x/realistic-bread-ads-horizontal-poster-vector.jpg',
+	5: 'https://static.vecteezy.com/system/resources/previews/024/854/340/non_2x/realistic-bread-ads-horizontal-poster-vector.jpg',
+	6: 'https://www.nestlegoodnes.com/ph/sites/default/files/styles/3_2_1920px_width/public/2024-11/Banner.png.webp?itok=ajyNg68Q',
+	7: 'https://5.imimg.com/data5/SELLER/Default/2021/3/NA/WI/JS/12666815/chocolate-chip-cookies.jpg',
+	8: 'https://cdn.vectorstock.com/i/500p/35/88/summer-sale-holiday-on-sand-beach-banner-design-vector-55593588.jpg',
 	9: 'https://img.freepik.com/free-vector/hand-drawn-donuts-party-twitter-header_23-2149164950.jpg?semt=ais_hybrid&w=740',
-	10: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800',
-	11: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800',
-	12: 'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=800',
-	13: 'https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=800',
+	10: 'https://img.freepik.com/premium-psd/summer-fresh-healthy-drink-special-menu-promotion-social-media-facebook-cover-banner-template_485905-641.jpg',
+	11: 'https://static.vecteezy.com/system/resources/previews/004/957/919/non_2x/mate-tea-poster-vector.jpg',
+	12: 'https://img.freepik.com/vector-premium/virutas-copos-rizos-barras-chocolate-negro-realistas-espirales-caramelo-cacao-dulce-3d-conjunto-vector-rebanadas-chocolate-amargo-o-leche-deliciosos-postres-bocadillos-comida-elementos-aislados_102902-4877.jpg',
+	13: 'https://i.pinimg.com/736x/22/00/b1/2200b1db220513353413b69eb1131f1e.jpg',
 }
 
 // Category description mapping
@@ -249,7 +249,7 @@ export default function CategoryScreen() {
 			<StatusBar barStyle="dark-content" backgroundColor="#FAF5ED" />
 
 			{/* Header */}
-			<View style={styles.header}>
+			<LinearGradient colors={['#FFE9D0', '#F9F5F0']} style={styles.header}>
 				<TouchableOpacity
 					style={styles.backButton}
 					onPress={() => router.back()}
@@ -258,7 +258,7 @@ export default function CategoryScreen() {
 				</TouchableOpacity>
 				<Text style={styles.headerTitle}>{categoryName}</Text>
 				<View style={styles.placeholder} />
-			</View>
+			</LinearGradient>
 
 			{/* Category Banner */}
 			{categoryBanner && (

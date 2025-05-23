@@ -486,39 +486,40 @@ export default function OrderTrackingScreen() {
 						</View>
 
 						{/* Order items with vibrant styling */}
-						{trackingOrder.items && trackingOrder.items.length > 0 && (
-							<View style={styles.orderItemsContainer}>
-								<Text style={styles.sectionTitle}>{t('orderItems')}</Text>
-								{trackingOrder.items.map((item, index) => (
-									<View
-										key={`${item.product_id}-${index}`}
-										style={styles.orderItem}
-									>
-										<View style={styles.itemImageWrapper}>
-											<Image
-												source={{ uri: item.product_image }}
-												style={styles.itemImage}
-												resizeMode="cover"
-											/>
-										</View>
-										<View style={styles.itemDetails}>
-											<Text style={styles.itemName}>{item.product_name}</Text>
-											<Text style={styles.itemSize}>{item.product_size}</Text>
-											<View style={styles.itemPriceRow}>
-												<Text style={styles.itemPrice}>
-													{formatPrice(item.product_price, locale)}
-												</Text>
-												<View style={styles.quantityContainer}>
-													<Text style={styles.itemQuantity}>
-														x{item.product_quantity}
+						{trackingOrder.order_items &&
+							trackingOrder.order_items.length > 0 && (
+								<View style={styles.orderItemsContainer}>
+									<Text style={styles.sectionTitle}>{t('orderItems')}</Text>
+									{trackingOrder.order_items.map((item, index) => (
+										<View
+											key={`${item.product_id}-${index}`}
+											style={styles.orderItem}
+										>
+											<View style={styles.itemImageWrapper}>
+												<Image
+													source={{ uri: item.product_image }}
+													style={styles.itemImage}
+													resizeMode="cover"
+												/>
+											</View>
+											<View style={styles.itemDetails}>
+												<Text style={styles.itemName}>{item.product_name}</Text>
+												<Text style={styles.itemSize}>{item.product_size}</Text>
+												<View style={styles.itemPriceRow}>
+													<Text style={styles.itemPrice}>
+														{formatPrice(item.product_price, locale)}
 													</Text>
+													<View style={styles.quantityContainer}>
+														<Text style={styles.itemQuantity}>
+															x{item.product_quantity}
+														</Text>
+													</View>
 												</View>
 											</View>
 										</View>
-									</View>
-								))}
-							</View>
-						)}
+									))}
+								</View>
+							)}
 
 						{/* Order summary with vibrant styling */}
 						<View style={styles.orderSummaryContainer}>

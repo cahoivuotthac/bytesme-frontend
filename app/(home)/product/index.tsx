@@ -268,12 +268,14 @@ export default function ProductScreen() {
 
 	// Select a category
 	const handleSelectCategory = (categoryId: string) => {
+		setActiveCategory(categoryId)
 		if (categoryId === 'all') {
-			setActiveCategory(categoryId)
 			// Stay on current page for "all" category
 		} else {
 			// Navigate to specific category page
-			router.push(`/(home)/product/categories/${categoryId}`)
+			setTimeout(() => {
+				router.push(`/(home)/product/categories/${categoryId}`)
+			}, 1000)
 		}
 	}
 

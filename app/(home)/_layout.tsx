@@ -9,9 +9,54 @@ import {
 } from 'react-native'
 import { useAuth } from '@/providers/auth'
 import BottomBar from '@/components/shared/BottomBar'
-import { Dimensions } from 'react-native'
+import * as Notifications from 'expo-notifications'
+import Constants from 'expo-constants'
 
-const { width, height } = Dimensions.get('window')
+function handleRegistrationError(errorMessage: string) {
+	alert(errorMessage)
+	throw new Error(errorMessage)
+}
+
+async function registerForPushNotificationsAsync() {
+	if (Platform.OS === 'android') {
+		Notifications.setNotificationChannelAsync('default', {
+			name: 'default',
+			importance: Notifications.AndroidImportance.MAX,
+			vibrationPattern: [0, 250, 250, 250],
+			lightColor: '#FF231F7C',
+		})
+	}
+
+	const { status: existingStatus } = await Notifications.getPermissionsAsync()
+	let finalStatus = existingStatus
+	if (existingStatus !== 'granted') {
+		const { status } = await Notifications.requestPermissionsAsync()
+		finalStatus = status
+	}
+	if (finalStatus !== 'granted') {
+		handleRegistrationError(
+			'Permission not granted to get push token for push notification!'
+		)
+		return
+	}
+	const projectId =
+		Constants?.expoConfig?.extra?.eas?.projectId ??
+		Constants?.easConfig?.projectId
+	if (!projectId) {
+		handleRegistrationError('Project ID not found')
+	}
+	try {
+		const pushTokenString = (
+			await Notifications.getExpoPushTokenAsync({
+				projectId,
+			})
+		).data
+		console.log(pushTokenString)
+		return pushTokenString
+	} catch (e: unknown) {
+		handleRegistrationError(`${e}`)
+	}
+}
 
 /**
  * Layout for all authenticated screens in the app
@@ -29,6 +74,27 @@ export default function HomeLayout() {
 			</View>
 		)
 	}
+
+	// Register for push notifications
+	// useEffect(() => {
+	// 	if (authState.isLoading || !isAuthenticated()) {
+	// 		return
+	// 	}
+
+	// 	registerForPushNotificationsAsync()
+	// 		.then(async (pushToken: string | undefined) => {
+	// 			console.log('Push notification token registered:', pushToken)
+
+	// 			// Send the push token to the server
+	// 			if (pushToken) {
+	// 				// TODO: Implement sending pushToken to your backend here
+	// 			}
+	// 		})
+	// 		.catch((error) => {
+	// 			console.error('Error registering for push notifications:', error)
+	// 		})
+	// // Add isAuthenticated to dependencies to ensure effect runs when auth changes
+	// }, [authState])
 
 	// Redirect if not authenticated
 	if (!isAuthenticated()) {
