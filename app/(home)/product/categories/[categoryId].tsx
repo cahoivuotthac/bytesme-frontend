@@ -3,22 +3,23 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	ScrollView,
 	TouchableOpacity,
 	Image,
 	SafeAreaView,
 	StatusBar,
 	Dimensions,
-	FlatList,
 	ActivityIndicator,
 	RefreshControl,
+	ScrollView,
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import RegularProductCard from '@/components/product/RegularProductCard'
-import DiscountProductCard from '@/components/product/DiscountProductCard'
+import PinterestProductCard from '@/components/product/PinterestProductCard'
 import { useTranslation } from '@/providers/locale'
+import BottomSpacer from '@/components/shared/BottomSpacer'
+import { addToWishlist, productAPI, removeFromWishlist } from '@/utils/api'
+import { useAlert } from '@/hooks/useAlert'
 
 const { width } = Dimensions.get('window')
 
@@ -31,7 +32,7 @@ const CATEGORY_BANNERS = {
 	6: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800',
 	7: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800',
 	8: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800',
-	9: 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?w=800',
+	9: 'https://img.freepik.com/free-vector/hand-drawn-donuts-party-twitter-header_23-2149164950.jpg?semt=ais_hybrid&w=740',
 	10: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=800',
 	11: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=800',
 	12: 'https://images.unsplash.com/photo-1549007953-2f2dc0b24019?w=800',
@@ -70,73 +71,40 @@ const CATEGORY_NAME_KEYS = {
 	13: 'coffee',
 }
 
-// Mock products data - In real app, this would come from API
-const MOCK_PRODUCTS = [
-	{
-		productId: 1,
-		name: 'Bingsu Dâu Tây',
-		price: 85000,
-		imageUrl: 'https://images.unsplash.com/photo-1551024506-0bccd828d307',
-		rating: 4.8,
-		isFavorite: false,
-	},
-	{
-		productId: 2,
-		name: 'Bingsu Xoài',
-		price: 90000,
-		originalPrice: 100000,
-		discountPercentage: 10,
-		imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b',
-		rating: 4.7,
-		isFavorite: true,
-	},
-	{
-		productId: 3,
-		name: 'Bingsu Chocolate',
-		price: 95000,
-		imageUrl: 'https://images.unsplash.com/photo-1551024739-7f6baf4e7000',
-		rating: 4.9,
-		isFavorite: false,
-	},
-	{
-		productId: 4,
-		name: 'Bingsu Trà Xanh',
-		price: 88000,
-		imageUrl: 'https://images.unsplash.com/photo-1551024739-7f6baf4e7000',
-		rating: 4.6,
-		isFavorite: false,
-	},
-	{
-		productId: 5,
-		name: 'Bingsu Đậu Đỏ',
-		price: 82000,
-		originalPrice: 90000,
-		discountPercentage: 9,
-		imageUrl: 'https://images.unsplash.com/photo-1551024506-0bccd828d307',
-		rating: 4.5,
-		isFavorite: true,
-	},
-	{
-		productId: 6,
-		name: 'Bingsu Tổng Hợp',
-		price: 120000,
-		imageUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b',
-		rating: 4.9,
-		isFavorite: false,
-	},
-]
+// Helper to split products into two columns for Pinterest effect
+function splitProductsToColumns(products: any[]) {
+	const left: any[] = []
+	const right: any[] = []
+	let leftHeight = 0
+	let rightHeight = 0
+	products.forEach((item, idx) => {
+		// For demo, use a random height for each card (simulate image+desc height)
+		const estHeight = 180 + Math.floor(Math.random() * 80)
+		if (leftHeight <= rightHeight) {
+			left.push({ ...item, _pinterestHeight: estHeight })
+			leftHeight += estHeight
+		} else {
+			right.push({ ...item, _pinterestHeight: estHeight })
+			rightHeight += estHeight
+		}
+	})
+	return [left, right]
+}
 
 export default function CategoryScreen() {
 	const params = useLocalSearchParams()
 	const categoryId = Number(params.categoryId)
 	const { t } = useTranslation()
 
-	const [products, setProducts] = useState(MOCK_PRODUCTS)
+	const [products, setProducts] = useState<any[]>([])
 	const [loading, setLoading] = useState(false)
 	const [refreshing, setRefreshing] = useState(false)
 	const [page, setPage] = useState(1)
 	const [hasMoreProducts, setHasMoreProducts] = useState(true)
-	const [favorites, setFavorites] = useState<number[]>([1, 2, 5])
+	const [favorites, setFavorites] = useState<number[]>([])
+	const [loadingMore, setLoadingMore] = useState(false)
+	const pageSize = 10
+	const { showError } = useAlert()
 
 	// Get category information
 	const categoryNameKey =
@@ -149,6 +117,18 @@ export default function CategoryScreen() {
 	const categoryName = categoryNameKey ? t(categoryNameKey) : 'Category'
 	const categoryDescription = categoryDescKey ? t(categoryDescKey) : ''
 
+	// Transform backend product data to match PinterestProductCard props
+	const transformProduct = (p: any) => ({
+		productId: p.product_id,
+		name: p.product_name,
+		price: p.product_price,
+		imageUrl: p.product_image_url || '', // fallback or placeholder if needed
+		description: p.product_description,
+		isFavorite: p.is_wishlisted,
+		rating: p.product_overall_stars,
+		discountPercentage: p.product_discount_percentage,
+	})
+
 	// Fetch products (mock implementation)
 	const fetchProducts = async (
 		pageNum: number = 1,
@@ -156,37 +136,58 @@ export default function CategoryScreen() {
 	) => {
 		if (isRefresh) {
 			setRefreshing(true)
-		} else {
+		} else if (pageNum === 1) {
 			setLoading(true)
+		} else {
+			setLoadingMore(true)
 		}
 
 		try {
-			// Simulate API call delay
-			await new Promise((resolve) => setTimeout(resolve, 1000))
+			const offset = (pageNum - 1) * pageSize
+			const response = await productAPI.getProductsByCategory(
+				categoryId,
+				offset,
+				pageSize
+			)
+			const newProducts = (response.data.products || []).map(transformProduct)
+			const hasMore = response.data.has_more // <-- use this from backend
 
-			// In real app, make API call here
-			// const response = await api.getProductsByCategory(categoryId, pageNum)
-
-			if (isRefresh) {
-				setProducts(MOCK_PRODUCTS)
+			if (isRefresh || pageNum === 1) {
+				setProducts(newProducts)
 				setPage(1)
-			} else if (pageNum === 1) {
-				setProducts(MOCK_PRODUCTS)
+				setHasMoreProducts(hasMore)
 			} else {
-				// Simulate no more products for demo
-				setHasMoreProducts(false)
+				setProducts((prev) => [...prev, ...newProducts])
+				setHasMoreProducts(hasMore)
 			}
 		} catch (error) {
 			console.error('Error fetching products:', error)
 		} finally {
 			setLoading(false)
 			setRefreshing(false)
+			setLoadingMore(false)
 		}
 	}
 
 	// Load more products when reaching end
 	const loadMoreProducts = () => {
 		if (!loading && hasMoreProducts) {
+			const nextPage = page + 1
+			setPage(nextPage)
+			fetchProducts(nextPage)
+		}
+	}
+
+	// Detect scroll near bottom to load more
+	const handleScroll = (event: any) => {
+		const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent
+		const paddingToBottom = 120
+		if (
+			layoutMeasurement.height + contentOffset.y >=
+				contentSize.height - paddingToBottom &&
+			!loadingMore &&
+			hasMoreProducts
+		) {
 			const nextPage = page + 1
 			setPage(nextPage)
 			fetchProducts(nextPage)
@@ -200,14 +201,40 @@ export default function CategoryScreen() {
 	}
 
 	// Toggle favorite status
-	const handleToggleFavorite = (productId: number) => {
-		setFavorites((prev) => {
-			if (prev.includes(productId)) {
-				return prev.filter((id) => id !== productId)
-			} else {
-				return [...prev, productId]
+	const handleToggleFavorite = async (productId: number) => {
+		console.log('Handle toggle favorite for productId:', productId)
+		const favoriteFlipState = !favorites.includes(productId)
+		if (!favorites.includes(productId)) {
+			console.log('product is not favorited')
+			try {
+				// Remove from wishlsit
+				await addToWishlist(productId)
+				// setFavorites((prev) => {
+				// 	return [...prev, productId]
+				// })
+				setProducts((prev) =>
+					prev.map((item) =>
+						item.productId === productId ? { ...item, isFavorite: true } : item
+					)
+				)
+			} catch (err) {
+				console.error('Error toggling favorite:', err)
+				showError(t('errorAddingToWishlist'))
 			}
-		})
+		} else {
+			console.log('product is already favorited')
+			try {
+				await removeFromWishlist(productId)
+				setProducts((prev) =>
+					prev.map((item) =>
+						item.productId === productId ? { ...item, isFavorite: false } : item
+					)
+				)
+			} catch (err) {
+				console.error('Error toggling favorite:', err)
+				showError(t('errorRemovingFromWishlist'))
+			}
+		}
 	}
 
 	// Load initial products
@@ -215,44 +242,7 @@ export default function CategoryScreen() {
 		fetchProducts(1)
 	}, [categoryId])
 
-	// Render product item
-	const renderProductItem = ({ item }: { item: any }) => {
-		const isDiscounted = item.originalPrice && item.discountPercentage
-		const isFavorite = favorites.includes(item.productId)
-
-		const productWithFavorite = {
-			...item,
-			isFavorite,
-		}
-
-		if (isDiscounted) {
-			return (
-				<DiscountProductCard
-					product={productWithFavorite}
-					onToggleFavorite={handleToggleFavorite}
-					style={styles.productCard}
-				/>
-			)
-		} else {
-			return (
-				<RegularProductCard
-					product={productWithFavorite}
-					onToggleFavorite={handleToggleFavorite}
-					style={styles.productCard}
-				/>
-			)
-		}
-	}
-
-	// Render footer with loading indicator
-	const renderFooter = () => {
-		if (!loading) return null
-		return (
-			<View style={styles.footerLoader}>
-				<ActivityIndicator size="small" color="#C67C4E" />
-			</View>
-		)
-	}
+	const [leftCol, rightCol] = splitProductsToColumns(products)
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -270,63 +260,76 @@ export default function CategoryScreen() {
 				<View style={styles.placeholder} />
 			</View>
 
-			<FlatList
-				data={products}
-				renderItem={renderProductItem}
-				keyExtractor={(item) => item.productId.toString()}
-				numColumns={2}
-				columnWrapperStyle={styles.row}
-				contentContainerStyle={styles.contentContainer}
-				showsVerticalScrollIndicator={false}
-				refreshControl={
-					<RefreshControl
-						refreshing={refreshing}
-						onRefresh={handleRefresh}
-						colors={['#C67C4E']}
-						tintColor="#C67C4E"
+			{/* Category Banner */}
+			{categoryBanner && (
+				<View style={styles.bannerContainer}>
+					<Image
+						source={{ uri: categoryBanner }}
+						style={styles.bannerImage}
+						resizeMode="cover"
 					/>
-				}
-				onEndReached={loadMoreProducts}
-				onEndReachedThreshold={0.1}
-				ListFooterComponent={renderFooter}
-				ListHeaderComponent={
-					<View>
-						{/* Category Banner */}
-						{categoryBanner && (
-							<View style={styles.bannerContainer}>
-								<Image
-									source={{ uri: categoryBanner }}
-									style={styles.bannerImage}
-									resizeMode="cover"
-								/>
-								<LinearGradient
-									colors={['transparent', 'rgba(0,0,0,0.7)']}
-									style={styles.bannerGradient}
-								/>
-								<View style={styles.bannerContent}>
-									<Text style={styles.bannerTitle}>{categoryName}</Text>
-								</View>
-							</View>
-						)}
-
-						{/* Category Description */}
-						{categoryDescription && (
-							<View style={styles.descriptionContainer}>
-								<Text style={styles.descriptionText}>
-									{categoryDescription}
-								</Text>
-							</View>
-						)}
-
-						{/* Products Header */}
-						<View style={styles.productsHeader}>
-							<Text style={styles.productsTitle}>
-								{t('availableProducts')} ({products.length})
-							</Text>
-						</View>
+					<LinearGradient
+						colors={['transparent', 'rgba(0,0,0,0.7)']}
+						style={styles.bannerGradient}
+					/>
+					<View style={styles.bannerContent}>
+						<Text style={styles.bannerTitle}>{categoryName}</Text>
 					</View>
-				}
-			/>
+				</View>
+			)}
+
+			<ScrollView
+				contentContainerStyle={{
+					flexDirection: 'row',
+					paddingHorizontal: 16,
+					paddingBottom: 100,
+				}}
+				showsVerticalScrollIndicator={false}
+				onScroll={handleScroll}
+				scrollEventThrottle={16}
+			>
+				<View style={{ flex: 1, marginRight: 8 }}>
+					{/* Category Description */}
+					{categoryDescription && (
+						<View style={styles.descriptionContainer}>
+							<Text style={styles.descriptionText}>{categoryDescription}</Text>
+						</View>
+					)}
+					{leftCol.map((item, idx) => (
+						<PinterestProductCard
+							key={item.productId}
+							product={{ ...item }}
+							onToggleFavorite={handleToggleFavorite}
+							style={{ ...styles.productCard, marginBottom: 16 }}
+						/>
+					))}
+				</View>
+				<View style={{ flex: 1 }}>
+					{rightCol.map((item, idx) => (
+						<PinterestProductCard
+							key={item.productId}
+							product={{ ...item }}
+							onToggleFavorite={handleToggleFavorite}
+							style={{ ...styles.productCard, marginBottom: 16 }}
+						/>
+					))}
+				</View>
+				{/* Loading more indicator */}
+				{loadingMore && (
+					<View
+						style={{
+							position: 'absolute',
+							bottom: 24,
+							left: 0,
+							right: 0,
+							alignItems: 'center',
+						}}
+					>
+						<ActivityIndicator size="small" color="#C67C4E" />
+					</View>
+				)}
+				<BottomSpacer />
+			</ScrollView>
 		</SafeAreaView>
 	)
 }
