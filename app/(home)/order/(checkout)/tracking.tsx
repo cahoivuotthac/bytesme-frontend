@@ -440,7 +440,7 @@ export default function OrderTrackingScreen() {
 									</Text>
 								</View>
 								<Text style={[styles.orderInfoValue, styles.highlightedText]}>
-									{trackingOrder.order_payment_method === 'COD'
+									{trackingOrder.order_payment_method === 'cod'
 										? t('cashOnDelivery')
 										: t('onlinePayment')}
 								</Text>
