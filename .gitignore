@@ -41,3 +41,6 @@ yarn-error.*
 
 # Google service account private key
 bytesme-bakery-firebase-adminsdk-fbsvc-14b83f6c0a.json
+
+android
+ios
