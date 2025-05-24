@@ -19,11 +19,11 @@ import { useAuth } from '@/providers/auth'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
 import DishDecoration from '@/components/shared/DishDecoration'
-import OTPInput from '@/components/OTPInput'
+// import OTPInput from '@/components/OTPInput'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
 import NavButton from '@/components/shared/NavButton'
-import AlertDialog from '@/components/shared/AlertDialog'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+// import AlertDialog from '@/components/shared/AlertDialog'
+// import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const { width, height } = Dimensions.get('window')
 
@@ -172,6 +172,7 @@ export default () => {
 							style={styles.otpBox}
 							codeInputFieldStyle={styles.otpTextField}
 							codeInputHighlightStyle={styles.otpTextFieldFocused}
+							autoFocusOnLoad={false}
 						/>
 					</View>
 
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
 	backgroundDecoration: {
 		position: 'absolute',
 		width: width,
-		height: height * 0.4,
+		height: height * 0.3,
 		zIndex: 0,
 	},
 	pinkOutline: {
@@ -279,9 +280,9 @@ const styles = StyleSheet.create({
 	},
 	cake3Container: {
 		position: 'absolute',
-		width: '50%',
-		height: '50%',
-		top: height * 0.25,
+		width: '40%',
+		height: '40%',
+		top: height * 0.2,
 		alignSelf: 'center',
 		zIndex: 10,
 		backgroundColor: 'transparent',
@@ -289,9 +290,9 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0,
 	},
 	cake3Spacer: {
-		height: 70,
+		height: 30,
 		width: '100%',
-		marginTop: height * 0.4,
+		marginTop: height * 0.35,
 	},
 	scrollView: {
 		flex: 1,

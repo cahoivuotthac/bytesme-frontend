@@ -17,12 +17,25 @@ import { APIClient } from '@/utils/api'
 import { LinearGradient } from 'expo-linear-gradient'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
+import GoogleLoginButton from '@/components/ui/GoogleLoginButton'
+import FacebookLoginButton from '@/components/ui/FacebookLoginButton'
 
 const { width, height } = Dimensions.get('window')
 
 export default function InputPhoneScreen() {
 	const [phoneNumber, setPhoneNumber] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+
+	const handleGoogleOnLogin = async (idToken: string) => {
+		// Implement Google login
+		alert('ID token: ' + idToken)
+	}
+
+	const handleFacebookOnLogin = async (accessToken: string) => {
+		// Implement Facebook login
+		// alert('Facebook login not implemented yet')
+		alert('Access token: ' + accessToken)
+	}
 
 	const handleNextPage = async () => {
 		// Validate phone number (Vietnamese phone numbers typically have 10 digits)
@@ -54,15 +67,10 @@ export default function InputPhoneScreen() {
 		}
 	}
 
-	const handleGoogleLogin = () => {
-		// Implement Google login
-		alert('Google login not implemented yet')
-	}
-
-	const handleFacebookLogin = () => {
-		// Implement Facebook login
-		alert('Facebook login not implemented yet')
-	}
+	// const handleSocialLogin = () => {
+	// 	// Implement Facebook login
+	// 	alert('Facebook login not implemented yet')
+	// }
 
 	const handlePasswordSignin = () => {
 		// Navigate to password login screen
@@ -112,7 +120,7 @@ export default function InputPhoneScreen() {
 			{/* Add an empty View as a spacer to prevent content from going under cake-3 */}
 			<View style={styles.cake3Spacer} />
 
-			<ScrollView
+			<View
 				style={styles.scrollView}
 				contentContainerStyle={styles.contentContainer}
 				bounces={false} // Prevent bouncing to avoid overlap
@@ -161,31 +169,16 @@ export default function InputPhoneScreen() {
 					<View style={styles.orDivider} />
 				</View>
 
-				{/* Google login button */}
-				<TouchableOpacity
-					style={[styles.socialButton, styles.googleButton]}
-					onPress={handleGoogleLogin}
-				>
-					<Image
-						source={require('@/assets/icons/google-white.png')}
-						style={styles.socialIcon}
-						resizeMode="contain"
-					/>
-					<Text style={styles.socialButtonText}>Đăng nhập với Google</Text>
-				</TouchableOpacity>
-				{/* Facebook login button */}
-				<TouchableOpacity
-					style={[styles.socialButton, styles.facebookButton]}
-					onPress={handleFacebookLogin}
-				>
-					<Image
-						source={require('@/assets/icons/facebook-white.png')}
-						style={styles.socialIcon}
-						resizeMode="contain"
-					/>
-					<Text style={styles.socialButtonText}>Đăng nhập với Facebook</Text>
-				</TouchableOpacity>
-			</ScrollView>
+				{/* Google/ Facebook login section */}
+				{isLoading ? (
+					<ActivityIndicator size="large" color="#C67C4E" />
+				) : (
+					<>
+						<GoogleLoginButton onLogin={handleGoogleOnLogin} />
+						<FacebookLoginButton onLogin={handleFacebookOnLogin} />
+					</>
+				)}
+			</View>
 		</SafeAreaView>
 	)
 }
@@ -199,7 +192,7 @@ const styles = StyleSheet.create({
 	backgroundDecoration: {
 		position: 'absolute',
 		width: width,
-		height: height * 0.4, // 40% of screen height
+		height: height * 0.3, // 40% of screen height
 		zIndex: 0,
 	},
 	pinkOutline: {
@@ -240,7 +233,7 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		width: '50%',
 		height: '50%',
-		top: height * 0.25, // Position at bottom of gradient
+		top: height * 0.20, // Position at bottom of gradient
 		alignSelf: 'center', // Center horizontally
 		zIndex: 10, // Ensure it's above other elements
 		backgroundColor: 'transparent', // Make background transparent

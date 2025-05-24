@@ -157,7 +157,15 @@ export default function CategoryScreen() {
 				setPage(1)
 				setHasMoreProducts(hasMore)
 			} else {
-				setProducts((prev) => [...prev, ...newProducts])
+				setProducts((prev) => {
+					const all = [...prev, ...newProducts]
+					const seen = new Set()
+					return all.filter((item) => {
+						if (seen.has(item.productId)) return false
+						seen.add(item.productId)
+						return true
+					})
+				})
 				setHasMoreProducts(hasMore)
 			}
 		} catch (error) {

@@ -162,7 +162,7 @@ export default function VerifyResetOTPScreen() {
 			<View style={styles.cake3Container}>
 				<DishDecoration
 					imageSource={require('@/assets/signin-decorations/cake-3.png')}
-					size={width * 0.4}
+					size={width * 0.5}
 				/>
 			</View>
 
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
 	backgroundDecoration: {
 		position: 'absolute',
 		width: width,
-		height: height * 0.25, // Reduced height to 25% of screen height
+		height: height * 0.3, // Reduced height to 25% of screen height
 		zIndex: 0,
 	},
 	pinkOutline: {
@@ -278,9 +278,9 @@ const styles = StyleSheet.create({
 	},
 	cake3Container: {
 		position: 'absolute',
-		width: '40%',
+		width: '55%',
 		height: '40%',
-		top: height * 0.15,
+		top: height * 0.18,
 		alignSelf: 'center',
 		zIndex: 10,
 		backgroundColor: 'transparent',
@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
 	cake3Spacer: {
 		height: 30,
 		width: '100%',
-		marginTop: height * 0.25,
+		marginTop: height * 0.35,
 	},
 	scrollView: {
 		flex: 1,

@@ -12,8 +12,11 @@ export default {
 	decline: "Decline",
 	close: "Close",
 	error: "An issue occurred",
+	info: "Notice",
 	success: "Success",
-	info: 'Notice',
+
+	// Auth 
+	socialSigninError: "Cannot sign in with your social account, please try again later",
 
 	// Product Cards
 	discount: "Discount",

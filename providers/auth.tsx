@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from 'react'
 import { APIClient } from '@/utils/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useTranslation } from '@/providers/locale'
 
 // Define the structure of our auth state
 type AuthState = {
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 // Provider component that wraps your app and makes auth object available to any child component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
 	const [authState, setAuthState] = useState<AuthState>(defaultAuthState)
+	const { t } = useTranslation()
 
 	// Function to check if a session exists
 	useEffect(() => {
@@ -186,6 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				const { user, token } = response.data
 				// Is signin
 				if (token) {
+					alert('Has token: ' + token)
 					isNewUser = false
 					const bearerToken = `Bearer ${token}`
 					APIClient.defaults.headers.common['Authorization'] = bearerToken
@@ -289,6 +292,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const isAuthenticated = (): boolean => {
 		return authState.authToken !== null
+	}
+
+	const getSocialSigninLink = async (social: 'google' | 'facebook') => {
+		try {
+			const response = await APIClient.post(`/signin/social/${social}`)
+			const { auth_url } = response.data
+			return auth_url
+		} catch (err) {
+			console.error('Error during social login:', err)
+			throw new Error(t('socialSigninError'))
+		}
 	}
 
 	// Context value

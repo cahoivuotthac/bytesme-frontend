@@ -14,8 +14,11 @@ export default {
 	accept: "Chấp nhận",
 	decline: "Từ chối",
 	error: "Đã có lỗi xảy ra",
-	sucess: "Thành công",
+	success: "Thành công",
 	info: "Thông báo",
+
+	// Auth
+	socialSigninError: "Đã xảy ra lỗi khi đăng nhập bằng mạng xã hội, vui lòng thử lại sau",
 
 	// Product Cards
 	discount: "Giảm giá",

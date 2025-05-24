@@ -1,51 +1,50 @@
 {
-  "expo": {
-    "name": "pie-frontend",
-    "slug": "bytesme",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/logo-transparent.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.bytesme.frontend"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.bytesme.frontend",
-      "googleServicesFile": "./google-services.json"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      "expo-localization",
-      "expo-secure-store"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "1368ad0d-e938-411a-ab99-4624613b6ad7"
-      }
-    },
-    "owner": "dxcmint868"
-  }
+	"expo": {
+		"name": "pie-frontend",
+		"slug": "bytesme",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/images/logo-transparent.png",
+		"scheme": "myapp",
+		"userInterfaceStyle": "automatic",
+		"newArchEnabled": true,
+		"splash": {
+			"image": "./assets/images/splash-icon.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#ffffff"
+		},
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.bytesme.frontend"
+		},
+		"android": {
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/images/adaptive-icon.png",
+				"backgroundColor": "#ffffff"
+			},
+			"package": "com.bytesme.frontend",
+			"googleServicesFile": "./google-services.json"
+		},
+		"web": {
+			"bundler": "metro",
+			"output": "static",
+			"favicon": "./assets/images/favicon.png"
+		},
+		"plugins": ["expo-router", "expo-localization", "expo-secure-store"],
+		"experiments": {
+			"typedRoutes": true
+		},
+		"extra": {
+			"router": {
+				"origin": false
+			},
+			"eas": {
+				"projectId": "1368ad0d-e938-411a-ab99-4624613b6ad7"
+			},
+			"oauth": {
+				"googleAndroidClientId": "895067022871-dfo8nkljsl5vcl80h0rk0ifbcdmnckb9.apps.googleusercontent.com"
+			}
+		},
+		"owner": "dxcmint868"
+	}
 }

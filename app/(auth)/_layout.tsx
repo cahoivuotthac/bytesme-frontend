@@ -19,6 +19,7 @@ export default function AuthLayout() {
 			/>
 			<Stack.Screen name="signup" options={{ headerShown: false }} />
 			<Stack.Screen name="signin" options={{ headerShown: false }} />
+			<Stack.Screen name="verify-reset-otp" options={{ headerShown: false }} />
 		</Stack>
 	)
 }
