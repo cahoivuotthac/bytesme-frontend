@@ -32,7 +32,7 @@ export default function ProfileMainScreen() {
 	const [isEnglish, setIsEnglish] = useState(locale === 'en')
 
 	// User info
-	const userFullName = authState?.user?.fullName || 'Bytesme User'
+	const userFullName = authState?.user?.name || 'Bytesme User'
 	const userEmail = authState?.user?.email || 'customer@bytesme.vn'
 	const avatar = authState?.user?.avatar || DEFAULT_AVATAR
 
@@ -95,7 +95,7 @@ export default function ProfileMainScreen() {
 				<View style={styles.profileCard}>
 					<View style={styles.profilePhotoContainer}>
 						<DishDecoration
-							imageSource={avatar || DEFAULT_AVATAR}
+							imageSource={{ uri: avatar || DEFAULT_AVATAR }}
 							size={100}
 							containerStyle={styles.profilePhoto}
 						/>

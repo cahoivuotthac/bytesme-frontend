@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/providers/auth'
 import { LocaleProvider } from '@/providers/locale'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { EchoProvider } from '@/providers/EchoProvider'
+import { BottomBarVisibilityProvider } from '@/providers/BottomBarVisibilityProvider'
 
 export default function RootLayout() {
 	const [fontsLoaded, error] = useFonts({
@@ -38,7 +39,9 @@ export default function RootLayout() {
 			<LocaleProvider>
 				<AuthProvider>
 					<EchoProvider>
-						<Slot />
+						<BottomBarVisibilityProvider>
+							<Slot />
+						</BottomBarVisibilityProvider>
 					</EchoProvider>
 				</AuthProvider>
 			</LocaleProvider>

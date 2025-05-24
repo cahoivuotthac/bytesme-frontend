@@ -29,6 +29,12 @@ export default {
 	pleaseWaitBeforeRequetingEmailVerification:
 		"Please wait a moment before requesting email verification again",
 
+	// Input phone page
+	phoneSubtitle: "Please enter your phone number to complete registration.",
+	phoneUpdated: "Phone number updated successfully",
+	errorUpdatingPhone:
+		"Cannot update your phone number, please try again later.",
+
 	// Verify email
 	errorSendingOtp: "Could not send OTP, please try again",
 	errorResendingOtp: "Could not re-send OTP, please try again later",
@@ -497,6 +503,7 @@ export default {
 	passwordLabel: "Password",
 	confirmPasswordLabel: "Confirm Password",
 	signupSuccess: "Sign up successful!",
+	signinSuccess: "Sign in successful!",
 	signupFailed: "Sign up failed",
 	fillAllFields: "Please fill in all fields",
 	phoneInvalid: "Invalid phone number",

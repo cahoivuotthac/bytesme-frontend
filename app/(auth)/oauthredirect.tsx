@@ -9,16 +9,6 @@ export default function OAuthRedirect() {
 	const { finalizeGoogleSignin: googleSignin } = useAuth()
 
 	useEffect(() => {
-		// Google will redirect with ?code=... or ?id_token=... etc.
-		// const idToken = params.id_token as string | undefined
-		// const accessToken = params.access_token as string | undefined
-		// console.log('OAuthRedirect params: ', params)
-		// // Call your auth context to handle Google login
-		// if (idToken) {
-		// 	// If we have a token, we can proceed
-		// 	router.replace('/(auth)/input-email')
-		// }
-
 		router.replace('/(auth)/input-email')
 	}, [params])
 

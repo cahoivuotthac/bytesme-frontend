@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
 	View,
 	Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
+import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
 
 const { width } = Dimensions.get('window')
 
@@ -57,10 +58,11 @@ interface BottomBarProps {
  * Bottom navigation bar component with tabs for main app navigation
  */
 const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
-	const currentPath = usePathname()
-	const { t } = useTranslation()
 	const [pulseAnimation] = useState(new Animated.Value(1))
 	const [activeTabIndex, setActiveTabIndex] = useState(0)
+	const { t } = useTranslation()
+	const { isVisible } = useBottomBarVisibility()
+	const fadeAnim = useRef(new Animated.Value(1)).current
 
 	// Start the pulse animation when component mounts
 	React.useEffect(() => {
@@ -80,6 +82,15 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 		).start()
 	}, [])
 
+	// Animate bottom bar fade in/out based on visibility
+	useEffect(() => {
+		Animated.timing(fadeAnim, {
+			toValue: isVisible ? 1 : 0,
+			duration: 200,
+			useNativeDriver: true,
+		}).start()
+	}, [isVisible])
+
 	// Function to navigate to a tab
 	const handleTabPressed = (tabIndex: number) => {
 		setActiveTabIndex(tabIndex)
@@ -93,74 +104,92 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 	}
 
 	return (
-		// <View style={[styles.outerContainer, style]}>
-		<View style={[styles.innerClippingContainer, style]}>
-			{/* Container for shadow effect */}
-			{/* <View style={styles.shadowContainer} /> */}
+		<Animated.View
+			style={[
+				styles.container,
+				{ opacity: fadeAnim, pointerEvents: isVisible ? 'auto' : 'none' },
+			]}
+			pointerEvents={isVisible ? 'auto' : 'none'}
+		>
+			{/* <View style={[styles.outerContainer, style]}> */}
+			<View style={[styles.innerClippingContainer, style]}>
+				{/* Container for shadow effect */}
+				{/* <View style={styles.shadowContainer} /> */}
 
-			{/* Container for the actual content */}
-			<View style={styles.mainContainer}>
-				{TABS.map((tab, tabIndex) => {
-					const isActive = tabIndex === activeTabIndex
+				{/* Container for the actual content */}
+				<View style={styles.mainContainer}>
+					{TABS.map((tab, tabIndex) => {
+						const isActive = tabIndex === activeTabIndex
 
-					return (
+						return (
+							<TouchableOpacity
+								key={tab.name}
+								style={[
+									styles.tabButton,
+									tabIndex === 1 ? { marginRight: 20 } : {},
+									tabIndex === 2 ? { marginLeft: 20 } : {},
+								]}
+								onPress={() => handleTabPressed(tabIndex)}
+								activeOpacity={1.0}
+							>
+								<Image
+									source={tab.icon}
+									style={{
+										width: 24,
+										height: 24,
+										tintColor: '#DF7A82',
+										opacity: isActive ? 1.0 : 0.4,
+									}}
+								/>
+
+								<Text
+									style={[
+										styles.tabLabel,
+										isActive
+											? styles.activeTabLabel
+											: styles.inactiveTabLabel,
+									]}
+									numberOfLines={1}
+								>
+									{t(tab.label)}
+								</Text>
+							</TouchableOpacity>
+						)
+					})}
+
+					{/* Central featured button */}
+					<View style={styles.centralButtonContainer}>
 						<TouchableOpacity
-							key={tab.name}
-							style={[
-								styles.tabButton,
-								tabIndex === 1 ? { marginRight: 20 } : {},
-								tabIndex === 2 ? { marginLeft: 20 } : {},
-							]}
-							onPress={() => handleTabPressed(tabIndex)}
-							activeOpacity={1.0}
+							style={styles.centralButton}
+							onPress={handleCentralButtonPress}
+							activeOpacity={0.7}
 						>
 							<Image
-								source={tab.icon}
-								style={{
-									width: 24,
-									height: 24,
-									tintColor: '#DF7A82',
-									opacity: isActive ? 1.0 : 0.4,
-								}}
+								source={require('@/assets/images/logo-transparent.png')}
+								style={styles.centralButtonImage}
+								resizeMode="contain"
 							/>
-
-							<Text
-								style={[
-									styles.tabLabel,
-									isActive ? styles.activeTabLabel : styles.inactiveTabLabel,
-								]}
-								numberOfLines={1}
-							>
-								{t(tab.label)}
-							</Text>
 						</TouchableOpacity>
-					)
-				})}
-
-				{/* Central featured button */}
-				<View style={styles.centralButtonContainer}>
-					<TouchableOpacity
-						style={styles.centralButton}
-						onPress={handleCentralButtonPress}
-						activeOpacity={0.7}
-					>
-						<Image
-							source={require('@/assets/images/logo-transparent.png')}
-							style={styles.centralButtonImage}
-							resizeMode="contain"
-						/>
-					</TouchableOpacity>
+					</View>
 				</View>
-			</View>
 
-			{/* iOS safe area padding */}
-			{Platform.OS === 'ios' && <View style={styles.iosSafeArea} />}
-		</View>
-		// </View>
+				{/* iOS safe area padding */}
+				{Platform.OS === 'ios' && <View style={styles.iosSafeArea} />}
+			</View>
+			{/* </View> */}
+		</Animated.View>
 	)
 }
 
 const styles = StyleSheet.create({
+	container: {
+		position: 'absolute',
+		left: 0,
+		right: 0,
+		bottom: 0,
+		zIndex: 100,
+		backgroundColor: '#fff',
+	},
 	outerContainer: {
 		position: 'absolute',
 		bottom: 0,

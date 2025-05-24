@@ -150,6 +150,7 @@ export default function LoginScreen() {
 								value={password}
 								onChangeText={setPassword}
 								autoFocus={!!email}
+								autoCapitalize='none'
 							/>
 							<EyeIcon
 								isVisible={passwordVisible}

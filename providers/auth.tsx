@@ -1,8 +1,9 @@
 import { createContext, useState, useContext, useEffect } from 'react'
 import { APIClient } from '@/utils/api'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from '@/providers/locale'
 import { AxiosError } from 'axios'
+import { getItemAsync, deleteItemAsync } from 'expo-secure-store'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 // Define the structure of our auth state
 type AuthState = {
@@ -27,15 +28,13 @@ type AuthContextType = {
 	refreshUser: () => Promise<void>
 	resetPassword: (phoneNumber: string, newPassword: string) => Promise<void>
 	finalizeGoogleSignin: ({
-		accessToken,
-		idToken,
-		onDuplicateUser,
-		onMissingPhoneNumber,
+		onExistingUser,
+		onError,
+		onNewUser,
 	}: {
-		accessToken: string
-		idToken: string
-		onDuplicateUser: () => void
-		onMissingPhoneNumber: () => void
+		onExistingUser: (user: Record<string, any>) => any
+		onNewUser: (user: Record<string, any>) => any
+		onError: (error: any) => any
 	}) => Promise<void>
 	finalizeFacebookSignin: () => Promise<void>
 	requestOtpForEmail: (
@@ -96,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				})
 			} catch (error: any) {
 				if (error?.response?.status === 401) {
-					console.error('Token retrieved from storage have expired:', error)
+					console.log('Token retrieved from storage have expired:', error)
 				}
 				isAuthenticated = false
 			} finally {
@@ -318,29 +317,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		return authState.authToken !== null
 	}
 
+	/**
+	 *
+	 * @param phoneNumber The phone number to associate with the Google account (normally retrieved from the /(auth)/input-phone page)
+	 */
 	const finalizeGoogleSignin = async ({
-		accessToken,
-		idToken,
-		onDuplicateUser,
-		onMissingPhoneNumber,
+		onExistingUser,
+		onError,
+		onNewUser,
 	}: {
-		accessToken: string
-		idToken: string
-		onDuplicateUser: () => void
-		onMissingPhoneNumber: () => void
+		onExistingUser: (user: Record<string, any>) => any
+		onError: (error: any) => any
+		onNewUser: (user: Record<string, any>) => any
 	}) => {
 		try {
+			const googleOauthData = JSON.parse(
+				(await getItemAsync('googleOauthData')) || '{}'
+			)
+			console.log('Google OAuth data:', googleOauthData)
+			if (Object.keys(googleOauthData).length === 0) {
+				throw new Error('No Google OAuth data found in storage')
+			}
+			console.log('Google OAuth data from storage:', googleOauthData)
+
 			// const authUrl = await getSocialSigninLink('google')
 			const response = await APIClient.post('/auth/signin/google/callback', {
-				access_token: accessToken,
+				access_token: googleOauthData.accessToken,
+				idToken: googleOauthData.idToken,
 			})
 
-			const { user, token } = response.data
+			const { user, token, is_new_user: isNewUser } = response.data
 			if (!token) {
 				throw new Error(
 					"What the fuck is the server doing, there's no auth token after signin with google"
 				)
 			}
+
+			console.log('Deleting Google OAuth data from secure store')
+			await deleteItemAsync('googleOauthData')
 
 			// Log the fuck in
 			const bearerToken = `Bearer ${token}`
@@ -353,22 +367,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			}
 			setAuthState(newAuthState)
 			await persistAuthState(newAuthState)
+
+			if (isNewUser) {
+				onNewUser(user)
+			} else {
+				onExistingUser(user)
+			}
 		} catch (err) {
 			if (err instanceof AxiosError) {
-				if (
-					(err as any).response.status === 422 &&
-					(err as any).response.data.code === 'user_exists'
-				) {
-					onDuplicateUser()
-				} else if (
-					(err as any).response.status === 422 &&
-					(err as any).response.data.code === 'missing_phone_number'
-				) {
-					onMissingPhoneNumber()
-				}
 			}
-
-			throw err
+			onError(err)
 		}
 	}
 

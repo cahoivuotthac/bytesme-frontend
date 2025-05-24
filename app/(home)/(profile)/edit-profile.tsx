@@ -12,6 +12,7 @@ import {
 	Alert,
 	Platform,
 	KeyboardAvoidingView,
+	Keyboard,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons, MaterialIcons, Feather } from '@expo/vector-icons'
@@ -30,6 +31,8 @@ import {
 	isPasswordFormatValid,
 } from '@/utils/input-validation'
 import { AxiosError } from 'axios'
+import BottomSpacer from '@/components/shared/BottomSpacer'
+import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
 
 interface UserAddress {
 	user_address_id: number
@@ -52,6 +55,7 @@ export default function EditProfileScreen() {
 	const { authState, refreshUser } = useAuth()
 	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
 		useAlert()
+	const { show, hide } = useBottomBarVisibility()
 
 	console.log('Auth state:', authState)
 	console.log('Current user:', authState?.user)
@@ -324,6 +328,15 @@ export default function EditProfileScreen() {
 		})
 	}
 
+	useEffect(() => {
+		const showSub = Keyboard.addListener('keyboardDidShow', hide)
+		const hideSub = Keyboard.addListener('keyboardDidHide', show)
+		return () => {
+			showSub.remove()
+			hideSub.remove()
+		}
+	}, [])
+
 	return (
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
@@ -391,8 +404,8 @@ export default function EditProfileScreen() {
 				</TouchableOpacity>
 			</View>
 
-			<KeyboardAvoidingView
-				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+			<View
+				// behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 				style={styles.keyboardAvoidingView}
 			>
 				<ScrollView
@@ -412,7 +425,7 @@ export default function EditProfileScreen() {
 										</View>
 									) : (
 										<DishDecoration
-											imageSource={profileImage}
+											imageSource={{ uri: profileImage }}
 											size={120}
 											containerStyle={styles.profilePhoto}
 										/>
@@ -488,7 +501,7 @@ export default function EditProfileScreen() {
 										placeholder="0123456789"
 										placeholderTextColor="#9B9B9B"
 										keyboardType="phone-pad"
-										editable={false} // Phone number usually can't be changed directly
+										editable={true} // Phone number usually can't be changed directly
 									/>
 								</View>
 								<Text style={styles.helperText}>
@@ -685,7 +698,8 @@ export default function EditProfileScreen() {
 						</View>
 					)}
 				</ScrollView>
-			</KeyboardAvoidingView>
+			</View>
+			<BottomSpacer />
 		</SafeAreaView>
 	)
 }

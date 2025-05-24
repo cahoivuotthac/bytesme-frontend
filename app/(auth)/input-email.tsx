@@ -12,13 +12,12 @@ import {
 	Dimensions,
 } from 'react-native'
 import { router } from 'expo-router'
-import { APIClient } from '@/utils/api'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useTranslation } from '@/providers/locale'
 import { useAuth } from '@/providers/auth'
 import { useAlert } from '@/hooks/useAlert'
 import { isEmailFormatValid } from '@/utils/input-validation'
-import { AxiosError } from 'axios'
+import { setItemAsync } from 'expo-secure-store'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
 import GoogleLoginButton from '@/components/ui/GoogleLoginButton'
@@ -29,12 +28,13 @@ const { width, height } = Dimensions.get('window')
 export default function InputEmailScreen() {
 	const [email, setEmail] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const { t } = useTranslation()
-	const { finalizeGoogleSignin } = useAuth()
 	const { showError } = useAlert()
-	const { AlertComponent, showInfo } = useAlert()
-	const { requestOtpForEmail } = useAuth()
+	const { AlertComponent, showInfo, showSuccess } = useAlert()
+	const { requestOtpForEmail, finalizeGoogleSignin, finalizeFacebookSignin } =
+		useAuth()
+	const { t } = useTranslation()
 
+	// Handle google OAuth login
 	const onGoogleLoginSuccess = async ({
 		accessToken,
 		idToken,
@@ -42,33 +42,38 @@ export default function InputEmailScreen() {
 		accessToken: string
 		idToken: string
 	}) => {
-		const onDuplicateUser = () => {
-			// Handle duplicate user case
-			showError(t('userAlreadyExists'))
-		}
-
-		const onMissingPhoneNumber = () => {
-			// Handle missing phone number case
-			showError(t('socialMissingPhoneNumber'))
-		}
+		// Store tokens temporarily in secure storage for later consumers
+		await setItemAsync(
+			'googleOauthData',
+			JSON.stringify({ accessToken, idToken })
+		)
 
 		try {
 			await finalizeGoogleSignin({
-				idToken,
-				accessToken,
-				onDuplicateUser,
-				onMissingPhoneNumber,
+				onExistingUser: () => {
+					console.log('Signin with google successful, navigating home')
+					showSuccess(t('signinSuccess'), () =>
+						router.replace('/(home)/product')
+					)
+				},
+				onError: (error) => {
+					console.error('Error during Google sign-in:', error)
+					showError(t('signupFailed'))
+				},
+				onNewUser: () => {
+					router.push({
+						pathname: '/(welcome)/input-phone',
+					})
+				},
 			})
-			console.log('Made request to back-end to log user in with google')
-		} catch (err) {
-			console.error('Error at onGoogleLoginSuccess:', err)
-			showError(t('socialSigninError'))
+		} catch (error: any) {
+			showError(error?.message || t('signupFailed'))
+		} finally {
+			setIsLoading(false)
 		}
 	}
 
 	const onFacebookLoginSuccess = async (accessToken: string) => {
-		// Implement Facebook login
-		// alert('Facebook login not implemented yet')
 		alert('Access token: ' + accessToken)
 	}
 

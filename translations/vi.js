@@ -30,6 +30,12 @@ export default {
 	pleaseWaitBeforeRequetingEmailVerification:
 		"Vui lòng đợi trong giây lát trước khi yêu cầu xác thực email lần nữa",
 
+	// Input phone page
+	phoneSubtitle: "Vui lòng nhập số điện thoại của bạn để hoàn tất đăng ký",
+	phoneUpdated: "Số điện thoại đã được cập nhật thành công",
+	errorUpdatingPhone:
+		"Không thể cập nhật số điện thoại của bạn, vui lòng thử lại sau",
+
 	// Verify email
 	errorSendingOtp: "Đã xảy ra lỗi khi gửi mã xác thực, vui lòng thử lại sau",
 	errorResendingOtp:
@@ -503,6 +509,7 @@ export default {
 	passwordLabel: "Mật khẩu",
 	confirmPasswordLabel: "Xác nhận mật khẩu",
 	signupSuccess: "Đăng ký thành công!",
+	signinSuccess: "Đăng nhập thành công!",
 	signupFailed: "Đăng ký thất bại",
 	fillAllFields: "Vui lòng điền đầy đủ thông tin",
 	phoneInvalid: "Số điện thoại không hợp lệ",

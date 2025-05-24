@@ -6,14 +6,12 @@ export default function AuthLayout() {
 			<Stack.Screen
 				name="input-email"
 				options={{
-					title: 'Give me your email now',
 					headerShown: false,
 				}}
 			/>
 			<Stack.Screen
 				name="verify-email"
 				options={{
-					title: 'Verify your phone number',
 					headerShown: false,
 				}}
 			/>

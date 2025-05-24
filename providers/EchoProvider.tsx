@@ -1,7 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import Echo from 'laravel-echo'
 import Pusher from 'pusher-js/react-native'
+import Echo from 'laravel-echo'
 import { useAuth } from './auth'
+
+// Cheat
+if (typeof global.document === 'undefined') {
+	// @ts-ignore
+	global.document = {}
+}
+if (typeof global.window === 'undefined') {
+	// @ts-ignore
+	global.window = global
+}
 
 // Create context to store the Echo instance
 const EchoContext = createContext<{
@@ -22,10 +32,14 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 			console.warn('No auth token available, wait a bit more.')
 			return
 		}
+		if (!Pusher.isReady) {
+			console.warn('Pusher is not ready yet, waiting for auth token...')
+			return
+		}
 
 		try {
 			// Make Pusher available globally (required by Laravel Echo)
-			;(window as any).Pusher = Pusher
+			// ;(window as any).Pusher = Pusher
 
 			console.log('Attempting to connect to WebSocket server with config:', {
 				wsHost: '127.0.0.1',

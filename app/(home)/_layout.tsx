@@ -8,6 +8,7 @@ import {
 	ActivityIndicator,
 } from 'react-native'
 import { useAuth } from '@/providers/auth'
+import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
 import BottomBar from '@/components/shared/BottomBar'
 import * as Notifications from 'expo-notifications'
 import Constants from 'expo-constants'
@@ -65,6 +66,7 @@ async function registerForPushNotificationsAsync() {
 export default function HomeLayout() {
 	const { authState, isAuthenticated } = useAuth()
 	const pathname = usePathname()
+	const { isVisible } = useBottomBarVisibility()
 
 	// Show loading screen while checking auth state
 	if (authState.isLoading) {

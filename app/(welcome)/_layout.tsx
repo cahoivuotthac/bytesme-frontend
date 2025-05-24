@@ -21,6 +21,12 @@ export default function WelcomeLayout() {
 					headerShown: false,
 				}}
 			/>
+			<Stack.Screen
+				name="input-phone"
+				options={{
+					headerShown: false,
+				}}
+			/>
 		</Stack>
 	)
 }
