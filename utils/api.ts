@@ -8,7 +8,7 @@ export const APIClient = axios.create({
 	withCredentials: true, // Important
 	// baseURL: URLs.serverBaseUrl,
 	// baseURL: 'http://192.168.2.9:8000',
-	baseURL: 'http://127.0.0.1:8000',
+	baseURL: "http://192.168.33.253:8000",
 	timeout: 5000,
 	headers: {
 		"Content-Type": "application/json",

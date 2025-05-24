@@ -1,5 +1,3 @@
-import { ForeignObject } from "react-native-svg";
-
 export default {
 	// General
 	skip: "Bỏ qua",
@@ -17,8 +15,17 @@ export default {
 	success: "Thành công",
 	info: "Thông báo",
 
-	// Auth
-	socialSigninError: "Đã xảy ra lỗi khi đăng nhập bằng mạng xã hội, vui lòng thử lại sau",
+	// Input phone
+	socialSigninError:
+		"Đã xảy ra lỗi khi đăng nhập bằng tài khoản mạng xã hội, vui lòng thử lại sau",
+	loginWithGoogle: "Đăng nhập với tài khoản Google",
+	loginWithFacebook: "Đăng nhập với tài khoản Facebook",
+	inputPhoneNumber: "Nhập số điện thoại của bạn",
+	phoneNumberPlaceholder: "Só điện thoại",
+	signinWithPassword: "Đăng nhập bằng email & mật khẩu",
+	userAlreadyExists: "Người dùng đã tồn tại, vui lòng tạo tài khoản khác",
+	socialMissingPhoneNumber:
+		"Số điện thoại không được cung cấp từ mạng xã hội",
 
 	// Product Cards
 	discount: "Giảm giá",

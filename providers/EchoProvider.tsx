@@ -36,6 +36,7 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 
 			const echoInstance = new Echo({
 				broadcaster: 'reverb',
+				Pusher,
 				key: 'jv2d8id8cncc3h2xbsm5',
 				wsHost: '127.0.0.1',
 				wsPort: 8080, // Your Reverb server port

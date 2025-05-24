@@ -15,8 +15,16 @@ export default {
 	info: "Notice",
 	success: "Success",
 
-	// Auth 
-	socialSigninError: "Cannot sign in with your social account, please try again later",
+	// Input phone page
+	socialSigninError:
+		"Cannot sign in with your social account, please try again later",
+	loginWithGoogle: "Sign in with Google account",
+	loginWithFacebook: "Sign in with Facebook account",
+	inputPhoneNumber: "Enter your phone number",
+	phoneNumberPlaceholder: "Phone number",
+	signinWithPassword: "Sign in with email & password",
+	userAlreadyExists: "User already exists, please create a new account",
+	socialMissingPhoneNumber: "Missing phone number",
 
 	// Product Cards
 	discount: "Discount",

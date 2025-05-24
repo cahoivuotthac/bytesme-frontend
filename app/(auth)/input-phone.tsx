@@ -19,19 +19,46 @@ import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
 import GoogleLoginButton from '@/components/ui/GoogleLoginButton'
 import FacebookLoginButton from '@/components/ui/FacebookLoginButton'
+import { useTranslation } from '@/providers/locale'
+import { useAuth } from '@/providers/auth'
+import { useAlert } from '@/hooks/useAlert'
 
 const { width, height } = Dimensions.get('window')
 
 export default function InputPhoneScreen() {
 	const [phoneNumber, setPhoneNumber] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+	const { t } = useTranslation()
+	const { finalizeGoogleSignin } = useAuth()
+	const { showError } = useAlert()
 
-	const handleGoogleOnLogin = async (idToken: string) => {
-		// Implement Google login
-		alert('ID token: ' + idToken)
+	const onGoogleLoginSuccess = async ({
+		accessToken,
+		idToken,
+	}: {
+		accessToken: string
+		idToken: string
+	}) => {
+		const onDuplicateUser = () => {
+			// Handle duplicate user case
+			showError(t('userAlreadyExists'))
+		}
+
+		const onMissingPhoneNumber = () => {
+			// Handle missing phone number case
+			showError(t('socialMissingPhoneNumber'))
+		}
+
+		try {
+			await finalizeGoogleSignin({ idToken, accessToken, onDuplicateUser, onMissingPhoneNumber })
+			console.log('Made request to back-end to log user in with google')
+		} catch (err) {
+			console.error('Error at onGoogleLoginSuccess:', err)
+			showError(t('socialSigninError'))
+		}
 	}
 
-	const handleFacebookOnLogin = async (accessToken: string) => {
+	const onFacebookLoginSuccess = async (accessToken: string) => {
 		// Implement Facebook login
 		// alert('Facebook login not implemented yet')
 		alert('Access token: ' + accessToken)
@@ -126,7 +153,7 @@ export default function InputPhoneScreen() {
 				bounces={false} // Prevent bouncing to avoid overlap
 			>
 				{/* Heading */}
-				<Text style={styles.heading}>Nhập số điện thoại</Text>
+				<Text style={styles.heading}>{t('inputPhoneNumber')}</Text>
 				{/* Phone input field */}
 				<View style={styles.inputContainer}>
 					<Image
@@ -136,7 +163,7 @@ export default function InputPhoneScreen() {
 					/>
 					<TextInput
 						style={styles.input}
-						placeholder="Số điện thoại"
+						placeholder={t('phoneNumberPlaceholder')}
 						placeholderTextColor="#999"
 						keyboardType="phone-pad"
 						value={phoneNumber}
@@ -159,7 +186,9 @@ export default function InputPhoneScreen() {
 					style={styles.passwordLoginButton}
 					onPress={handlePasswordSignin}
 				>
-					<Text style={styles.passwordLoginText}>Đăng nhập bằng mật khẩu</Text>
+					<Text style={styles.passwordLoginText}>
+						{t('signinWithPassword')}
+					</Text>
 				</TouchableOpacity>
 
 				{/* Or divider */}
@@ -174,8 +203,8 @@ export default function InputPhoneScreen() {
 					<ActivityIndicator size="large" color="#C67C4E" />
 				) : (
 					<>
-						<GoogleLoginButton onLogin={handleGoogleOnLogin} />
-						<FacebookLoginButton onLogin={handleFacebookOnLogin} />
+						<GoogleLoginButton onLoginSuccess={onGoogleLoginSuccess} />
+						<FacebookLoginButton onLogin={onFacebookLoginSuccess} />
 					</>
 				)}
 			</View>
@@ -233,7 +262,7 @@ const styles = StyleSheet.create({
 		position: 'absolute',
 		width: '50%',
 		height: '50%',
-		top: height * 0.20, // Position at bottom of gradient
+		top: height * 0.2, // Position at bottom of gradient
 		alignSelf: 'center', // Center horizontally
 		zIndex: 10, // Ensure it's above other elements
 		backgroundColor: 'transparent', // Make background transparent

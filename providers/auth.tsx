@@ -2,6 +2,7 @@ import { createContext, useState, useContext, useEffect } from 'react'
 import { APIClient } from '@/utils/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTranslation } from '@/providers/locale'
+import { AxiosError } from 'axios'
 
 // Define the structure of our auth state
 type AuthState = {
@@ -25,6 +26,18 @@ type AuthContextType = {
 	signup: (userData: any) => Promise<void>
 	refreshUser: () => Promise<void>
 	resetPassword: (phoneNumber: string, newPassword: string) => Promise<void>
+	finalizeGoogleSignin: ({
+		accessToken,
+		idToken,
+		onDuplicateUser,
+		onMissingPhoneNumber,
+	}: {
+		accessToken: string
+		idToken: string
+		onDuplicateUser: () => void
+		onMissingPhoneNumber: () => void
+	}) => Promise<void>
+	finalizeFacebookSignin: () => Promise<void>
 }
 
 // Default auth state
@@ -294,16 +307,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		return authState.authToken !== null
 	}
 
-	const getSocialSigninLink = async (social: 'google' | 'facebook') => {
+	const finalizeGoogleSignin = async ({
+		accessToken,
+		idToken,
+		onDuplicateUser,
+		onMissingPhoneNumber,
+	}: {
+		accessToken: string
+		idToken: string
+		onDuplicateUser: () => void
+		onMissingPhoneNumber: () => void
+	}) => {
 		try {
-			const response = await APIClient.post(`/signin/social/${social}`)
-			const { auth_url } = response.data
-			return auth_url
+			// const authUrl = await getSocialSigninLink('google')
+			const response = await APIClient.post('/auth/signin/google/callback', {
+				access_token: accessToken,
+			})
+
+			const { user, token } = response.data
+			if (!token) {
+				throw new Error(
+					"What the fuck is the server doing, there's no auth token after signin with google"
+				)
+			}
+
+			// Log the fuck in
+			const bearerToken = `Bearer ${token}`
+			APIClient.defaults.headers.common['Authorization'] = bearerToken
+			const newAuthState = {
+				isLoading: false,
+				user: user,
+				authToken: bearerToken,
+				resetPasswordToken: null,
+			}
+			setAuthState(newAuthState)
+			await persistAuthState(newAuthState)
 		} catch (err) {
-			console.error('Error during social login:', err)
-			throw new Error(t('socialSigninError'))
+			if (err instanceof AxiosError) {
+				if (
+					(err as any).response.status === 422 &&
+					(err as any).response.data.code === 'user_exists'
+				) {
+					onDuplicateUser()
+				} else if (
+					(err as any).response.status === 422 &&
+					(err as any).response.data.code === 'missing_phone_number'
+				) {
+					onMissingPhoneNumber()
+				}
+			}
+
+			throw err
 		}
 	}
+
+	const finalizeFacebookSignin = async () => {}
 
 	// Context value
 	const contextValue: AuthContextType = {
@@ -315,6 +373,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		refreshUser,
 		resetPassword,
 		isAuthenticated,
+		finalizeGoogleSignin,
+		finalizeFacebookSignin,
 	}
 
 	return (

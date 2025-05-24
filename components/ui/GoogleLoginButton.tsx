@@ -1,29 +1,54 @@
 import { useEffect } from 'react'
+import * as AuthSession from 'expo-auth-session'
 import * as Google from 'expo-auth-session/providers/google'
 import * as WebBrowser from 'expo-web-browser'
 import { Button, StyleSheet, TouchableOpacity, Image, Text } from 'react-native'
 import { Platform } from 'expo-modules-core'
 import Constants from 'expo-constants'
+import { useTranslation } from '@/providers/locale'
 
 WebBrowser.maybeCompleteAuthSession()
 
 interface GoogleLoginButtonProps {
-	onLogin: (idToken: string) => void
+	onLoginSuccess: ({
+		idToken,
+		accessToken,
+	}: {
+		idToken: string
+		accessToken: string
+	}) => void
 }
 
-export default function GoogleLoginButton({ onLogin }: GoogleLoginButtonProps) {
+export default function GoogleLoginButton({
+	onLoginSuccess,
+}: GoogleLoginButtonProps) {
+	const { t } = useTranslation()
 	// const clientId = Constants.expoConfig?.extra?.oauth?.googleAndroidClientId
 	const clientId =
 		'895067022871-dfo8nkljsl5vcl80h0rk0ifbcdmnckb9.apps.googleusercontent.com'
 	// alert('Google client id: ' + clientId)
 	const [request, response, promptAsync] = Google.useAuthRequest({
-		clientId,
+		androidClientId: clientId,
+		responseType: 'code',
+		// redirectUri: AuthSession.makeRedirectUri({
+		// 	// scheme: 'myapp',
+		// 	// path: 'oauthredirect'
+		// 	// native: 'com.bytesmes.frontend://input-phone',
+
+		// })
 	})
 
 	useEffect(() => {
 		if (response?.type === 'success') {
-			const { id_token } = response.params
-			onLogin(id_token) // Send this token to your backend
+			const { access_token, id_token } = response.params
+			console.log(
+				'google oath response params entries: ',
+				Object.entries(response.params)
+			)
+			onLoginSuccess({
+				accessToken: access_token,
+				idToken: id_token,
+			}) // Send this token to backend
 		}
 	}, [response])
 
@@ -37,7 +62,7 @@ export default function GoogleLoginButton({ onLogin }: GoogleLoginButtonProps) {
 				style={styles.socialIcon}
 				resizeMode="contain"
 			/>
-			<Text style={styles.socialButtonText}>Đăng nhập với Facebook</Text>
+			<Text style={styles.socialButtonText}>{t('loginWithGoogle')}</Text>
 		</TouchableOpacity>
 	)
 }
