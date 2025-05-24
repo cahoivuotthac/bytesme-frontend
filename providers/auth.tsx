@@ -16,8 +16,8 @@ type AuthState = {
 type AuthContextType = {
 	authState: AuthState
 	isAuthenticated: () => boolean
-	verifyPhone: (
-		phoneNumber: string,
+	verifyEmail: (
+		email: string,
 		code: string,
 		intent?: 'signin/signup' | 'reset_password'
 	) => Promise<{ isNewUser: boolean }>
@@ -38,6 +38,16 @@ type AuthContextType = {
 		onMissingPhoneNumber: () => void
 	}) => Promise<void>
 	finalizeFacebookSignin: () => Promise<void>
+	requestOtpForEmail: (
+		email: string,
+		isPasswordReset: boolean,
+		handlers: {
+			onUserAlreadyExists?: () => any
+			onRateLimitExceeded?: () => any
+			onOtpSent?: () => any
+			onError?: (error: any) => any
+		}
+	) => Promise<void>
 }
 
 // Default auth state
@@ -181,8 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	}
 
-	const verifyPhone = async (
-		phoneNumber: string,
+	const verifyEmail = async (
+		email: string,
 		code: string,
 		intent: 'signin/signup' | 'reset_password' = 'signin/signup'
 	): Promise<{ isNewUser: boolean }> => {
@@ -190,7 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		let newAuthState
 		let isNewUser = true
 		const defaultRequestData = {
-			phone_number: phoneNumber,
+			email: email,
 			code,
 		}
 
@@ -221,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 			} else {
 				response = await APIClient.post('/auth/otp/verify', {
 					...defaultRequestData,
-					is_password_reset: 'true',
+					is_password_reset: true,
 				})
 
 				if (!response.data.reset_token) {
@@ -264,14 +274,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		}
 	}
 
-	const resetPassword = async (phoneNumber: string, newPassword: string) => {
+	const resetPassword = async (email: string, newPassword: string) => {
 		try {
 			if (!authState.resetPasswordToken) {
 				throw new Error('No reset token available')
 			}
 
 			const response = await APIClient.post('/auth/reset-password', {
-				phone_number: phoneNumber,
+				email,
 				new_password: newPassword,
 				reset_token: authState.resetPasswordToken,
 			})
@@ -287,6 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 				authToken: bearerToken,
 				resetPasswordToken: null,
 			}
+			APIClient.defaults.headers.common['Authorization'] = bearerToken
 			setAuthState(newAuthState)
 			await persistAuthState(newAuthState)
 		} catch (error: any) {
@@ -363,10 +374,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	const finalizeFacebookSignin = async () => {}
 
+	const requestOtpForEmail = async (
+		email: string,
+		isPasswordReset: boolean,
+		handlers: {
+			onUserAlreadyExists?: () => any
+			onRateLimitExceeded?: () => any
+			onOtpSent?: () => any
+			onError?: (error: any) => any
+		}
+	) => {
+		try {
+			await APIClient.post('/auth/otp/gen', {
+				email,
+				is_password_reset: isPasswordReset,
+			})
+
+			if (handlers.onOtpSent) {
+				handlers.onOtpSent()
+			}
+		} catch (error: any) {
+			if (error instanceof AxiosError) {
+				const axiosError = error as AxiosError
+				if (axiosError.response?.status === 429) {
+					handlers.onRateLimitExceeded ? handlers.onRateLimitExceeded() : null
+				} else if (axiosError.response?.status === 409) {
+					handlers.onUserAlreadyExists ? handlers.onUserAlreadyExists() : null
+				} else {
+					handlers.onError ? handlers.onError(error) : null
+				}
+			} else {
+				handlers.onError ? handlers.onError(error) : null
+			}
+		}
+	}
+
 	// Context value
 	const contextValue: AuthContextType = {
 		authState,
-		verifyPhone,
+		verifyEmail,
 		signin,
 		logout,
 		signup,
@@ -375,6 +421,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		isAuthenticated,
 		finalizeGoogleSignin,
 		finalizeFacebookSignin,
+		requestOtpForEmail,
 	}
 
 	return (

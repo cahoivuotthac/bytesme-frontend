@@ -24,7 +24,8 @@ import { useTranslation } from '@/providers/locale'
 const { width, height } = Dimensions.get('window')
 
 export default function LoginScreen() {
-	const [email, setEmail] = useState('')
+	const presetEmail = useLocalSearchParams().email as string
+	const [email, setEmail] = useState(presetEmail)
 	const [password, setPassword] = useState('')
 	const [passwordVisible, setPasswordVisible] = useState(false)
 	const [isLoading, setIsLoading] = useState(false)
@@ -148,6 +149,7 @@ export default function LoginScreen() {
 								secureTextEntry={!passwordVisible}
 								value={password}
 								onChangeText={setPassword}
+								autoFocus={!!email}
 							/>
 							<EyeIcon
 								isVisible={passwordVisible}
@@ -160,7 +162,14 @@ export default function LoginScreen() {
 				{/* Forgot Password */}
 				<TouchableOpacity
 					style={styles.forgotPasswordContainer}
-					onPress={() => router.push('/(auth)/forget-password')}
+					onPress={() =>
+						router.push({
+							pathname: '/(auth)/forget-password',
+							params: {
+								email,
+							},
+						})
+					}
 				>
 					<Text style={styles.forgotPasswordText}>{t('forgetPassword')}</Text>
 				</TouchableOpacity>
@@ -182,7 +191,7 @@ export default function LoginScreen() {
 						Chưa có tài khoản?{' '}
 						<Text
 							style={styles.signUpLink}
-							onPress={() => router.push('/(auth)/input-phone')}
+							onPress={() => router.push('/(auth)/input-email')}
 						>
 							Đăng ký
 						</Text>

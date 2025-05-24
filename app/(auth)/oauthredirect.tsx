@@ -10,22 +10,16 @@ export default function OAuthRedirect() {
 
 	useEffect(() => {
 		// Google will redirect with ?code=... or ?id_token=... etc.
-		const idToken = params.id_token as string | undefined
-		const accessToken = params.access_token as string | undefined
-		console.log('OAuthRedirect params: ', params)
-		if (idToken) {
-			// Call your auth context to handle Google login
-			googleSignin({ idToken, accessToken: '' })
-				.then(() => {
-					router.replace('/(home)/product')
-				})
-				.catch(() => {
-					router.replace('/(auth)/input-phone')
-				})
-		} else {
-			// No token, redirect to login
-			router.replace('/(auth)/input-phone')
-		}
+		// const idToken = params.id_token as string | undefined
+		// const accessToken = params.access_token as string | undefined
+		// console.log('OAuthRedirect params: ', params)
+		// // Call your auth context to handle Google login
+		// if (idToken) {
+		// 	// If we have a token, we can proceed
+		// 	router.replace('/(auth)/input-email')
+		// }
+
+		router.replace('/(auth)/input-email')
 	}, [params])
 
 	return (

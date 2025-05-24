@@ -15,16 +15,27 @@ export default {
 	info: "Notice",
 	success: "Success",
 
-	// Input phone page
+	// Input email page
 	socialSigninError:
 		"Cannot sign in with your social account, please try again later",
 	loginWithGoogle: "Sign in with Google account",
 	loginWithFacebook: "Sign in with Facebook account",
-	inputPhoneNumber: "Enter your phone number",
-	phoneNumberPlaceholder: "Phone number",
+	enterYourEmail: "Enter your email address",
+	emailPlaceholder: "Email",
 	signinWithPassword: "Sign in with email & password",
 	userAlreadyExists: "User already exists, please create a new account",
 	socialMissingPhoneNumber: "Missing phone number",
+	pleaseTypeValidEmail: "Please enter an email address with valid format",
+	pleaseWaitBeforeRequetingEmailVerification:
+		"Please wait a moment before requesting email verification again",
+
+	// Verify email
+	errorSendingOtp: "Could not send OTP, please try again",
+	errorResendingOtp: "Could not re-send OTP, please try again later",
+	typeOtpCode: "Enter the verification code",
+	pleaseTypeOtpCode: "Please enter the verification code",
+	codeSentToYourEmail: "The {digits}-digit code has been sent to {mail}",
+	resendOtpCode: "Re-send code",
 
 	// Product Cards
 	discount: "Discount",
@@ -142,7 +153,7 @@ export default {
 	signIn: "Sign In",
 	forgetPassword: "Forgot Password?",
 	loginWithPassword: "Login with password",
-	emailPlaceholder: "example@email.com",
+	emailPlaceholder: "bytesmeuser@email.com",
 	passwordPlaceholder: "••••••••",
 	accountInfo: "Enter your account information",
 	login: "Login",
@@ -477,4 +488,30 @@ export default {
 	pinterestDesc_8: "Great for birthdays and events.",
 	pinterestDesc_9: "Loved by all customers.",
 	pinterestDesc_10: "Don't miss out!",
+
+	// Signup and Verification
+	signupTitle: "Sign Up",
+	signupSubtitle: "Enter your information to continue",
+	phoneLabel: "Phone Number",
+	phonePlaceholder: "0123456789",
+	passwordLabel: "Password",
+	confirmPasswordLabel: "Confirm Password",
+	signupSuccess: "Sign up successful!",
+	signupFailed: "Sign up failed",
+	fillAllFields: "Please fill in all fields",
+	phoneInvalid: "Invalid phone number",
+	passwordMismatch: "Passwords do not match",
+	termsText: "By continuing you agree to our {tos}\nand {privacy}.",
+	tos: "Terms of Service",
+	privacy: "Privacy Policy",
+	creatingAccount: "Creating account...",
+	createAccount: "Create Account",
+	codeSentToYourEmail: "A {digits}-digit code has been sent to {mail}.",
+	resendOtpCode: "Resend code",
+	invalidOTP: "Invalid OTP code",
+	otpSuccess: "OTP verified successfully!",
+	newOTPSent: "A new OTP has been sent!",
+	errorRetry: "An error occurred. Please try again.",
+	errorResendingOtp: "Error resending OTP.",
+	enterOTP: "Please enter the OTP code.",
 };

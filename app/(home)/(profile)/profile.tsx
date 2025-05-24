@@ -49,7 +49,7 @@ export default function ProfileMainScreen() {
 			try {
 				await logout()
 				showSuccess(t('logoutSuccess'), () =>
-					router.replace('/(auth)/input-phone')
+					router.replace('/(auth)/input-email')
 				)
 			} catch (err) {
 				console.error('Logout error:', err)

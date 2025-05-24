@@ -19,31 +19,27 @@ import { useAuth } from '@/providers/auth'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
 import DishDecoration from '@/components/shared/DishDecoration'
-// import OTPInput from '@/components/OTPInput'
 import OTPInputView from '@twotalltotems/react-native-otp-input'
 import NavButton from '@/components/shared/NavButton'
-// import AlertDialog from '@/components/shared/AlertDialog'
-// import AsyncStorage from '@react-native-async-storage/async-storage'
+import { isEmailFormatValid } from '@/utils/input-validation'
 
 const { width, height } = Dimensions.get('window')
 
-export type Intent = 'signin' | 'signup' | 'reset-password'
-
 export default () => {
 	const {
-		phoneNumber,
-		intent,
+		email,
 	}: {
-		phoneNumber: string
-		intent: Intent
+		email: string
 	} = useLocalSearchParams()
 	const [countdown, setCountdown] = useState(30)
 	const [canResend, setCanResend] = useState(false)
 	const [code, setCode] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const { verifyPhone, authState, isAuthenticated } = useAuth()
+	const { verifyEmail, authState } = useAuth()
 	const { showError, AlertComponent } = useAlert()
 	const { t } = useTranslation()
+
+	const OTP_DIGITS_COUNT = 4
 
 	useEffect(() => {
 		let timer: NodeJS.Timeout
@@ -57,24 +53,27 @@ export default () => {
 		return () => clearInterval(timer)
 	}, [countdown])
 
-	const handleVerifyPhone = async () => {
-		if (!code || code.length !== 4) {
-			alert('Vui lòng nhập mã OTP')
+	const handleVerifyEmail = async () => {
+		if (!code || code.length !== OTP_DIGITS_COUNT) {
+			showError(t('enterOTP'))
+			return
+		}
+
+		if (!isEmailFormatValid(email)) {
+			showError(t('invalidEmail'))
 			return
 		}
 
 		setIsLoading(true)
 		try {
-			const isNewUser = await verifyPhone(phoneNumber, code)
-			console.log('Auth state after verify phone:', authState)
-			if (!isNewUser) {
-				// login if user already exists
-				router.replace('/(home)/product')
-			} else {
-				router.replace({ pathname: '/(auth)/signup', params: { phoneNumber } })
-			}
+			await verifyEmail(email, code)
+			console.log('Auth state after verify email:', authState)
+			router.replace({
+				pathname: '/(auth)/signup',
+				params: { email },
+			})
 		} catch (error: any) {
-			console.error('Error verifying phone number: ', error)
+			console.error('Error verifying email: ', error)
 			showError(error.message || t('errorRetry'))
 		} finally {
 			setIsLoading(false)
@@ -87,14 +86,14 @@ export default () => {
 		setIsLoading(true)
 		try {
 			await APIClient.post('/auth/otp/gen', {
-				phone_number: phoneNumber,
+				email,
 			})
 
 			setCountdown(30)
 			setCanResend(false)
 		} catch (error) {
 			console.error('Error resending OTP: ', error)
-			alert('Không thể gửi lại mã OTP. Vui lòng thử lại sau.')
+			showError(t('errorResendingOtp'))
 		} finally {
 			setIsLoading(false)
 		}
@@ -159,15 +158,17 @@ export default () => {
 					</View>
 
 					{/* Heading */}
-					<Text style={styles.heading}>Nhập mã OTP</Text>
+					<Text style={styles.heading}>{t('typeOtpCode')}</Text>
 					<Text style={styles.subheading}>
-						Mã 4 chữ số được gửi đến {phoneNumber}
+						{t('codeSentToYourEmail')
+							.replace('{digits}', OTP_DIGITS_COUNT.toString())
+							.replace('{mail}', email)}
 					</Text>
 
 					{/* OTP input */}
 					<View style={styles.otpContainer}>
 						<OTPInputView
-							pinCount={4}
+							pinCount={OTP_DIGITS_COUNT}
 							onCodeChanged={setCode}
 							style={styles.otpBox}
 							codeInputFieldStyle={styles.otpTextField}
@@ -191,12 +192,12 @@ export default () => {
 									},
 								]}
 							>
-								Gửi lại mã {countdown > 0 ? `(${countdown}s)` : ''}
+								{t('resendOtpCode')} {countdown > 0 ? `(${countdown}s)` : ''}
 							</Text>
 						</TouchableOpacity>
 
 						<NavButton
-							onPress={handleVerifyPhone}
+							onPress={handleVerifyEmail}
 							direction="next"
 							disabled={code.length !== 4 || isLoading}
 							size={48}
@@ -280,12 +281,12 @@ const styles = StyleSheet.create({
 	},
 	cake3Container: {
 		position: 'absolute',
-		width: '40%',
-		height: '40%',
-		top: height * 0.2,
-		alignSelf: 'center',
-		zIndex: 10,
-		backgroundColor: 'transparent',
+		width: '50%',
+		height: '50%',
+		top: height * 0.2, // Position at bottom of gradient
+		alignSelf: 'center', // Center horizontally
+		zIndex: 10, // Ensure it's above other elements
+		backgroundColor: 'transparent', // Make background transparent
 		borderColor: 'transparent',
 		shadowOpacity: 0,
 	},

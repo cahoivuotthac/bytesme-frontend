@@ -9,7 +9,7 @@ export const APIClient = axios.create({
 	// baseURL: URLs.serverBaseUrl,
 	// baseURL: 'http://192.168.2.9:8000',
 	baseURL: "http://192.168.33.253:8000",
-	timeout: 5000,
+	timeout: 30 * 1000, // 30 seconds for prod environment
 	headers: {
 		"Content-Type": "application/json",
 		Accept: "application/json",

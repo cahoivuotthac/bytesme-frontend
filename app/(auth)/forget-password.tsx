@@ -12,26 +12,29 @@ import {
 	Dimensions,
 	StatusBar,
 } from 'react-native'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
-import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
+import { isEmailFormatValid } from '@/utils/input-validation'
+import { useAuth } from '@/providers/auth'
 
 const { width, height } = Dimensions.get('window')
 
 export default function ForgetPasswordScreen() {
-	const [phoneNumber, setPhoneNumber] = useState('')
+	const presetEmail = useLocalSearchParams().email as string
+	const [email, setEmail] = useState(presetEmail)
 	const [isLoading, setIsLoading] = useState(false)
 	const { AlertComponent, showError, showSuccess } = useAlert()
 	const { t } = useTranslation()
+	const { requestOtpForEmail } = useAuth()
 
 	const handleSendOTP = async () => {
-		// Validate phone number (Vietnamese phone numbers typically have 10 digits)
-		if (phoneNumber.length !== 10) {
-			showError(t('invalidPhone'))
+		// Validate email
+		if (!isEmailFormatValid(email)) {
+			showError(t('invalidEmail'))
 			return
 		}
 
@@ -39,18 +42,19 @@ export default function ForgetPasswordScreen() {
 
 		try {
 			// Request to send a password reset OTP
-			await APIClient.post('/auth/otp/gen', {
-				phone_number: phoneNumber,
-				is_password_reset: 'true',
-			})
-
-			// Success message
-			showSuccess(t('otpSent'))
-
-			// Navigate to OTP verification page for password reset
-			router.push({
-				pathname: '/(auth)/verify-reset-otp',
-				params: { phoneNumber },
+			await requestOtpForEmail(email, true, {
+				onOtpSent: () => {
+					// Navigate to OTP verification page for password reset
+					console.log('OTP sent successfully')
+					showSuccess(t('otpSent'))
+					router.push({
+						pathname: '/(auth)/verify-reset-otp',
+						params: { email },
+					})
+				},
+				onRateLimitExceeded: () => {
+					showError(t('pleaseWaitBeforeRequetingEmailVerification'))
+				},
 			})
 		} catch (error: any) {
 			console.error('Error sending OTP:', error)
@@ -117,23 +121,24 @@ export default function ForgetPasswordScreen() {
 
 				{/* Heading */}
 				<Text style={styles.heading}>{t('passwordReset')}</Text>
-				<Text style={styles.subheading}>{t('enterPhoneForOTP')}</Text>
+				<Text style={styles.subheading}>{t('enterYourEmail')}</Text>
 
-				{/* Phone input field */}
+				{/* Email input field */}
 				<View style={styles.inputContainer}>
 					<Image
-						source={require('@/assets/icons/phone-rounded.png')}
+						source={require('@/assets/icons/mail-bold.png')}
 						style={styles.phoneIcon}
 						resizeMode="contain"
 					/>
 					<TextInput
 						style={styles.input}
-						placeholder={t('phone')}
+						placeholder={t('emailPlaceholder')}
 						placeholderTextColor="#999"
-						keyboardType="phone-pad"
-						value={phoneNumber}
-						onChangeText={setPhoneNumber}
-						maxLength={10}
+						keyboardType="email-address"
+						autoCapitalize="none"
+						value={email}
+						onChangeText={setEmail}
+						maxLength={50}
 					/>
 				</View>
 
@@ -141,7 +146,7 @@ export default function ForgetPasswordScreen() {
 				<TouchableOpacity
 					style={[styles.submitButton, isLoading && styles.disabledButton]}
 					onPress={handleSendOTP}
-					disabled={isLoading || phoneNumber.length !== 10}
+					disabled={isLoading || !email}
 				>
 					<Text style={styles.submitButtonText}>
 						{isLoading ? t('processing') : t('sendOTP')}

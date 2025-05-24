@@ -16,48 +16,49 @@ import { router, useLocalSearchParams } from 'expo-router'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
 import EyeIcon from '@/components/shared/EyeIcon'
-import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { useAuth } from '@/providers/auth'
 import { useTranslation } from '@/providers/locale'
 import * as Font from 'expo-font'
 import {
-	isEmailFormatValid,
 	isPasswordFormatValid,
+	isPhoneNumberFormatValid,
 } from '@/utils/input-validation'
 
 const { width, height } = Dimensions.get('window')
 
 export default function SignupScreen() {
-	const { phoneNumber } = useLocalSearchParams()
-	const [email, setEmail] = useState('')
+	const { email } = useLocalSearchParams()
+	const [phoneNumber, setPhoneNumber] = useState('')
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [passwordVisible, setPasswordVisible] = useState(false)
 	const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false)
 	const [isLoading, setIsLoading] = useState(false)
 	const { AlertComponent, showAlert, showError, showSuccess } = useAlert()
+
 	const [fontsLoaded] = Font.useFonts({
 		'Inter-Regular': require('../../assets/fonts/Inter-Regular.ttf'),
 	})
+
 	const { refreshUser, signup: register } = useAuth()
 	const { t } = useTranslation()
 
 	const handleSignUp = async () => {
 		// Validation
-		if (!email || !password || !confirmPassword) {
-			showError('Vui lòng điền đầy đủ thông tin')
+		if (!phoneNumber || !password || !confirmPassword) {
+			showError(t('fillAllFields'))
 			return
 		}
 
 		if (password !== confirmPassword) {
-			showError('Mật khẩu không khớp')
+			showError(t('passwordMismatch'))
 			return
 		}
 
-		// Validate email format
-		if (!isEmailFormatValid(email)) {
-			showError('Email không hợp lệ')
+		// Validate phone number format (Vietnamese phone numbers typically have 10 digits)
+		if (!isPhoneNumberFormatValid(phoneNumber)) {
+			showError(t('phoneInvalid'))
 			return
 		}
 
@@ -76,14 +77,14 @@ export default function SignupScreen() {
 				password_confirmation: confirmPassword,
 			})
 
-			showSuccess('Đăng ký thành công!', () => router.push('/input-address'))
+			showSuccess(t('signupSuccess'), () => router.push('/input-address'))
 		} catch (error: any) {
 			console.error('Error during signup:', error)
 
 			// Show more detailed error messages
 			const errorMessage = error.message
 			if (errorMessage) {
-				showError(`Đăng ký thất bại: ${errorMessage}`)
+				showError(t('signupFailed'))
 			} else {
 				showError(t('errorRetry'))
 			}
@@ -116,46 +117,45 @@ export default function SignupScreen() {
 				{/* Back button */}
 				<View style={styles.backButtonContainer}>
 					<NavButton
-						onPress={() => router.navigate('/(auth)/input-phone')}
+						onPress={() => router.navigate('/(auth)/input-email')}
 						direction="back"
 						size={36}
-						// backgroundColor="#F7F8FB"
 					/>
 				</View>
 
 				{/* Heading */}
-				<Text style={styles.heading}>Đăng ký</Text>
-				<Text style={styles.subheading}>
-					Nhập thông tin của bạn để tiếp tục
-				</Text>
+				<Text style={styles.heading}>{t('signupTitle')}</Text>
+				<Text style={styles.subheading}>{t('signupSubtitle')}</Text>
 
 				{/* Registration form container with subtle shadow */}
 				<View style={styles.formContainer}>
-					{/* Email input */}
+					{/* Phone number input */}
 					<View style={styles.formGroup}>
-						<Text style={styles.label}>Email</Text>
+						<Text style={styles.label}>{t('phoneLabel')}</Text>
 						<View style={styles.inputContainer}>
 							<TextInput
 								style={styles.input}
-								placeholder="example@email.com"
+								placeholder={t('phonePlaceholder')}
 								placeholderTextColor="#999"
-								keyboardType="email-address"
+								keyboardType="phone-pad"
 								autoCapitalize="none"
-								value={email}
-								onChangeText={setEmail}
+								value={phoneNumber}
+								onChangeText={setPhoneNumber}
+								maxLength={10}
 							/>
 						</View>
 					</View>
 
 					{/* Password input */}
 					<View style={styles.formGroup}>
-						<Text style={styles.label}>Mật khẩu</Text>
+						<Text style={styles.label}>{t('passwordLabel')}</Text>
 						<View style={styles.inputContainer}>
 							<TextInput
 								style={styles.input}
 								placeholder="••••••••"
 								placeholderTextColor="#999"
 								secureTextEntry={!passwordVisible}
+								autoCapitalize="none"
 								value={password}
 								onChangeText={setPassword}
 							/>
@@ -168,13 +168,14 @@ export default function SignupScreen() {
 
 					{/* Confirm Password input */}
 					<View style={styles.formGroup}>
-						<Text style={styles.label}>Xác nhận mật khẩu</Text>
+						<Text style={styles.label}>{t('confirmPasswordLabel')}</Text>
 						<View style={styles.inputContainer}>
 							<TextInput
 								style={styles.input}
 								placeholder="••••••••"
 								placeholderTextColor="#999"
 								secureTextEntry={!confirmPasswordVisible}
+								autoCapitalize="none"
 								value={confirmPassword}
 								onChangeText={setConfirmPassword}
 							/>
@@ -190,10 +191,10 @@ export default function SignupScreen() {
 
 				{/* Terms and Conditions */}
 				<Text style={styles.termsText}>
-					By continuing you agree to our{' '}
-					<Text style={{ color: '#00AA00' }}>Terms of Service</Text>
-					{'\n'}
-					and <Text style={{ color: '#00AA00' }}>Privacy Policy</Text>.
+					{t('termsText', {
+						tos: t('tos'),
+						privacy: t('privacy'),
+					})}
 				</Text>
 
 				{/* Sign Up Button */}
@@ -203,7 +204,7 @@ export default function SignupScreen() {
 					disabled={isLoading}
 				>
 					<Text style={styles.signupButtonText}>
-						{isLoading ? 'Đang xử lý...' : 'Tạo tài khoản'}
+						{isLoading ? t('creatingAccount') : t('createAccount')}
 					</Text>
 				</TouchableOpacity>
 

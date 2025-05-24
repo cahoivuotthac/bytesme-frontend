@@ -33,7 +33,7 @@ export default function GoogleLoginButton({
 		// redirectUri: AuthSession.makeRedirectUri({
 		// 	// scheme: 'myapp',
 		// 	// path: 'oauthredirect'
-		// 	// native: 'com.bytesmes.frontend://input-phone',
+		// 	// native: 'com.bytesmes.frontend://input-email',
 
 		// })
 	})

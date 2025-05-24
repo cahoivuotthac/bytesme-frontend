@@ -28,79 +28,44 @@ const RESEND_COOLDOWN_SECONDS = 30
 
 export default function VerifyResetOTPScreen() {
 	const params = useLocalSearchParams()
-	const { phoneNumber } = params as { phoneNumber: string }
-	const [otp, setOTP] = useState('')
+	const { email } = params as { email: string }
+	const [countdown, setCountdown] = useState(RESEND_COOLDOWN_SECONDS)
+	const [canResend, setCanResend] = useState(false)
+	const [code, setCode] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-	const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_SECONDS)
-	const [isResendActive, setIsResendActive] = useState(false)
-	const timerRef = useRef<NodeJS.Timeout | null>(null)
-	const { AlertComponent, showError, showSuccess } = useAlert()
+	const { verifyEmail } = useAuth()
+	const { showError, showSuccess, AlertComponent } = useAlert()
 	const { t } = useTranslation()
-	const OTP_LENGTH = 4
-
-	// Auth
-	const { verifyPhone } = useAuth()
+	const OTP_DIGITS_COUNT = 4
 
 	useEffect(() => {
-		// Start countdown timer
-		startCooldownTimer()
-
-		// Clear timer on unmount
-		return () => {
-			if (timerRef.current) {
-				clearInterval(timerRef.current)
-			}
+		let timer: NodeJS.Timeout
+		if (countdown > 0) {
+			timer = setInterval(() => {
+				setCountdown((prev) => prev - 1)
+			}, 1000)
+		} else {
+			setCanResend(true)
 		}
-	}, [])
+		return () => clearInterval(timer)
+	}, [countdown])
 
-	const startCooldownTimer = () => {
-		setIsResendActive(false)
-		setCooldown(RESEND_COOLDOWN_SECONDS)
-
-		if (timerRef.current) {
-			clearInterval(timerRef.current)
-		}
-
-		timerRef.current = setInterval(() => {
-			setCooldown((prevCooldown) => {
-				if (prevCooldown <= 1) {
-					clearInterval(timerRef.current!)
-					setIsResendActive(true)
-					return 0
-				}
-				return prevCooldown - 1
-			})
-		}, 1000)
-	}
-
-	const handleVerifyOTP = async () => {
-		if (otp.length !== OTP_LENGTH) {
+	const handleVerifyEmail = async () => {
+		if (!code || code.length !== OTP_DIGITS_COUNT) {
 			showError(t('enterOTP'))
 			return
 		}
-
-		if (!phoneNumber) {
-			showError(t('invalidPhoneNumber'))
-			return
-		}
-
 		setIsLoading(true)
-
 		try {
-			// Verify OTP for password reset
-			await verifyPhone(phoneNumber, otp, 'reset_password')
-
-			// If successful, navigate to reset password page
+			await verifyEmail(email, code, 'reset_password')
 			showSuccess(t('otpSuccess'), () =>
 				router.push({
 					pathname: '/(auth)/reset-password',
-					params: {
-						phoneNumber,
-					},
+					params: { email },
 				})
 			)
 		} catch (error: any) {
-			console.error('Error verifying OTP:', error)
+			console.error('Error verifying email:', error)
 			showError(error?.response?.data?.message || t('invalidOTP'))
 		} finally {
 			setIsLoading(false)
@@ -108,34 +73,28 @@ export default function VerifyResetOTPScreen() {
 	}
 
 	const handleResendOTP = async () => {
-		if (!isResendActive) return
-
+		if (!canResend) return
+		setIsLoading(true)
 		try {
-			// Request to resend OTP
-			await APIClient.post('/auth/otp/gen', {
-				phone_number: phoneNumber,
-			})
-
+			await APIClient.post('/auth/otp/gen', { email })
 			showSuccess(t('newOTPSent'))
-			startCooldownTimer()
+			setCountdown(30)
+			setCanResend(false)
 		} catch (error: any) {
 			console.error('Error resending OTP:', error)
 			showError(error?.response?.data?.message || t('errorRetry'))
+		} finally {
+			setIsLoading(false)
 		}
 	}
 
 	return (
 		<SafeAreaView style={styles.container}>
-			{/* Include the AlertComponent in the render */}
 			{AlertComponent}
-
-			<StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
-
 			{/* Background decoration at the top */}
 			<View style={styles.backgroundDecoration}>
 				{/* Pink border outline */}
 				<View style={styles.pinkOutline} />
-
 				{/* Brown gradient background */}
 				<LinearGradient
 					colors={['#EDE9E0', '#C67C4E']}
@@ -143,32 +102,27 @@ export default function VerifyResetOTPScreen() {
 					start={{ x: 0.5, y: 0 }}
 					end={{ x: 0.5, y: 1 }}
 				/>
-
 				{/* Cake images */}
 				<Image
 					source={require('@/assets/signin-decorations/cake-1.png')}
 					style={styles.cake1Image}
 					resizeMode="cover"
 				/>
-
 				<Image
 					source={require('@/assets/signin-decorations/cake-2.png')}
 					style={styles.cake2Image}
 					resizeMode="cover"
 				/>
 			</View>
-
-			{/* Cake-3 moved outside the background decoration to be a fixed element */}
+			{/* Cake-3 outside the background decoration */}
 			<View style={styles.cake3Container}>
 				<DishDecoration
 					imageSource={require('@/assets/signin-decorations/cake-3.png')}
 					size={width * 0.5}
 				/>
 			</View>
-
-			{/* Reduced spacer height */}
+			{/* Spacer to prevent content overlap */}
 			<View style={styles.cake3Spacer} />
-
 			<ScrollView
 				style={styles.scrollView}
 				contentContainerStyle={styles.contentContainer}
@@ -178,54 +132,49 @@ export default function VerifyResetOTPScreen() {
 				<View style={styles.backButtonContainer}>
 					<NavButton onPress={() => router.back()} direction="back" size={36} />
 				</View>
-
 				{/* Heading */}
-				<Text style={styles.heading}>{t('otpVerification')}</Text>
+				<Text style={styles.heading}>{t('typeOtpCode')}</Text>
 				<Text style={styles.subheading}>
-					{t('enterOTPSentTo')}
-					{'\n'}
-					<Text style={styles.phoneHighlight}>{phoneNumber}</Text>
+					{t('codeSentToYourEmail')
+						.replace('{digits}', OTP_DIGITS_COUNT.toString())
+						.replace('{mail}', email)}
 				</Text>
-
-				{/* OTP Input */}
+				{/* OTP input */}
 				<View style={styles.otpContainer}>
 					<OTPInputView
-						pinCount={OTP_LENGTH}
-						onCodeChanged={setOTP}
+						pinCount={OTP_DIGITS_COUNT}
+						onCodeChanged={setCode}
 						style={styles.otpBox}
 						codeInputFieldStyle={styles.otpTextField}
 						codeInputHighlightStyle={styles.otpTextFieldFocused}
+						autoFocusOnLoad={false}
 					/>
 				</View>
-
-				{/* Resend code option */}
-				<View style={styles.resendContainer}>
-					<Text style={styles.resendText}>{t('didntReceiveCode')} </Text>
+				{/* Resend code and next button */}
+				<View style={styles.actionContainer}>
 					<TouchableOpacity
-						disabled={!isResendActive}
 						onPress={handleResendOTP}
+						disabled={!canResend || isLoading}
 					>
 						<Text
 							style={[
-								styles.resendAction,
-								!isResendActive && styles.resendDisabled,
+								styles.resendText,
+								{
+									color: canResend ? '#C67C4E' : '#7C7C7C',
+									opacity: canResend ? 1 : 0.8,
+								},
 							]}
 						>
-							{isResendActive
-								? t('resend')
-								: t('resendAfter').replace('{seconds}', cooldown.toString())}
+							{t('resendOtpCode')} {countdown > 0 ? `(${countdown}s)` : ''}
 						</Text>
 					</TouchableOpacity>
+					<NavButton
+						onPress={handleVerifyEmail}
+						direction="next"
+						disabled={code.length !== OTP_DIGITS_COUNT || isLoading}
+						size={48}
+					/>
 				</View>
-
-				{/* Verify Button */}
-				<Button
-					onPress={handleVerifyOTP}
-					disabled={isLoading || otp.length !== 4}
-					style={[styles.verifyButton, isLoading && styles.disabledButton]}
-					textStyle={styles.verifyButtonText}
-					text={isLoading ? t('processing') : t('verify')}
-				/>
 			</ScrollView>
 		</SafeAreaView>
 	)
@@ -278,12 +227,12 @@ const styles = StyleSheet.create({
 	},
 	cake3Container: {
 		position: 'absolute',
-		width: '55%',
-		height: '40%',
-		top: height * 0.18,
-		alignSelf: 'center',
-		zIndex: 10,
-		backgroundColor: 'transparent',
+		width: '50%',
+		height: '50%',
+		top: height * 0.2, // Position at bottom of gradient
+		alignSelf: 'center', // Center horizontally
+		zIndex: 10, // Ensure it's above other elements
+		backgroundColor: 'transparent', // Make background transparent
 		borderColor: 'transparent',
 		shadowOpacity: 0,
 	},
@@ -384,5 +333,12 @@ const styles = StyleSheet.create({
 		color: '#FFFFFF',
 		fontSize: 16,
 		fontWeight: 'bold',
+	},
+	actionContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		width: '80%',
+		marginHorizontal: 'auto',
 	},
 })

@@ -98,7 +98,7 @@ export default function HomeLayout() {
 
 	// Redirect if not authenticated
 	if (!isAuthenticated()) {
-		return <Redirect href="/(auth)/input-phone" />
+		return <Redirect href="/(auth)/input-email" />
 	}
 
 	// Determine if we should show the bottom bar on this screen

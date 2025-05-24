@@ -15,17 +15,29 @@ export default {
 	success: "Thành công",
 	info: "Thông báo",
 
-	// Input phone
+	// Input email
 	socialSigninError:
 		"Đã xảy ra lỗi khi đăng nhập bằng tài khoản mạng xã hội, vui lòng thử lại sau",
 	loginWithGoogle: "Đăng nhập với tài khoản Google",
 	loginWithFacebook: "Đăng nhập với tài khoản Facebook",
-	inputPhoneNumber: "Nhập số điện thoại của bạn",
-	phoneNumberPlaceholder: "Só điện thoại",
+	enterYourEmail: "Nhập địa chỉ email của bạn",
+	emailPlaceholder: "bytesmeuser@email.com",
 	signinWithPassword: "Đăng nhập bằng email & mật khẩu",
 	userAlreadyExists: "Người dùng đã tồn tại, vui lòng tạo tài khoản khác",
 	socialMissingPhoneNumber:
 		"Số điện thoại không được cung cấp từ mạng xã hội",
+	pleaseTypeValidEmail: "Vui lòng nhập địa chỉ email hợp lệ",
+	pleaseWaitBeforeRequetingEmailVerification:
+		"Vui lòng đợi trong giây lát trước khi yêu cầu xác thực email lần nữa",
+
+	// Verify email
+	errorSendingOtp: "Đã xảy ra lỗi khi gửi mã xác thực, vui lòng thử lại sau",
+	errorResendingOtp:
+		"Đã xảy ra lỗi khi gửi lại mã xác thực, vui lòng thử lại sau",
+	typeOtpCode: "Nhập mã xác thực",
+	pleaseTypeOtpCode: "Vui lòng nhập mã xác thực",
+	codeSentToYourEmail: "Mã xác thực {digits} chữ số đã được gửi đến {mail}",
+	resendOtpCode: "Gửi lại mã",
 
 	// Product Cards
 	discount: "Giảm giá",
@@ -482,4 +494,30 @@ export default {
 	pinterestDesc_8: "Phù hợp cho tiệc sinh nhật và sự kiện.",
 	pinterestDesc_9: "Được yêu thích bởi mọi khách hàng.",
 	pinterestDesc_10: "Không thể bỏ lỡ!",
+
+	// Signup and Verification
+	signupTitle: "Đăng ký",
+	signupSubtitle: "Nhập thông tin của bạn để tiếp tục",
+	phoneLabel: "Số điện thoại",
+	phonePlaceholder: "0123456789",
+	passwordLabel: "Mật khẩu",
+	confirmPasswordLabel: "Xác nhận mật khẩu",
+	signupSuccess: "Đăng ký thành công!",
+	signupFailed: "Đăng ký thất bại",
+	fillAllFields: "Vui lòng điền đầy đủ thông tin",
+	phoneInvalid: "Số điện thoại không hợp lệ",
+	passwordMismatch: "Mật khẩu không khớp",
+	termsText: "Bằng việc tiếp tục, bạn đồng ý với {tos}\nvà {privacy}.",
+	tos: "Điều khoản dịch vụ",
+	privacy: "Chính sách bảo mật",
+	creatingAccount: "Đang tạo tài khoản...",
+	createAccount: "Tạo tài khoản",
+	codeSentToYourEmail: "Mã gồm {digits} số đã được gửi đến {mail}.",
+	resendOtpCode: "Gửi lại mã",
+	invalidOTP: "Mã OTP không hợp lệ",
+	otpSuccess: "Xác thực OTP thành công!",
+	newOTPSent: "Mã OTP mới đã được gửi!",
+	errorRetry: "Đã xảy ra lỗi. Vui lòng thử lại.",
+	errorResendingOtp: "Lỗi khi gửi lại mã OTP.",
+	enterOTP: "Vui lòng nhập mã OTP.",
 };

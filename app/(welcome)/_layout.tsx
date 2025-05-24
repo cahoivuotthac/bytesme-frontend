@@ -9,7 +9,7 @@ export default function WelcomeLayout() {
 
 	if (!isAuthenticated()) {
 		// Redirect to phone input screen if not authenticated
-		return <Redirect href="/(auth)/input-phone" />
+		return <Redirect href="/(auth)/input-email" />
 	}
 
 	return (

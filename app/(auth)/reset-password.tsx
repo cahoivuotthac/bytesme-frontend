@@ -17,7 +17,6 @@ import { LinearGradient } from 'expo-linear-gradient'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
 import EyeIcon from '@/components/shared/EyeIcon'
-import { APIClient } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { useTranslation } from '@/providers/locale'
 import { useAuth } from '@/providers/auth'
@@ -26,9 +25,9 @@ import { isPasswordFormatValid } from '@/utils/input-validation'
 const { width, height } = Dimensions.get('window')
 
 export default function ResetPasswordScreen() {
-	let { phoneNumber } = useLocalSearchParams()
-	if (Array.isArray(phoneNumber) && phoneNumber.length > 0) {
-		phoneNumber = phoneNumber[0]
+	let { email } = useLocalSearchParams()
+	if (Array.isArray(email) && email.length > 0) {
+		email = email[0]
 	}
 
 	const [newPassword, setNewPassword] = useState('')
@@ -70,7 +69,7 @@ export default function ResetPasswordScreen() {
 		setIsLoading(true)
 
 		try {
-			await resetPassword(phoneNumber as string, newPassword)
+			await resetPassword(email as string, newPassword)
 
 			// Show success message
 			showSuccess(t('resetSuccess'), () => setIsReadyToNavigate(true))
@@ -154,6 +153,7 @@ export default function ResetPasswordScreen() {
 								secureTextEntry={!passwordVisible}
 								value={newPassword}
 								onChangeText={setNewPassword}
+								autoCapitalize="none"
 							/>
 							<EyeIcon
 								isVisible={passwordVisible}
@@ -173,6 +173,7 @@ export default function ResetPasswordScreen() {
 								secureTextEntry={!confirmPasswordVisible}
 								value={confirmPassword}
 								onChangeText={setConfirmPassword}
+								autoCapitalize='none'
 							/>
 							<EyeIcon
 								isVisible={confirmPasswordVisible}

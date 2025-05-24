@@ -5,7 +5,6 @@ import {
 	ScrollView,
 	Text,
 	Image,
-	TouchableOpacity,
 	TextInput,
 	StyleSheet,
 	ActivityIndicator,
@@ -15,22 +14,26 @@ import {
 import { router } from 'expo-router'
 import { APIClient } from '@/utils/api'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useTranslation } from '@/providers/locale'
+import { useAuth } from '@/providers/auth'
+import { useAlert } from '@/hooks/useAlert'
+import { isEmailFormatValid } from '@/utils/input-validation'
+import { AxiosError } from 'axios'
 import DishDecoration from '@/components/shared/DishDecoration'
 import NavButton from '@/components/shared/NavButton'
 import GoogleLoginButton from '@/components/ui/GoogleLoginButton'
 import FacebookLoginButton from '@/components/ui/FacebookLoginButton'
-import { useTranslation } from '@/providers/locale'
-import { useAuth } from '@/providers/auth'
-import { useAlert } from '@/hooks/useAlert'
 
 const { width, height } = Dimensions.get('window')
 
-export default function InputPhoneScreen() {
-	const [phoneNumber, setPhoneNumber] = useState('')
+export default function InputEmailScreen() {
+	const [email, setEmail] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const { t } = useTranslation()
 	const { finalizeGoogleSignin } = useAuth()
 	const { showError } = useAlert()
+	const { AlertComponent, showInfo } = useAlert()
+	const { requestOtpForEmail } = useAuth()
 
 	const onGoogleLoginSuccess = async ({
 		accessToken,
@@ -50,7 +53,12 @@ export default function InputPhoneScreen() {
 		}
 
 		try {
-			await finalizeGoogleSignin({ idToken, accessToken, onDuplicateUser, onMissingPhoneNumber })
+			await finalizeGoogleSignin({
+				idToken,
+				accessToken,
+				onDuplicateUser,
+				onMissingPhoneNumber,
+			})
 			console.log('Made request to back-end to log user in with google')
 		} catch (err) {
 			console.error('Error at onGoogleLoginSuccess:', err)
@@ -66,29 +74,43 @@ export default function InputPhoneScreen() {
 
 	const handleNextPage = async () => {
 		// Validate phone number (Vietnamese phone numbers typically have 10 digits)
-		if (phoneNumber.length !== 10) {
-			alert('Vui lòng nhập số điện thoại hợp lệ')
+		if (!isEmailFormatValid(email)) {
+			showInfo(t('pleaseTypeValidEmail'))
 			return
 		}
 
 		setIsLoading(true)
 
 		try {
-			// Send OTP code
-			const response = await APIClient.post('/auth/otp/gen', {
-				phone_number: phoneNumber,
-			})
+			// Request verification code
+			console.log('Requesting OTP for email:', email)
+			await requestOtpForEmail(email, false, {
+				onOtpSent: () => {
+					console.log('OTP sent successfully')
 
-			console.log('OTP sent successfully:', response.data)
-
-			// Navigate to verification page
-			router.push({
-				pathname: '/(auth)/verify-phone',
-				params: { phoneNumber },
+					// Navigate to verification page
+					router.push({
+						pathname: '/(auth)/verify-email',
+						params: { email },
+					})
+				},
+				onUserAlreadyExists: () => {
+					// Navigate to signin page
+					router.push({
+						pathname: '/(auth)/signin',
+						params: { email },
+					})
+				},
+				onRateLimitExceeded: () => {
+					// Handle rate limit exceeded
+					showInfo(t('pleaseWaitBeforeRequetingEmailVerification'))
+					return
+				},
+				onError: (error) => {
+					showError('errorSendingOtp')
+					console.log('Error sending OTP:', error)
+				},
 			})
-		} catch (error) {
-			console.error('Error sending OTP:', error)
-			alert('Có lỗi xảy ra, vui lòng thử lại')
 		} finally {
 			setIsLoading(false)
 		}
@@ -109,10 +131,11 @@ export default function InputPhoneScreen() {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			{/* Background decoration at the top */}
-			<View style={styles.backgroundDecoration}>
+			{AlertComponent}
+
+			<View style={styles.backgroundDecoration} pointerEvents="none">
 				{/* Pink border outline */}
-				<View style={styles.pinkOutline} />
+				<View style={styles.pinkOutline} pointerEvents="none" />
 
 				{/* Brown gradient background */}
 				<LinearGradient
@@ -120,6 +143,7 @@ export default function InputPhoneScreen() {
 					style={styles.bgGradient}
 					start={{ x: 0.5, y: 0 }}
 					end={{ x: 0.5, y: 1 }}
+					pointerEvents="none" // Required for non-ui-block
 				/>
 
 				{/* Cake images */}
@@ -134,46 +158,47 @@ export default function InputPhoneScreen() {
 					style={styles.cake2Image}
 					resizeMode="cover"
 				/>
-			</View>
-
-			{/* Cake-3 moved outside the background decoration to be a fixed element */}
-			<View style={styles.cake3Container}>
-				<DishDecoration
-					imageSource={require('@/assets/signin-decorations/cake-3.png')}
-					size={width * 0.5}
-				/>
+				<View style={styles.cake3Container} pointerEvents="none">
+					<DishDecoration
+						imageSource={require('@/assets/signin-decorations/cake-3.png')}
+						size={width * 0.5}
+					/>
+				</View>
 			</View>
 
 			{/* Add an empty View as a spacer to prevent content from going under cake-3 */}
 			<View style={styles.cake3Spacer} />
 
-			<View
+			<ScrollView
 				style={styles.scrollView}
-				contentContainerStyle={styles.contentContainer}
-				bounces={false} // Prevent bouncing to avoid overlap
+				// contentContainerStyle={styles.contentContainer}
+				// bounces={false} // Prevent bouncing to avoid overlap
 			>
 				{/* Heading */}
-				<Text style={styles.heading}>{t('inputPhoneNumber')}</Text>
+				<Text style={styles.heading}>{t('enterYourEmail')}</Text>
 				{/* Phone input field */}
 				<View style={styles.inputContainer}>
 					<Image
-						source={require('@/assets/icons/phone-rounded.png')}
-						style={styles.phoneIcon}
+						source={require('@/assets/icons/mail-bold.png')}
+						style={styles.mailIcon}
 						resizeMode="contain"
 					/>
 					<TextInput
 						style={styles.input}
-						placeholder={t('phoneNumberPlaceholder')}
+						placeholder={t('emailPlaceholder')}
 						placeholderTextColor="#999"
-						keyboardType="phone-pad"
-						value={phoneNumber}
-						onChangeText={setPhoneNumber}
-						maxLength={10}
+						keyboardType="email-address"
+						value={email}
+						onChangeText={setEmail}
+						// maxLength={10}
+						// blurOnSubmit={false}
+						returnKeyType="done"
+						// autoFocus
 					/>
 					<NavButton
 						onPress={handleNextPage}
 						direction="next"
-						disabled={phoneNumber.length !== 10 || isLoading}
+						disabled={email.length < 1 || isLoading}
 						size={36}
 					/>
 				</View>
@@ -181,17 +206,17 @@ export default function InputPhoneScreen() {
 				{/* Optional divider line */}
 				{/* <View style={styles.divider} /> */}
 
-				{/* Login with password */}
-				<TouchableOpacity
+				{/* Signing with password (obvious now, obsolete) */}
+				{/* <TouchableOpacity
 					style={styles.passwordLoginButton}
 					onPress={handlePasswordSignin}
 				>
 					<Text style={styles.passwordLoginText}>
 						{t('signinWithPassword')}
 					</Text>
-				</TouchableOpacity>
+				</TouchableOpacity> */}
 
-				{/* Or divider */}
+				{/*  --- Or --- divider */}
 				<View style={styles.orContainer}>
 					<View style={styles.orDivider} />
 					<Text style={styles.orText}>Hoặc</Text>
@@ -207,7 +232,7 @@ export default function InputPhoneScreen() {
 						<FacebookLoginButton onLogin={onFacebookLoginSuccess} />
 					</>
 				)}
-			</View>
+			</ScrollView>
 		</SafeAreaView>
 	)
 }
@@ -309,7 +334,7 @@ const styles = StyleSheet.create({
 		elevation: 2,
 		marginBottom: 20,
 	},
-	phoneIcon: {
+	mailIcon: {
 		width: 26,
 		height: 26,
 		marginRight: 15,
