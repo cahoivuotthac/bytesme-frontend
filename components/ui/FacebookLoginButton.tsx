@@ -1,6 +1,6 @@
-import * as React from 'react'
-import * as AuthSession from 'expo-auth-session'
-import { Button, TouchableOpacity, Image, Text, StyleSheet } from 'react-native'
+import { useEffect } from 'react'
+import * as Facebook from 'expo-auth-session/providers/facebook'
+import { TouchableOpacity, Image, Text, StyleSheet } from 'react-native'
 import { Platform } from 'expo-modules-core'
 import Constants from 'expo-constants'
 
@@ -11,26 +11,16 @@ interface FacebookLoginButtonProps {
 export default function FacebookLoginButton({
 	onLogin,
 }: FacebookLoginButtonProps) {
-	const discovery = {
-		authorizationEndpoint: 'https://www.facebook.com/v10.0/dialog/oauth',
-		tokenEndpoint: 'https://graph.facebook.com/v10.0/oauth/access_token',
-	}
+	const [request, response, promptAsync] = Facebook.useAuthRequest({
+		clientId: '681677864573199',
+		redirectUri: 'myapp://oauthredirect',
+		// Optionally add scopes, redirectUri, etc.
+	})
 
-	const clientId = Constants.expoConfig?.extra?.oauth?.facebookAppId
-	const [request, response, promptAsync] = AuthSession.useAuthRequest(
-		{
-			clientId: clientId,
-			redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
-			scopes: ['public_profile', 'email'],
-			responseType: 'token',
-		},
-		discovery
-	)
-
-	React.useEffect(() => {
+	useEffect(() => {
 		if (response?.type === 'success') {
 			const { access_token } = response.params
-			onLogin(access_token) // Send this token to your backend
+			onLogin(access_token)
 		}
 	}, [response])
 

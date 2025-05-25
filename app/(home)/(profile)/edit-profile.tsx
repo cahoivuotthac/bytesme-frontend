@@ -6,12 +6,10 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	TextInput,
-	Image,
 	SafeAreaView,
 	ActivityIndicator,
 	Alert,
 	Platform,
-	KeyboardAvoidingView,
 	Keyboard,
 } from 'react-native'
 import { router } from 'expo-router'

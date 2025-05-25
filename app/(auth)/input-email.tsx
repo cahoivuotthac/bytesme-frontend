@@ -74,7 +74,29 @@ export default function InputEmailScreen() {
 	}
 
 	const onFacebookLoginSuccess = async (accessToken: string) => {
-		alert('Access token: ' + accessToken)
+		// Store token if needed
+		await setItemAsync('facebookOauthData', JSON.stringify({ accessToken }))
+		console.log('faceobok access token: ', accessToken)
+		try {
+			// await finalizeFacebookSignin({
+			// 	accessToken,
+			// 	onExistingUser: () => {
+			// 		showSuccess(t('signinSuccess'), () =>
+			// 			router.replace('/(home)/product')
+			// 		)
+			// 	},
+			// 	onError: (error) => {
+			// 		showError(t('signupFailed'))
+			// 	},
+			// 	onNewUser: () => {
+			// 		router.push({ pathname: '/(welcome)/input-phone' })
+			// 	},
+			// })
+		} catch (error: any) {
+			showError(error?.message || t('signupFailed'))
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	const handleNextPage = async () => {
@@ -120,11 +142,6 @@ export default function InputEmailScreen() {
 			setIsLoading(false)
 		}
 	}
-
-	// const handleSocialLogin = () => {
-	// 	// Implement Facebook login
-	// 	alert('Facebook login not implemented yet')
-	// }
 
 	const handlePasswordSignin = () => {
 		// Navigate to password login screen
@@ -199,6 +216,7 @@ export default function InputEmailScreen() {
 						// blurOnSubmit={false}
 						returnKeyType="done"
 						// autoFocus
+						autoCapitalize='none'
 					/>
 					<NavButton
 						onPress={handleNextPage}

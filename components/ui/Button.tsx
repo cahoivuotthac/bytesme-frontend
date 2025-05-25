@@ -116,5 +116,6 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 16,
 		fontWeight: '600',
+		backgroundColor: 'transparent',
 	},
 })

@@ -12,11 +12,7 @@ import {
 	ImageBackground,
 	Animated,
 } from 'react-native'
-import {
-	Ionicons,
-	MaterialCommunityIcons,
-	FontAwesome5,
-} from '@expo/vector-icons'
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
@@ -25,7 +21,6 @@ import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
 import { orderAPI } from '@/utils/api'
 import { formatPrice } from '@/utils/display'
-import { useAuth } from '@/providers/auth'
 import { useEchoChannel } from '@/hooks/useEchoChannel'
 import { CheckoutContext } from './_layout'
 import { useContext } from 'react'
@@ -69,16 +64,25 @@ export default function OrderTrackingScreen() {
 	const { t, locale } = useTranslation()
 	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
 		useAlert()
-	const params = useLocalSearchParams()
-	const { authState } = useAuth()
-	const { orderId, trackingOrder, setTrackingOrder } =
+	const { orderId, setOrderId, trackingOrder, setTrackingOrder } =
 		useContext(CheckoutContext)
+	const params = useLocalSearchParams()
+	const presetOrderId = params.orderId
+		? parseInt(params.orderId as string)
+		: null
 
 	console.log('Order ID in tracking page:', orderId)
 
 	// State
 	const [isLoading, setIsLoading] = useState(true)
 	const [isCancelling, setIsCancelling] = useState(false)
+
+	// Effect to set orderId from params if not already set
+	useEffect(() => {
+		if (!orderId && presetOrderId) {
+			setOrderId(presetOrderId)
+		}
+	}, [orderId, presetOrderId, setOrderId])
 
 	const handleOrderStatusEvent = (event: any) => {
 		console.log('OrderStatusEvent event received:', event)
@@ -212,7 +216,7 @@ export default function OrderTrackingScreen() {
 
 	// Navigate to order details/history
 	const navigateToOrderHistory = () => {
-		router.navigate('/order')
+		router.navigate('/(home)/order/history')
 	}
 
 	// Format dates for display
@@ -357,7 +361,7 @@ export default function OrderTrackingScreen() {
 									]}
 								>
 									<Ionicons
-										name={statusData.icon}
+										name={statusData.icon as any}
 										size={32}
 										color="#FFF"
 										style={styles.statusIconInner}
@@ -497,21 +501,28 @@ export default function OrderTrackingScreen() {
 										>
 											<View style={styles.itemImageWrapper}>
 												<Image
-													source={{ uri: item.product_image }}
+													source={{
+														uri: item.product?.product_images[0]
+															?.product_image_url,
+													}}
 													style={styles.itemImage}
 													resizeMode="cover"
 												/>
 											</View>
 											<View style={styles.itemDetails}>
-												<Text style={styles.itemName}>{item.product_name}</Text>
-												<Text style={styles.itemSize}>{item.product_size}</Text>
+												<Text style={styles.itemName}>
+													{item.product.product_name}
+												</Text>
+												<Text style={styles.itemSize}>
+													{item.order_items_size}
+												</Text>
 												<View style={styles.itemPriceRow}>
 													<Text style={styles.itemPrice}>
-														{formatPrice(item.product_price, locale)}
+														{formatPrice(item.order_items_unitprice, locale)}
 													</Text>
 													<View style={styles.quantityContainer}>
 														<Text style={styles.itemQuantity}>
-															x{item.product_quantity}
+															x{item.order_items_quantity}
 														</Text>
 													</View>
 												</View>
@@ -599,8 +610,12 @@ export default function OrderTrackingScreen() {
 									onPress={handleCancelOrder}
 									backgroundColor="transparent"
 									loading={isCancelling}
-									style={styles.cancelButton}
+									style={[
+										styles.cancelButton,
+										{ backgroundColor: 'transparent', elevation: 0 },
+									]}
 									textStyle={styles.buttonText}
+									activeOpacity={1}
 								/>
 							</LinearGradient>
 						)}
@@ -631,8 +646,12 @@ export default function OrderTrackingScreen() {
 									}
 								}}
 								backgroundColor="transparent"
-								style={styles.backToHomeButton}
+								style={[
+									styles.backToHomeButton,
+									{ backgroundColor: 'transparent', elevation: 0 },
+								]}
 								textStyle={styles.buttonText}
+								activeOpacity={1}
 							/>
 						</LinearGradient>
 					</View>

@@ -344,7 +344,7 @@ export default function CheckoutScreen() {
 				showInfo(t('voucherNotApplicable'))
 			}
 		} catch (err) {
-			console.error('Error applying voucher via code:', err)
+			console.log('Error applying voucher via code:', err)
 			if (err instanceof AxiosError && err?.response?.status === 404) {
 				showError(t('voucherNotFound'))
 			} else {
@@ -376,7 +376,7 @@ export default function CheckoutScreen() {
 			payment_method_id: selectedPaymentMethodId,
 			voucher_code: appliedVoucher?.voucher_code || null,
 			selected_item_ids: checkoutItems.map((item) => item.productId),
-			language: locale
+			language: locale,
 		}
 		try {
 			switch (selectedPaymentMethodId) {
@@ -399,7 +399,7 @@ export default function CheckoutScreen() {
 					console.log('order_id:', online_order_id)
 					setOrderId(online_order_id)
 					router.replace({
-						pathname: '(home)/order/(checkout)/online-payment-pending',
+						pathname: '/(home)/order/(checkout)/online-payment-pending',
 						params: {
 							payUrls: JSON.stringify(payUrls),
 							paymentMethodId: selectedPaymentMethodId,
@@ -675,9 +675,28 @@ export default function CheckoutScreen() {
 					text={t('placeOrder')}
 					onPress={handlePlaceOrder}
 					loading={isLoading}
-					style={styles.placeOrderButton}
+					style={[
+						styles.placeOrderButton,
+						{
+							borderRadius: 24, // More rounded
+							backgroundColor: '#C67C4E', // Consistent solid color
+							shadowColor: '#C67C4E',
+							shadowOffset: { width: 0, height: 2 },
+							shadowOpacity: 0.12,
+							shadowRadius: 6,
+							elevation: 3,
+							alignSelf: 'center',
+							width: '90%', // Centered and not full width
+							marginBottom: 8,
+						},
+					]}
 					backgroundColor="#C67C4E"
 					disabled={!selectedAddressId}
+					textStyle={{
+						color: '#FFF',
+						fontFamily: 'Inter-SemiBold',
+						fontSize: 16,
+					}}
 				/>
 			</View>
 		</SafeAreaView>

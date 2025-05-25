@@ -293,7 +293,7 @@ export default {
 
 	// Wishlist
 	noFavorites: "Chưa có sản phẩm yêu thích",
-	browseProducts: "Duyệt sản phẩm",
+	browseProducts: "Mua sắm ngay",
 	addAllToCart: "Thêm tất cả vào giỏ hàng",
 	removingFromFavorites: "Đang xóa khỏi yêu thích...",
 	errorFetchingWishlist:
@@ -320,7 +320,7 @@ export default {
 	errorFetchingCartItems:
 		"Không thể lấy thông tin giỏ hàng. Vui lòng thử lại.",
 	errorUpdatingSize: "Không thể cập nhật kích cỡ sản phẩm. Vui lòng thử lại.",
-
+	
 	// Checkout page
 	deliveryAddress: "Địa chỉ giao hàng",
 	noAddressFound: "Bạn chưa thiết lập địa chỉ giao hàng nào",
@@ -343,6 +343,7 @@ export default {
 	confirmPaymentMethod: "Xác nhận phương thức thanh toán",
 	yourOrder: "Xem lại đơn hàng của bạn",
 	confirmPlaceOrder: "Xác nhận đặt hàng",
+	errorApplyingVoucher: "Không thể áp dụng voucher.",
 
 	// Order Placed screen
 	orderCompleted: "Hoàn tất!",
@@ -525,6 +526,40 @@ export default {
 	otpSuccess: "Xác thực OTP thành công!",
 	newOTPSent: "Mã OTP mới đã được gửi!",
 	errorRetry: "Đã xảy ra lỗi. Vui lòng thử lại.",
-	errorResendingOtp: "Lỗi khi gửi lại mã OTP.",
+	errorResendiPagengOtp: "Lỗi khi gửi lại mã OTP.",
 	enterOTP: "Vui lòng nhập mã OTP.",
+
+	// Order history page
+	orderHistory: "Lịch sử đơn hàng",
+	recentOrders: "Đơn hàng gần đây",
+	history: "Lịch sử",
+	noOrdersFound: "Không tìm thấy đơn hàng",
+	noRecentOrders: "Không có đơn hàng gần đây",
+	noHistoryOrders: "Chưa có lịch sử đơn hàng",
+	orderOn: "Đặt hàng vào",
+	items: "món",
+	reorder: "Đặt lại",
+	completed: "Đã hoàn thành",
+	delivering: "Đang giao",
+	pending: "Chờ xử lý",
+	cancelled: "Đã hủy",
+	loadingOrders: "Đang tải đơn hàng...",
+	errorLoadingOrders: "Lỗi khi tải đơn hàng",
+	orderReorderSuccess: "Đã thêm sản phẩm vào giỏ hàng thành công",
+	errorReordering: "Lỗi khi thêm sản phẩm vào giỏ hàng",
+
+	// Order history and cards
+	followOrder: "Theo dõi đơn",
+	orderAgain: "Thưởng thức lại",
+	foodAndDrink: "Đồ ăn + nước uống",
+	feedback: "Đánh giá",
+	giveFeedback: "Đánh giá",
+
+	// Add items from order error handling
+	cartAlreadyOccupied:
+		"Giỏ hàng đã có sản phẩm khác. Vui lòng xóa giỏ hàng hiện tại trước khi thêm sản phẩm từ đơn hàng cũ.",
+	productNotFoundInOrder: "Không tìm thấy sản phẩm: {productName}.",
+	orderNotFound: "Rất tiếc, không tìm thấy đơn hàng.",
+	itemOutOfStockInOrder:
+		"Rất tiếc, sản phẩm {productName} hiện tại đang hết hàng.",
 };

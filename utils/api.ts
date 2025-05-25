@@ -1,9 +1,11 @@
+import URLs from "@/constants/URLs";
 import axios from "axios";
 
 export const APIClient = axios.create({
 	withCredentials: true, // Important
 	// baseURL: URLs.serverBaseUrl,
-	baseURL: "http://192.168.33.253:8000",
+	// baseURL: "http://192.168.33.253:8000",
+	baseURL: URLs.serverBaseUrl,
 	timeout: 30 * 1000, // 30 seconds for prod environment
 	headers: {
 		"Content-Type": "application/json",
@@ -79,6 +81,65 @@ export const cartAPI = {
 			product_id: productId,
 			size: size,
 		});
+	},
+
+	addItemsFromOrder: async (
+		orderId: number,
+		handlers: {
+			onSuccess?: () => void;
+			onError?: (error: any) => void;
+			onOrderNotFound: (orderId: number) => void;
+			onProductNotFound?: (
+				productId: number,
+				productName: string
+			) => void;
+			onCartItemExists?: () => void;
+			onItemOutOfStock?: (productId: number, productName: string) => void;
+		}
+	) => {
+		try {
+			await APIClient.post("/user/cart/replicate-order", {
+				order_id: orderId,
+			});
+			handlers.onSuccess?.();
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				const errorResponse = err.response;
+				console.log("Error adding items from order:", err);
+				console.log("Error status:", errorResponse?.status);
+				if (errorResponse) {
+					if (errorResponse.status === 409) {
+						handlers.onCartItemExists?.();
+					} else if (
+						errorResponse.status === 404 &&
+						errorResponse.data?.code === "PRODUCT_NOT_FOUND"
+					) {
+						const productId = parseInt(
+							errorResponse.data.extras.product_id
+						);
+						const productName =
+							errorResponse.data.extras.product_name;
+						handlers.onProductNotFound?.(productId, productName);
+					} else if (
+						errorResponse.status === 422 &&
+						errorResponse.data?.code === "INSUFFICIENT_STOCK"
+					) {
+						const productId = parseInt(
+							errorResponse.data.extras?.product_id
+						);
+						const productName =
+							errorResponse.data.extras?.product_name;
+						handlers.onItemOutOfStock?.(productId, productName);
+					} else {
+						handlers.onError?.(errorResponse.data);
+					}
+				} else {
+					handlers.onError?.(err);
+				}
+			} else {
+				handlers.onError?.(err);
+			}
+		}
 	},
 };
 
@@ -257,9 +318,9 @@ export const voucherAPI = {
 };
 
 export const orderAPI = {
-	getOrderHistory: (offset: number, limit: number) => {
+	getOrderHistory: async (offset: number, limit: number) => {
 		return APIClient.get(
-			"/order?" +
+			"/order/history?" +
 				new URLSearchParams({
 					offset: offset.toString(),
 					limit: limit.toString(),

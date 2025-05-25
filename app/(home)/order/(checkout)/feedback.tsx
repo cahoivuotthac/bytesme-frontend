@@ -9,33 +9,29 @@ import {
 	Image,
 	TextInput,
 	Platform,
-	Alert,
+	Keyboard,
 } from 'react-native'
-import {
-	Ionicons,
-	MaterialCommunityIcons,
-	FontAwesome5,
-	AntDesign,
-} from '@expo/vector-icons'
+import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
 import { useAlert } from '@/hooks/useAlert'
 import NavButton from '@/components/shared/NavButton'
-import Button from '@/components/ui/Button'
 import { orderAPI } from '@/utils/api'
-import * as ImagePicker from 'expo-image-picker'
 import DishDecoration from '@/components/shared/DishDecoration'
 import { CheckoutContext } from './_layout'
 import { useAuth } from '@/providers/auth'
 import { useMemo } from 'react'
 import { useEffect } from 'react'
+import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
+import * as ImagePicker from 'expo-image-picker'
 import BottomSpacer from '@/components/shared/BottomSpacer'
+import LinearGradientButton from '@/components/ui/LinearGradientButton'
 
 export default function FeedbackScreen() {
-	const { t, locale } = useTranslation()
+	const { t } = useTranslation()
 	const { AlertComponent, showInfo, showError, showSuccess } = useAlert()
-	const { trackingOrder } = useContext(CheckoutContext)
+	const { trackingOrder, setTrackingOrder } = useContext(CheckoutContext)
 
 	// State
 	const [rating, setRating] = useState(4)
@@ -44,7 +40,49 @@ export default function FeedbackScreen() {
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [selectedImproveTags, setSelectedImproveTags] = useState<string[]>([])
 	const [isAnonymous, setIsAnonymous] = useState(false)
+	const [isBottomContainerVisible, setIsBottomContainerVisible] = useState(true)
 	const { authState } = useAuth()
+	const { show: showBottomBar, hide: hideBottomBar } = useBottomBarVisibility()
+
+	const params = useLocalSearchParams()
+	const navigateBackToPath = params.navigateBackToPath || '/(home)/product'
+	const presetOrderId = params.orderId ? Number(params.orderId) : null
+
+	// Keyboard listener
+	useEffect(() => {
+		const showSub = Keyboard.addListener('keyboardDidShow', () => {
+			hideBottomBar()
+			setIsBottomContainerVisible(false)
+		})
+		const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+			showBottomBar()
+			setIsBottomContainerVisible(true)
+		})
+		return () => {
+			showSub.remove()
+			hideSub.remove()
+		}
+	}, [])
+
+	// If presetOrderId is provided, fetch the order details
+	useEffect(() => {
+		if (!trackingOrder && presetOrderId) {
+			orderAPI
+				.getOrderDetails(presetOrderId)
+				.then((response) => {
+					const orderDetails = response.data
+					if (orderDetails && orderDetails.order_id) {
+						setTrackingOrder(orderDetails)
+					} else {
+						showError(t('orderNotFound'))
+					}
+				})
+				.catch((error) => {
+					console.error('Error fetching order details:', error)
+					showError(t('errorFetchingOrder'))
+				})
+		}
+	}, [presetOrderId, trackingOrder, setTrackingOrder])
 
 	const userDisplayName = useMemo(() => {
 		if (isAnonymous) {
@@ -94,22 +132,10 @@ export default function FeedbackScreen() {
 					onPress={() => handleRatingChange(i)}
 					style={styles.starContainer}
 				>
-					{/* <AntDesign
+					<AntDesign
 						name={i <= rating ? 'star' : 'staro'}
-						size={28}
-						color={i <= rating ? '#F2994A' : '#D8D8D8'}
-					/> */}
-					<Image
-						source={
-							i <= rating
-								? require('@/assets/icons/feedback/pink-star-filled.png')
-								: require('@/assets/icons/feedback/pink-star.png')
-						}
-						style={{
-							width: 28,
-							height: 28,
-							// tintColor: i <= rating ? '#F2994A' : '#D88D8',
-						}}
+						size={32}
+						color={'#EA5982'}
 					/>
 				</TouchableOpacity>
 			)
@@ -193,7 +219,7 @@ export default function FeedbackScreen() {
 			await orderAPI.sendFeedback(payload)
 
 			showSuccess(t('feedbackSubmitSuccess'), () =>
-				router.replace('/(home)/product')
+				router.replace(navigateBackToPath as any)
 			)
 		} catch (error) {
 			console.error('Error submitting feedback:', error)
@@ -387,47 +413,38 @@ export default function FeedbackScreen() {
 			</ScrollView>
 
 			{/* Submit Button and Anonymous Checkbox on the same line */}
-			<View style={styles.bottomContainer}>
-				<View style={styles.bottomInnerContainer}>
-					{/* Submit as anonymous checkbox */}
-					<View style={styles.anonymousContainer}>
-						<TouchableOpacity
-							style={[
-								styles.checkbox,
-								isAnonymous && {
-									backgroundColor: '#406343',
-									borderColor: '#406343',
-								},
-							]}
-							onPress={() => setIsAnonymous((prev) => !prev)}
-						>
-							{isAnonymous && (
-								<Ionicons name="checkmark" size={16} color="#fff" />
-							)}
-						</TouchableOpacity>
-						<Text style={styles.anonymousText}>{t('submitAnonymously')}</Text>
-					</View>
+			{isBottomContainerVisible && (
+				<View style={styles.bottomContainer}>
+					<View style={styles.bottomInnerContainer}>
+						{/* Submit as anonymous checkbox */}
+						<View style={styles.anonymousContainer}>
+							<TouchableOpacity
+								style={[
+									styles.checkbox,
+									isAnonymous && {
+										backgroundColor: '#406343',
+										borderColor: '#406343',
+									},
+								]}
+								onPress={() => setIsAnonymous((prev) => !prev)}
+							>
+								{isAnonymous && (
+									<Ionicons name="checkmark" size={16} color="#fff" />
+								)}
+							</TouchableOpacity>
+							<Text style={styles.anonymousText}>{t('submitAnonymously')}</Text>
+						</View>
 
-					<LinearGradient
-						colors={['#C67C4E', '#FFAC6B']}
-						style={styles.gradientButton}
-						start={{ x: 0, y: 0 }}
-						end={{ x: 1, y: 0 }}
-					>
-						<Button
+						<LinearGradientButton
 							text={t('submit')}
 							onPress={handleSendFeedback}
-							backgroundColor="transparent"
 							loading={isSubmitting}
-							style={styles.submitButton}
-							textStyle={styles.buttonText}
-							rightIcon={
-								<Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-							}
+							style={{ marginLeft: 12, minWidth: 140 }}
+							textStyle={{ fontSize: 16 }}
 						/>
-					</LinearGradient>
+					</View>
 				</View>
-			</View>
+			)}
 			<BottomSpacer height={90} />
 		</SafeAreaView>
 	)
@@ -691,6 +708,7 @@ const styles = StyleSheet.create({
 	},
 	gradientButton: {
 		borderRadius: 16,
+		backgroundColor: 'transparent',
 		shadowColor: '#000',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
@@ -710,5 +728,6 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		color: '#FFFFFF',
 		fontSize: 16,
+		backgroundColor: 'transparent',
 	},
 })

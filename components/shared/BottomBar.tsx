@@ -21,28 +21,28 @@ const TABS = [
 		name: 'home',
 		label: 'home',
 		icon: require('@/assets/icons/bottom-bar/home.png'),
-		activeIcon: 'home',
+		activeIcon: require('@/assets/icons/bottom-bar/home.png'),
 		path: '/(home)/product',
 	},
 	{
 		name: 'cart',
+		activeIcon: require('@/assets/icons/bottom-bar/cart-fill.png'),
+		icon: require('@/assets/icons/bottom-bar/cart-line.png'),
 		label: 'cart',
-		icon: require('@/assets/icons/bottom-bar/cart.png'),
-		activeIcon: 'cart',
 		path: '/(home)/cart',
 	},
 	{
 		name: 'notifications',
+		activeIcon: require('@/assets/icons/bottom-bar/notification-fill.png'),
+		icon: require('@/assets/icons/bottom-bar/notification-line.png'),
 		label: 'notifications',
-		icon: require('@/assets/icons/bottom-bar/notification.png'),
-		activeIcon: 'notifications',
 		path: '/(home)/notifications',
 	},
 	{
 		name: 'profile',
+		activeIcon: require('@/assets/icons/bottom-bar/profile-fill.png'),
+		icon: require('@/assets/icons/bottom-bar/profile-line.png'),
 		label: 'profile',
-		icon: require('@/assets/icons/bottom-bar/profile.png'),
-		activeIcon: 'person',
 		path: '/(home)/profile',
 	},
 ]
@@ -93,8 +93,10 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 
 	// Function to navigate to a tab
 	const handleTabPressed = (tabIndex: number) => {
-		setActiveTabIndex(tabIndex)
-		router.push(TABS[tabIndex].path as any)
+		if (tabIndex !== activeTabIndex) {
+			setActiveTabIndex(tabIndex)
+			router.push(TABS[tabIndex].path as any)
+		}
 	}
 
 	// Handle featured deals/promotions button press
@@ -107,7 +109,12 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 		<Animated.View
 			style={[
 				styles.container,
-				{ opacity: fadeAnim, pointerEvents: isVisible ? 'auto' : 'none' },
+				{
+					opacity: fadeAnim,
+					pointerEvents: isVisible ? 'auto' : 'none',
+					height: isVisible ? null : 0,
+					display: isVisible ? 'flex' : 'none',
+				},
 			]}
 			pointerEvents={isVisible ? 'auto' : 'none'}
 		>
@@ -126,14 +133,14 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 								key={tab.name}
 								style={[
 									styles.tabButton,
-									tabIndex === 1 ? { marginRight: 20 } : {},
-									tabIndex === 2 ? { marginLeft: 20 } : {},
+									tabIndex === 1 ? { marginRight: 40 } : {},
+									tabIndex === 2 ? { marginLeft: 40 } : {},
 								]}
 								onPress={() => handleTabPressed(tabIndex)}
 								activeOpacity={1.0}
 							>
 								<Image
-									source={tab.icon}
+									source={isActive ? tab.activeIcon : tab.icon}
 									style={{
 										width: 24,
 										height: 24,
@@ -145,9 +152,7 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 								<Text
 									style={[
 										styles.tabLabel,
-										isActive
-											? styles.activeTabLabel
-											: styles.inactiveTabLabel,
+										isActive ? styles.activeTabLabel : styles.inactiveTabLabel,
 									]}
 									numberOfLines={1}
 								>

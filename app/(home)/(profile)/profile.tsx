@@ -11,13 +11,13 @@ import {
 	Switch,
 	Platform,
 } from 'react-native'
-import { Ionicons, MaterialIcons, Feather, AntDesign } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
 import { useAuth } from '@/providers/auth'
 import { LinearGradient } from 'expo-linear-gradient'
-import DishDecoration from '@/components/shared/DishDecoration'
 import { useAlert } from '@/hooks/useAlert'
+import DishDecoration from '@/components/shared/DishDecoration'
 
 // Default profile image if user has no profile photo
 const DEFAULT_AVATAR =
@@ -61,6 +61,10 @@ export default function ProfileMainScreen() {
 	// Navigate to other screens
 	const navigateToEditProfile = () => {
 		router.push('/(home)/(profile)/edit-profile')
+	}
+
+	const navigateToOrders = () => {
+		router.push('/(home)/order/history')
 	}
 
 	const navigateToCart = () => {
@@ -158,6 +162,20 @@ export default function ProfileMainScreen() {
 							/>
 						</View>
 						<Text style={styles.menuItemText}>{t('notifications')}</Text>
+						<Ionicons name="chevron-forward" size={22} color="#9B9B9B" />
+					</TouchableOpacity>
+
+					{/* Order History - New Option */}
+					<TouchableOpacity
+						style={styles.menuItem}
+						onPress={navigateToOrders}
+					>
+						<View
+							style={[styles.menuIconContainer, { backgroundColor: '#E8F0FE' }]}
+						>
+							<Ionicons name="time-outline" size={22} color="#4A90E2" />
+						</View>
+						<Text style={styles.menuItemText}>{t('orderHistory')}</Text>
 						<Ionicons name="chevron-forward" size={22} color="#9B9B9B" />
 					</TouchableOpacity>
 				</View>

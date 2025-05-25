@@ -24,6 +24,7 @@ import { useAlert } from '@/hooks/useAlert'
 import { useMemo } from 'react'
 import QRCode from 'react-native-qrcode-svg'
 import BottomSpacer from '@/components/shared/BottomSpacer'
+import { orderAPI } from '@/utils/api'
 
 const ACCENT_ORANGE = '#FF9F67' // Slightly deeper orange for better contrast
 const SOFT_ORANGE = '#FFE5D0'
@@ -43,7 +44,8 @@ interface OnlinePaymentEvent {
 export default function OnlinePaymentPendingScreen() {
 	const { t } = useTranslation()
 	const { orderId, setOrderId } = useContext(CheckoutContext)
-	const { AlertComponent, showInfo, showError, showSuccess } = useAlert()
+	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
+		useAlert()
 
 	const params = useLocalSearchParams()
 
@@ -88,8 +90,17 @@ export default function OnlinePaymentPendingScreen() {
 	}
 
 	// Cancel order handler
-	const handleCancelOrder = () => {
+	const handleCancelOrder = async () => {
+		try {
+			showConfirm(t('cancelOrderMessage'), async () => {
+				await orderAPI.cancelOrder(orderId as number)
+			})
+		} catch (error) {
+			console.error('Error canceling order:', error)
+			showError(t('cancelOrderFailed'))
+		}
 		setOrderId(undefined)
+
 		router.replace('/(home)/product')
 	}
 

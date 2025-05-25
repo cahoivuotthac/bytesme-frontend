@@ -100,6 +100,7 @@ interface OrderItem {
 	order_items_id: number
 	order_items_quantity: number
 	order_items_unitprice: number
+	order_items_size: string
 	product: Record<string, any>
 }
 
