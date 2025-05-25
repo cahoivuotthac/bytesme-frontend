@@ -72,6 +72,9 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 18,
 		color: '#383838',
+		flex: 1,
+		textAlign: 'center',
+		marginHorizontal: 8,
 	},
 	placeholderView: {
 		width: 40,
