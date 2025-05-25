@@ -602,6 +602,7 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: '#2F2D2C',
 		marginLeft: 12,
+		flex: 1,
 	},
 	listContainer: {
 		paddingHorizontal: 16,

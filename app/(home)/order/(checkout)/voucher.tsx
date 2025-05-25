@@ -23,6 +23,7 @@ import ZigzagBorder from '@/components/shared/ZigzagBorder'
 import NavButton from '@/components/shared/NavButton'
 import Button from '@/components/ui/Button'
 import VoucherRuleDisplay from '@/components/shared/VoucherRuleDisplay'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 // Helper function to format date
 
@@ -382,6 +383,7 @@ const VoucherItem = ({
 export default function VoucherPage() {
 	const { t } = useTranslation()
 	const { AlertComponent, showInfo } = useAlert()
+	const [hasMoreVouchers, setHasMoreVouchers] = useState(false)
 
 	// Get checkout context data
 	const {
@@ -416,17 +418,17 @@ export default function VoucherPage() {
 			setIsLoadingVouchers(true)
 			try {
 				// In a real app, fetch from API
-				let vouchers = (
-					await voucherAPI.getVouchers(
-						checkoutItems.map((item) => item.productId),
-						0,
-						pageSize
-					)
-				).data as Voucher[]
-				vouchers = vouchers.map((voucher) => ({
+				const response = await voucherAPI.getVouchers(
+					checkoutItems.map((item) => item.productId),
+					0,
+					pageSize
+				)
+				const vouchers = response.data.vouchers.map((voucher: Voucher) => ({
 					...voucher,
 					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
 				})) as Voucher[]
+				const hasMore = response.data.has_more
+				setHasMoreVouchers(hasMore)
 
 				setVouchers(vouchers)
 				setIsLoadingVouchers(false)
@@ -590,7 +592,7 @@ export default function VoucherPage() {
 							/>
 						))}
 
-						{vouchers.length > 0 && (
+						{vouchers.length > 0 && hasMoreVouchers && (
 							<View style={styles.showMoreContainer}>
 								<TouchableOpacity
 									style={styles.showMoreButton}
@@ -624,6 +626,7 @@ export default function VoucherPage() {
 						{/* Bottom spacing */}
 						<View style={styles.bottomSpacer} />
 					</ScrollView>
+					<BottomSpacer height={100} />
 
 					{/* Apply Voucher Button*/}
 					<View style={styles.buttonContainer}>
@@ -689,6 +692,7 @@ const styles = StyleSheet.create({
 
 	rulesContainer: {
 		marginVertical: 4, // Reduced spacing
+		marginBottom: 16,
 	},
 	notApplicableText: {
 		color: '#FF6B6B',
@@ -1032,9 +1036,6 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontFamily: 'Inter-Medium',
 		color: '#333333',
-	},
-	rulesContainer: {
-		marginBottom: 16,
 	},
 	rulesTitle: {
 		fontSize: 14,

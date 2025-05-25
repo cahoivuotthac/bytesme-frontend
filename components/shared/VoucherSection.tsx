@@ -313,7 +313,12 @@ const VoucherSection: React.FC<VoucherSectionProps> = ({
 								activeOpacity={voucher.is_applicable ? 0.7 : 1}
 							>
 								<LinearGradient
-									colors={getVoucherColors(voucher) || ['#C67C4E', '#A0643C']}
+									colors={
+										(getVoucherColors(voucher) as [string, string]) || [
+											'#C67C4E',
+											'#A0643C',
+										]
+									}
 									start={{ x: 0, y: 0 }}
 									end={{ x: 1, y: 1 }}
 									style={styles.voucherCardGradient}

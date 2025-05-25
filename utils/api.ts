@@ -328,11 +328,16 @@ export const orderAPI = {
 		);
 	},
 
-	placeOrder: (params: {
+	placeOrder: async (params: {
 		user_address_id: number;
 		payment_method_id: string;
 		voucher_code: string | null;
 		selected_item_ids: number[];
+		handlers: {
+			onItemOutOfStock?: (productId: number, productName: string) => void;
+			onOrderPlaced?: (responseData: Record<string, any>) => void;
+			onError?: (error: any) => void;
+		};
 	}) => {
 		const payload = params.voucher_code
 			? { ...params }
@@ -341,17 +346,54 @@ export const orderAPI = {
 						([key]) => key !== "voucher_code"
 					)
 			  );
-		const response = APIClient.post("/order/place", {
-			...payload,
-			selected_item_ids: params.selected_item_ids.join(","),
-		});
-
-		return response;
+		try {
+			const response = await APIClient.post("/order/place", {
+				...payload,
+				selected_item_ids: params.selected_item_ids.join(","),
+			});
+			const responseData = response.data;
+			params.handlers.onOrderPlaced?.(responseData);
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				const errorResponse = err.response;
+				console.log("Error placing order:", err);
+				console.log("Error status:", errorResponse?.status);
+				console.log("Response data: ", errorResponse?.data);
+				if (errorResponse) {
+					if (
+						errorResponse.status === 422 &&
+						errorResponse.data?.code === "INSUFFICIENT_STOCK"
+					) {
+						const productId = parseInt(
+							errorResponse.data.extras?.product_id
+						);
+						const productName =
+							errorResponse.data.extras?.product_name;
+						params.handlers.onItemOutOfStock?.(
+							productId,
+							productName
+						);
+					} else {
+						params.handlers.onError?.(errorResponse.data);
+					}
+				} else {
+					params.handlers.onError?.(err);
+				}
+			} else {
+				params.handlers.onError?.(err);
+			}
+			return;
+		}
 	},
 
-	cancelOrder: async (orderId: number) => {
-		return APIClient.post("/order/cancel", {
+	cancelOrder: async (
+		orderId: number,
+		language: "en" | "vi",
+		handlers?: {}
+	) => {
+		return APIClient.post("/order/update-status", {
 			order_id: orderId,
+			status: "cancelled",
 		});
 	},
 

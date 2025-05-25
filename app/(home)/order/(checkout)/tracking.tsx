@@ -76,6 +76,7 @@ export default function OrderTrackingScreen() {
 	// State
 	const [isLoading, setIsLoading] = useState(true)
 	const [isCancelling, setIsCancelling] = useState(false)
+	const [isRefunding, setIsRefunding] = useState(false)
 
 	// Effect to set orderId from params if not already set
 	useEffect(() => {
@@ -155,31 +156,54 @@ export default function OrderTrackingScreen() {
 			return
 		}
 
+		const isMoMoPayment = trackingOrder.order_payment_method === 'momo'
+		const isPaid = trackingOrder.order_is_paid
+
+		// Show appropriate confirmation message based on payment method and status
+		const confirmMessage =
+			isMoMoPayment && isPaid
+				? t('cancelOrderWithRefundContent')
+				: t('cancelOrderContent')
+
 		// Show confirmation dialog before cancelling
-		showConfirm(
-			t('cancelOrderTitle'),
-			async () => {
-				try {
-					setIsCancelling(true)
-					// Call API to cancel the order
-					await orderAPI.cancelOrder(orderId!)
-
-					// Update local state since Echo event might be delayed
-					setTrackingOrder((prevOrder) => {
-						if (!prevOrder) return null
-						return { ...prevOrder, order_status: 'cancelled' }
-					})
-
-					showSuccess(t('orderCancelledSuccess'))
-				} catch (error) {
-					console.error('Error cancelling order:', error)
-					showError(t('errorCancellingOrder'))
-				} finally {
-					setIsCancelling(false)
+		showConfirm(confirmMessage, async () => {
+			// Confirmation action
+			try {
+				setIsCancelling(true)
+				if (isMoMoPayment && isPaid) {
+					setIsRefunding(true)
 				}
-			},
-			t('close')
-		)
+
+				// Call API to cancel the order
+				await orderAPI.cancelOrder(orderId!, locale, {})
+
+				// Update local state since Echo event might be delayed
+				setTrackingOrder((prevOrder) => {
+					if (!prevOrder) return null
+					return { ...prevOrder, order_status: 'cancelled' }
+				})
+
+				// Show success message with refund info if applicable
+				if (isMoMoPayment && isPaid) {
+					showSuccess(t('orderCancelledWithRefundSuccess'))
+				} else {
+					showSuccess(t('orderCancelledSuccess'))
+				}
+			} catch (error: any) {
+				console.error('Error cancelling order:', error)
+				// Handle specific error cases
+				if (error?.response?.data?.code === 'REFUND_FAILED') {
+					showError(t('refundFailedError'))
+				} else if (error?.response?.data?.code === 'CANCEL_FAILED') {
+					showError(t('errorCancellingOrder'))
+				} else {
+					showError(t('generalError'))
+				}
+			} finally {
+				setIsCancelling(false)
+				setIsRefunding(false)
+			}
+		})
 	}
 
 	// Get status data based on current order status
@@ -244,6 +268,16 @@ export default function OrderTrackingScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			{AlertComponent}
+
+			{/* Refund Loading Modal */}
+			{isRefunding && (
+				<View style={styles.modalOverlay}>
+					<View style={styles.modalContent}>
+						<ActivityIndicator size="large" color="#C67C4E" />
+						<Text style={styles.modalText}>{t('processingRefund')}</Text>
+					</View>
+				</View>
+			)}
 
 			{/* Header with decorative background */}
 			<LinearGradient
@@ -929,7 +963,10 @@ const styles = StyleSheet.create({
 	},
 	paymentStatusText: {
 		fontSize: 15,
+		minWidth: 60,
 		fontFamily: 'Inter-SemiBold',
+		textAlign: 'right',
+		marginLeft: 8,
 	},
 	orderItemsContainer: {
 		marginTop: 24,
@@ -1094,5 +1131,34 @@ const styles = StyleSheet.create({
 	},
 	bottomSpacer: {
 		height: 40,
+	},
+	modalOverlay: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+		backgroundColor: 'rgba(0, 0, 0, 0.7)',
+		justifyContent: 'center',
+		alignItems: 'center',
+		zIndex: 1000,
+	},
+	modalContent: {
+		backgroundColor: '#FFFFFF',
+		padding: 24,
+		borderRadius: 12,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.1,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	modalText: {
+		marginTop: 12,
+		fontSize: 16,
+		fontFamily: 'Inter-Medium',
+		color: '#333',
+		textAlign: 'center',
 	},
 })

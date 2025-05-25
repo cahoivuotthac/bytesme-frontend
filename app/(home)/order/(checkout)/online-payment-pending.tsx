@@ -377,11 +377,11 @@ export default function OnlinePaymentPendingScreen() {
 								color={ACCENT_ORANGE}
 							/>
 						</View>
-						<View style={styles.houseLabel}>
+						{/* <View style={styles.houseLabel}>
 							<Text style={styles.houseLabelText}>
 								{t('processingPayment')}
 							</Text>
-						</View>
+						</View> */}
 						<View style={styles.orderIdCard}>
 							<Text style={styles.orderIdLabel}>{t('orderNumber')}</Text>
 							<Text style={styles.orderIdValue}>#{orderId}</Text>
@@ -495,6 +495,7 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: BG,
+		// width: '100%'
 	},
 	loadingContainer: {
 		flex: 1,
@@ -529,13 +530,15 @@ const styles = StyleSheet.create({
 		textShadowRadius: 2,
 	},
 	houseIconWrapper: {
+		// position: 'absolute',
 		width: 80,
 		height: 80,
+		top: 50,
 		borderRadius: 40,
 		backgroundColor: CARD_BG,
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginBottom: 16,
+		marginBottom: 100,
 		shadowColor: ACCENT_ORANGE,
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.08,
@@ -559,9 +562,11 @@ const styles = StyleSheet.create({
 		textShadowRadius: 1,
 	},
 	orderIdCard: {
+		position: 'absolute',
+		top: 10,
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: CARD_BG,
+		backgroundColor: 'transparent',
 		borderRadius: 12,
 		paddingVertical: 6,
 		paddingHorizontal: 16,
@@ -784,7 +789,7 @@ const styles = StyleSheet.create({
 		marginTop: 8,
 		marginBottom: 8,
 		alignItems: 'center',
-		width: '80%',
+		width: '85%',
 		shadowColor: '#A50064',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.1,
@@ -795,6 +800,7 @@ const styles = StyleSheet.create({
 		color: '#FFF',
 		fontFamily: 'Inter-SemiBold',
 		fontSize: 16,
+		alignItems: 'center',
 		letterSpacing: 0.2,
 	},
 	cancelButton: {
@@ -804,7 +810,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 32,
 		marginTop: 4,
 		alignItems: 'center',
-		width: '80%',
+		width: '85%',
 		borderWidth: 1,
 		borderColor: '#FF6B6B',
 	},
@@ -816,11 +822,12 @@ const styles = StyleSheet.create({
 	},
 	showQrButton: {
 		backgroundColor: '#FF9F67',
-		borderRadius: 12,
+		borderRadius: 24,
 		paddingVertical: 12,
 		paddingHorizontal: 24,
 		marginBottom: 12,
 		alignItems: 'center',
+		width: '85%',
 	},
 	showQrButtonText: {
 		color: '#FFF',

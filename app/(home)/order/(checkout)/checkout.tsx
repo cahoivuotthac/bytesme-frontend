@@ -155,18 +155,19 @@ export default function CheckoutScreen() {
 			try {
 				// In a real app, fetch from API
 				console.log('checkoutItems in fetch quick vouchers:', checkoutItems)
-				let quickVouchers = (
-					await voucherAPI.getVouchers(
-						checkoutItems.map((item) => item.productId),
-						0,
-						3
-					)
-				).data as Voucher[]
 
-				quickVouchers = quickVouchers.map((voucher) => ({
-					...voucher,
-					isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
-				})) as Voucher[]
+				const response = await voucherAPI.getVouchers(
+					checkoutItems.map((item) => item.productId),
+					0,
+					3
+				)
+
+				const quickVouchers = response.data.vouchers.map(
+					(voucher: Voucher) => ({
+						...voucher,
+						isSelected: voucher.voucher_id === selectedVoucher?.voucher_id,
+					})
+				) as Voucher[]
 				setQuickVouchers(quickVouchers)
 			} catch (err) {}
 		}
@@ -262,7 +263,11 @@ export default function CheckoutScreen() {
 				onPress={() => setSelectedPaymentMethodId(method.id)}
 			>
 				<View style={styles.paymentIconContainer}>
-					<Ionicons name={method.icon} size={32} color={method.iconColor} />
+					<Ionicons
+						name={method.icon as any}
+						size={32}
+						color={method.iconColor}
+					/>
 				</View>
 
 				<View style={styles.paymentContent}>
@@ -378,47 +383,60 @@ export default function CheckoutScreen() {
 			selected_item_ids: checkoutItems.map((item) => item.productId),
 			language: locale,
 		}
-		try {
-			switch (selectedPaymentMethodId) {
-				case 'cod': {
-					const { order_id: cod_order_id } = (
-						await orderAPI.placeOrder({ ...params })
-					).data
-					setOrderId(cod_order_id)
-					router.replace({
-						pathname: '/(home)/order/(checkout)/order-placed',
-					})
-					break
-				}
-				case 'momo':
-				case 'vnpay': {
-					const { pay_urls: payUrls, order_id: online_order_id } = (
-						await orderAPI.placeOrder({ ...params })
-					).data
-					console.log('payUrls:', payUrls)
-					console.log('order_id:', online_order_id)
-					setOrderId(online_order_id)
-					router.replace({
-						pathname: '/(home)/order/(checkout)/online-payment-pending',
-						params: {
-							payUrls: JSON.stringify(payUrls),
-							paymentMethodId: selectedPaymentMethodId,
-						},
-					})
-					break
-				}
-			}
-			console.log('Order placed successfully:', params)
-		} catch (err) {
-			console.error('Error placing order:', err)
-			showError(t('orderFailed'))
+
+		const onItemOutOfStock = (productId: number, productName: string) => {
 			setIsLoading(false)
-			return
+			showError(
+				t('itemOutOfStockInOrder').replace('{productName}', productName)
+			)
 		}
 
-		setIsLoading(false)
+		const onError = (error: any) => {
+			setIsLoading(false)
+			showError(t('orderFailed'))
+		}
+		switch (selectedPaymentMethodId) {
+			case 'cod':
+				await orderAPI.placeOrder({
+					...params,
+					handlers: {
+						onItemOutOfStock,
+						onError,
+						onOrderPlaced: (responseData: Record<string, any>) => {
+							const { order_id: orderId } = responseData
+							setOrderId(orderId)
+							router.replace({
+								pathname: '/(home)/order/(checkout)/order-placed',
+							})
+						},
+					},
+				})
+				break
 
-		// Simulate order placement
+			case 'momo':
+			case 'vnpay':
+				await orderAPI.placeOrder({
+					...params,
+					handlers: {
+						onItemOutOfStock,
+						onError,
+						onOrderPlaced: (responseData: Record<string, any>) => {
+							const { pay_urls: payUrls, order_id: orderId } = responseData
+							console.log('payUrls:', payUrls)
+							console.log('order_id:', orderId)
+							setOrderId(orderId)
+							router.replace({
+								pathname: '/(home)/order/(checkout)/online-payment-pending',
+								params: {
+									payUrls: JSON.stringify(payUrls),
+									paymentMethodId: selectedPaymentMethodId,
+								},
+							})
+						},
+					},
+				})
+				break
+		}
 	}
 
 	return (
@@ -933,8 +951,10 @@ const styles = StyleSheet.create({
 	},
 	discountValue: {
 		fontSize: 14,
+		alignSelf: 'flex-end',
 		fontFamily: 'Inter-Medium',
 		color: '#A9411D',
+		textAlign: 'right',
 	},
 	divider: {
 		height: 1,
@@ -1060,7 +1080,7 @@ const styles = StyleSheet.create({
 		borderRadius: 8,
 	},
 	viewAllText: {
-		fontSize: 12,
+		fontSize: 13,
 		fontFamily: 'Inter-Medium',
 		color: '#FFFFFF',
 	},
@@ -1094,9 +1114,9 @@ const styles = StyleSheet.create({
 		marginBottom: 4,
 	},
 	itemSize: {
-		fontSize: 10,
-		fontFamily: 'Inter-Regular',
-		color: '#968B7B',
+		fontSize: 14,
+		fontFamily: 'Inter-Bold',
+		color: '#C67C4E',
 		marginBottom: 4,
 	},
 	itemQuantityPrice: {
@@ -1105,12 +1125,12 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	itemQuantity: {
-		fontSize: 10,
+		fontSize: 14,
 		fontFamily: 'Inter-Medium',
 		color: '#474747',
 	},
 	itemPrice: {
-		fontSize: 10,
+		fontSize: 12,
 		fontFamily: 'Inter-Medium',
 		color: '#A9411D',
 	},

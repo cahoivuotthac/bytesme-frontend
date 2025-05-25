@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
+	Animated,
 	View,
 	Text,
 	StyleSheet,
 	ScrollView,
 	SafeAreaView,
 	TouchableOpacity,
-	Image,
+	TouchableWithoutFeedback,
 	ActivityIndicator,
 	FlatList,
 	RefreshControl,
@@ -17,11 +18,10 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
 import { useAlert } from '@/hooks/useAlert'
-import NavButton from '@/components/shared/NavButton'
-import Button from '@/components/ui/Button'
 import { cartAPI, orderAPI } from '@/utils/api'
 import { formatPrice, formatDateTime } from '@/utils/display'
 import DishDecoration from '@/components/shared/DishDecoration'
+import DatePickerModal from '@/components/shared/DatePickerModal'
 
 // Updated Order status types to match API
 type OrderStatus = 'pending' | 'delivering' | 'delivered' | 'cancelled'
@@ -49,6 +49,7 @@ interface Order {
 interface OrderItem {
 	product_id: number
 	product_name: string
+	product_category_id: number
 	quantity: number
 	size: string
 	unit_price: number
@@ -61,33 +62,6 @@ interface OrderHistoryResponse {
 	has_more: boolean
 	offset: string
 	limit: string
-}
-
-const ORDER_STATUS_CONFIG = {
-	pending: {
-		label: 'pending',
-		color: '#FF9F67',
-		bgColor: '#FFF3E0',
-		icon: 'time-outline',
-	},
-	delivering: {
-		label: 'delivering',
-		color: '#2196F3',
-		bgColor: '#E3F2FD',
-		icon: 'bicycle-outline',
-	},
-	delivered: {
-		label: 'completed',
-		color: '#4CAF50',
-		bgColor: '#E8F5E8',
-		icon: 'checkmark-circle-outline',
-	},
-	cancelled: {
-		label: 'cancelled',
-		color: '#F44336',
-		bgColor: '#FFEBEE',
-		icon: 'close-circle-outline',
-	},
 }
 
 const STATUS_ICONS: Record<OrderStatus, string> = {
@@ -110,6 +84,15 @@ export default function OrderHistoryScreen() {
 	const [hasMoreOrders, setHasMoreOrders] = useState(true)
 	const [isLoadingMore, setIsLoadingMore] = useState(false)
 	const [currentOffset, setCurrentOffset] = useState(0)
+	const [fromDate, setFromDate] = useState<Date | null>(null)
+	const [toDate, setToDate] = useState<Date | null>(null)
+	const [showFromPicker, setShowFromPicker] = useState(false)
+	const [showToPicker, setShowToPicker] = useState(false)
+
+	const FOOD_CATEGORY_IDS = new Set([1, 3, 4, 5, 6, 7, 8, 9])
+
+	// Animated scale for order cards
+	const scale = useRef(new Animated.Value(1)).current
 
 	const pageSize = 10
 
@@ -168,7 +151,7 @@ export default function OrderHistoryScreen() {
 		}
 	}, [fetchOrders, isLoadingMore, hasMoreOrders, currentOffset])
 
-	// Filter orders based on active tab and selected filter
+	// Filter orders based on active tab, selected filter, and date range
 	const filteredOrders = orders.filter((order) => {
 		if (activeTab === 'current') {
 			// Current orders: pending, delivering
@@ -179,7 +162,11 @@ export default function OrderHistoryScreen() {
 			return order.status === selectedFilter
 		} else {
 			// History: delivered, cancelled
-			return ['delivered', 'cancelled'].includes(order.status)
+			const isHistory = ['delivered', 'cancelled'].includes(order.status)
+			if (!isHistory) return false
+			if (fromDate && new Date(order.created_at) < fromDate) return false
+			if (toDate && new Date(order.created_at) > toDate) return false
+			return true
 		}
 	})
 
@@ -232,6 +219,13 @@ export default function OrderHistoryScreen() {
 		})
 	}
 
+	const navigateToDetails = (orderId: number) => {
+		router.push({
+			pathname: '/(home)/order/[id]',
+			params: { id: orderId.toString() },
+		})
+	}
+
 	// Get main product name from order items
 	const getMainProductName = (items: OrderItem[]) => {
 		return items[0]?.product_name || 'Product'
@@ -240,6 +234,19 @@ export default function OrderHistoryScreen() {
 	// Count total items in order
 	const getTotalItems = (items: OrderItem[]) => {
 		return items.reduce((total, item) => total + item.quantity, 0)
+	}
+
+	const getProductClassification = (items: OrderItem[]) => {
+		const hasFood = items.some((item) =>
+			FOOD_CATEGORY_IDS.has(item.product_category_id)
+		)
+		const hasBeverage = items.some(
+			(item) => !FOOD_CATEGORY_IDS.has(item.product_category_id)
+		)
+
+		if (hasFood && hasBeverage) return t('foodAndDrink')
+		if (hasFood) return t('food')
+		return t('drink')
 	}
 
 	// Render filter chips for current orders
@@ -325,6 +332,89 @@ export default function OrderHistoryScreen() {
 		)
 	}
 
+	// Date range filter bar for history tab
+	const renderDateRangeFilter = () => {
+		if (activeTab !== 'history') return null
+
+		const hasDateFilters = fromDate !== null || toDate !== null
+
+		return (
+			<View style={styles.dateFilterContainer}>
+				<View style={styles.datePickersRow}>
+					<TouchableOpacity
+						onPress={() => setShowFromPicker(true)}
+						style={styles.datePickerButton}
+					>
+						<Ionicons
+							name="calendar-outline"
+							size={18}
+							color="#B76245"
+							style={{ marginRight: 4 }}
+						/>
+						<Text style={styles.datePickerText}>
+							{fromDate
+								? formatDateTime(fromDate.toISOString(), locale).split(' ')[0]
+								: t('fromDate')}
+						</Text>
+					</TouchableOpacity>
+					<Ionicons
+						name="arrow-forward"
+						size={18}
+						color="#B76245"
+						style={{ marginHorizontal: 4 }}
+					/>
+					<TouchableOpacity
+						onPress={() => setShowToPicker(true)}
+						style={styles.datePickerButton}
+					>
+						<Text style={styles.datePickerText}>
+							{toDate
+								? formatDateTime(toDate.toISOString(), locale).split(' ')[0]
+								: t('toDate')}
+						</Text>
+					</TouchableOpacity>
+				</View>
+
+				{hasDateFilters && (
+					<TouchableOpacity
+						style={styles.clearDateButton}
+						onPress={() => {
+							setFromDate(null)
+							setToDate(null)
+						}}
+					>
+						<Ionicons name="close-circle" size={18} color="#B76245" />
+						<Text style={styles.clearDateText}>{t('clear')}</Text>
+					</TouchableOpacity>
+				)}
+
+				<DatePickerModal
+					visible={showFromPicker}
+					onClose={() => setShowFromPicker(false)}
+					onSelect={(date) => {
+						setFromDate(date)
+						setShowFromPicker(false)
+					}}
+					currentDate={fromDate || new Date()}
+					maxDate={toDate || undefined}
+					locale={locale}
+				/>
+
+				<DatePickerModal
+					visible={showToPicker}
+					onClose={() => setShowToPicker(false)}
+					onSelect={(date) => {
+						setToDate(date)
+						setShowToPicker(false)
+					}}
+					currentDate={toDate || new Date()}
+					minDate={fromDate || undefined}
+					locale={locale}
+				/>
+			</View>
+		)
+	}
+
 	// Render individual order card
 	const renderOrderCard = ({ item: order }: { item: Order }) => {
 		const isCurrentOrder = ['pending', 'delivering'].includes(order.status)
@@ -338,101 +428,133 @@ export default function OrderHistoryScreen() {
 
 		const statusIconName = STATUS_ICONS[order.status] || 'help-circle-outline'
 
+		const onPressIn = () => {
+			Animated.spring(scale, {
+				toValue: 0.95,
+				useNativeDriver: true,
+			}).start()
+		}
+
+		const onPressOut = () => {
+			Animated.spring(scale, {
+				toValue: 1,
+				useNativeDriver: true,
+			}).start()
+		}
+
+		const onPress = () => {
+			navigateToDetails(order.order_id)
+		}
+
 		return (
-			<View
-				style={[styles.orderCard, { backgroundColor: cardBackgroundColor }]}
+			<TouchableWithoutFeedback
+				onPress={onPress}
+				onPressIn={onPressIn}
+				onPressOut={onPressOut}
 			>
-				{/* Order items image display */}
-				<View style={styles.orderImagesRow}>
-					<View style={styles.orderImagesCompound}>
-						{displayItems.map((item, index) => (
-							<View
-								key={`${item.product_id}-${index}`}
-								style={[styles.dishImageContainer, { zIndex: 3 - index }]}
+				<Animated.View
+					style={[
+						styles.orderCard,
+						{ backgroundColor: cardBackgroundColor },
+						{
+							transform: [{ scale }],
+						},
+					]}
+				>
+					{/* Order items image display */}
+					<View style={styles.orderImagesRow}>
+						<View style={styles.orderImagesCompound}>
+							{displayItems.map((item, index) => (
+								<View
+									key={`${item.product_id}-${index}`}
+									style={[styles.dishImageContainer, { zIndex: 3 - index }]}
+								>
+									<DishDecoration
+										imageSource={{ uri: item.image_url }}
+										size={index === 0 ? 110 : 90}
+										adjustForBowl={false}
+										imageScale={1}
+										containerStyle={{ backgroundColor: '#FFFFFF' }}
+									/>
+								</View>
+							))}
+
+							{extraItemsCount > 0 && (
+								<View style={styles.extraItemsBadge}>
+									<Text style={styles.extraItemsText}>+{extraItemsCount}</Text>
+								</View>
+							)}
+						</View>
+
+						{/* Order ID and Date */}
+						<View style={styles.orderIdAndDate}>
+							<Text
+								style={[
+									styles.orderNumber,
+									{ textDecorationLine: 'underline', alignSelf: 'flex-end' },
+								]}
 							>
-								<DishDecoration
-									imageSource={{ uri: item.image_url }}
-									size={index === 0 ? 110 : 90}
-									adjustForBowl={false}
-									imageScale={1}
-									containerStyle={{ backgroundColor: '#FFFFFF' }}
+								#{order.order_id}
+							</Text>
+							<Text style={styles.orderDate}>
+								{formatDateTime(order.created_at, locale)}
+							</Text>
+						</View>
+					</View>
+
+					{/* Order content - name, type, price */}
+					<View style={styles.cardMiddleRow}>
+						<View style={styles.orderContent}>
+							<Text style={styles.orderName} numberOfLines={1}>
+								{getMainProductName(order.items)}
+								{order.items.length > 1 ? '...' : ''}
+							</Text>
+							<Text style={styles.orderType}>
+								{getProductClassification(order.items)}
+							</Text>
+							<Text style={styles.orderPrice}>
+								{formatPrice(order.total_price, locale)} ({order.items_count}{' '}
+								{t('items')})
+							</Text>
+						</View>
+					</View>
+					<View style={styles.cardFooterRow}>
+						<View style={styles.statusIconContainer}>
+							<View style={styles.statusIconCircle}>
+								<Ionicons
+									name={statusIconName as any}
+									size={28}
+									color="#000000"
 								/>
 							</View>
-						))}
-					</View>
-
-					{extraItemsCount > 0 && (
-						<View style={styles.extraItemsBadge}>
-							<Text style={styles.extraItemsText}>+{extraItemsCount}</Text>
 						</View>
-					)}
-
-					{/* Order ID and Date */}
-					<View style={styles.orderIdAndDate}>
-						<Text
-							style={[
-								styles.orderNumber,
-								{ textDecorationLine: 'underline', alignSelf: 'flex-end' },
-							]}
-						>
-							#{order.order_id}
-						</Text>
-						<Text style={styles.orderDate}>
-							{formatDateTime(order.created_at, locale)}
-						</Text>
-					</View>
-				</View>
-
-				{/* Order content - name, type, price */}
-				<View style={styles.cardMiddleRow}>
-					<View style={styles.orderContent}>
-						<Text style={styles.orderName} numberOfLines={1}>
-							{getMainProductName(order.items)}
-							{order.items.length > 1 ? '...' : ''}
-						</Text>
-						<Text style={styles.orderType}>{t('foodAndDrink')}</Text>
-						<Text style={styles.orderPrice}>
-							{formatPrice(order.total_price, locale)} ({order.items_count}{' '}
-							{t('items')})
-						</Text>
-					</View>
-				</View>
-				<View style={styles.cardFooterRow}>
-					<View style={styles.statusIconContainer}>
-						<View style={styles.statusIconCircle}>
-							<Ionicons
-								name={statusIconName as any}
-								size={28}
-								color="#000000"
-							/>
-						</View>
-					</View>
-					<View style={styles.actionButtonContainer}>
-						<TouchableOpacity
-							style={[styles.actionButton, { backgroundColor: '#EA5982' }]}
-							onPress={() => {
-								if (isCurrentOrder) {
-									navigateToTracking(order.order_id)
-								} else {
-									if (order.did_feedback) {
-										handleReorder(order.order_id)
+						<View style={styles.actionButtonContainer}>
+							<TouchableOpacity
+								style={[styles.actionButton, { backgroundColor: '#EA5982' }]}
+								onPress={() => {
+									if (isCurrentOrder) {
+										navigateToTracking(order.order_id)
 									} else {
-										handleFeedback(order.order_id)
+										if (order.did_feedback) {
+											handleReorder(order.order_id)
+										} else {
+											handleFeedback(order.order_id)
+										}
 									}
-								}
-							}}
-						>
-							<Text style={styles.actionButtonText}>
-								{isCurrentOrder
-									? t('followOrder')
-									: order.did_feedback
-									? t('orderAgain')
-									: t('giveFeedback')}
-							</Text>
-						</TouchableOpacity>
+								}}
+							>
+								<Text style={styles.actionButtonText}>
+									{isCurrentOrder
+										? t('followOrder')
+										: order.did_feedback
+										? t('orderAgain')
+										: t('giveFeedback')}
+								</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
-				</View>
-			</View>
+				</Animated.View>
+			</TouchableWithoutFeedback>
 		)
 	}
 
@@ -506,6 +628,9 @@ export default function OrderHistoryScreen() {
 					</TouchableOpacity>
 				</View>
 
+				{/* Date range filter for history tab */}
+				{renderDateRangeFilter()}
+
 				{/* Filter chips */}
 				{renderFilterChips()}
 
@@ -571,8 +696,8 @@ const styles = StyleSheet.create({
 		backgroundColor: 'transparent',
 	},
 	backCircle: {
-		width: 40,
-		height: 40,
+		width: 35,
+		height: 35,
 		borderRadius: 20,
 		backgroundColor: '#C89B7B',
 		justifyContent: 'center',
@@ -607,11 +732,15 @@ const styles = StyleSheet.create({
 		paddingVertical: 8,
 		backgroundColor: 'transparent',
 		position: 'relative',
+		overflow: 'visible',
 	},
 	tabModernText: {
 		fontFamily: 'Inter-Bold',
 		fontSize: 15,
 		color: '#A6A6A6',
+		flexShrink: 1, // Added to allow text to shrink if needed
+		flexWrap: 'wrap', // Added to wrap text
+		textAlign: 'center', // Added to center text
 	},
 	tabModernTextActive: {
 		color: '#FF8500',
@@ -700,11 +829,11 @@ const styles = StyleSheet.create({
 		// marginBottom: 20,
 	},
 	orderName: {
-		fontSize: 21,
+		fontSize: 17,
 		fontFamily: 'Inter-SemiBold',
 		color: '#FFFFFF',
 		marginBottom: 4,
-		textAlign: 'right',
+		textAlign: 'left',
 		// marginRight: 7,
 	},
 	orderType: {
@@ -758,15 +887,16 @@ const styles = StyleSheet.create({
 		elevation: 16,
 	},
 	extraItemsBadge: {
-		position: 'absolute',
+		// position: 'absolute',
 		top: 0,
-		right: -10,
+		// right: -10,
 		backgroundColor: '#FFCC00',
 		borderRadius: 15,
 		width: 40,
 		height: 40,
 		justifyContent: 'center',
 		alignItems: 'center',
+		alignSelf: 'flex-start',
 		zIndex: 10,
 	},
 	cardMiddleRow: {
@@ -826,5 +956,44 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 20,
 		borderBottomLeftRadius: 15,
 		borderBottomRightRadius: 15,
+	},
+	dateFilterContainer: {
+		flexDirection: 'column',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginVertical: 15,
+		gap: 10,
+	},
+	datePickersRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	datePickerButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#FFF8F0',
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		borderRadius: 20,
+	},
+	datePickerText: {
+		color: '#B76245',
+		fontFamily: 'Inter-Medium',
+		fontSize: 15,
+	},
+	clearDateButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#FFEBEE',
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: 20,
+	},
+	clearDateText: {
+		color: '#B76245',
+		fontFamily: 'Inter-Medium',
+		fontSize: 13,
+		marginLeft: 4,
 	},
 })

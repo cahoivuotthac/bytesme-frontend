@@ -14,6 +14,8 @@ export default {
 	error: "An error occurred",
 	success: "Success",
 	info: "Information",
+	goBack: "Go back",
+	clear: "Clear",
 
 	// Input email
 	socialSigninError:
@@ -465,8 +467,8 @@ export default {
 
 	// Online Payment Pending Page
 	onlinePayment: "Online payment",
-	momoPaymentMethod: "Payment with Momo wallet",
-	vnpayPaymentMethod: "Payment with VNPay wallet",
+	momoPaymentMethod: "Pay with Momo wallet",
+	vnpayPaymentMethod: "Pay with VNPay wallet",
 	processingPayment: "Please complete payment externally...",
 	paymentPendingInfo:
 		"Please complete payment through external service (e.g.: MoMo, VNPay). Don't close this page. We will update order status when payment confirmation is received.",
@@ -524,7 +526,11 @@ export default {
 	// Order history and cards
 	followOrder: "Track Order",
 	orderAgain: "Enjoy Again",
-	foodAndDrink: "Food & Drink",
+	foodAndDrink: "Food & Drinks",
+	food: "Food",
+	drink: "Drinks",
+	fromDate: 'From date',
+	toDate: 'To date',
 
 	// Order History page
 	orderHistory: "Order History",
@@ -553,4 +559,33 @@ export default {
 	productNotFoundInOrder: "Product not found: {productName}.",
 	itemOutOfStockInOrder:
 		"Sorry, product {productName} is currently out of stock.",
+
+	// Order Details
+
+	orderDetails: "Order Details",
+	track: "Track",
+	orderNumber: "Order #",
+	deliveryAddress: "Delivery Address",
+	deliverTime: "Delivery Time",
+	orderItems: "Order items",
+	size: "Size",
+	orderSummary: "Order Summary",
+	subtotal: "Subtotal",
+	deliveryFee: "Delivery Fee",
+	discount: "Discount",
+	total: "Total",
+	additionalNotes: "Additional Notes",
+	expectedDelivery: "Expected delivery",
+	saveMoney: "Save",
+	Voucher: "Voucher",
+
+	// Order cancellation and refund
+	cancelOrderTitle: 'Cancel Order',
+	cancelOrderContent: 'Are you sure you want to cancel this order?',
+	cancelOrderWithRefundContent: 'Are you sure you want to cancel this order? We will process a refund for your payment through MoMo.',
+	orderCancelledSuccess: 'Order cancelled successfully',
+	orderCancelledWithRefundSuccess: 'Order cancelled successfully. Your refund will be processed through MoMo.',
+	processingRefund: 'Processing refund...',
+	refundFailedError: 'Failed to process refund. Please contact customer support.',
+	generalError: 'An error occurred. Please try again.',
 };

@@ -14,6 +14,8 @@ export default {
 	error: "Đã có lỗi xảy ra",
 	success: "Thành công",
 	info: "Thông báo",
+	goBack: "Quay lại",
+	clear: "Xóa",
 
 	// Input email
 	socialSigninError:
@@ -320,7 +322,7 @@ export default {
 	errorFetchingCartItems:
 		"Không thể lấy thông tin giỏ hàng. Vui lòng thử lại.",
 	errorUpdatingSize: "Không thể cập nhật kích cỡ sản phẩm. Vui lòng thử lại.",
-	
+
 	// Checkout page
 	deliveryAddress: "Địa chỉ giao hàng",
 	noAddressFound: "Bạn chưa thiết lập địa chỉ giao hàng nào",
@@ -547,11 +549,15 @@ export default {
 	errorLoadingOrders: "Lỗi khi tải đơn hàng",
 	orderReorderSuccess: "Đã thêm sản phẩm vào giỏ hàng thành công",
 	errorReordering: "Lỗi khi thêm sản phẩm vào giỏ hàng",
+	fromDate: "Từ ngày",
+	toDate: "Đến ngày",
 
 	// Order history and cards
 	followOrder: "Theo dõi đơn",
 	orderAgain: "Thưởng thức lại",
 	foodAndDrink: "Đồ ăn + nước uống",
+	food: "Đồ ăn",
+	drink: "Đồ uống",
 	feedback: "Đánh giá",
 	giveFeedback: "Đánh giá",
 
@@ -562,4 +568,32 @@ export default {
 	orderNotFound: "Rất tiếc, không tìm thấy đơn hàng.",
 	itemOutOfStockInOrder:
 		"Rất tiếc, sản phẩm {productName} hiện tại đang hết hàng.",
+
+	// Order Details
+	orderDetails: "Chi tiết đơn hàng",
+	track: "Theo dõi",
+	orderNumber: "Mã đơn #",
+	deliveryAddress: "Địa chỉ giao hàng",
+	deliverTime: "Thời gian giao hàng",
+	orderItems: "Danh sách món",
+	size: "Kích thước",
+	orderSummary: "Tóm tắt đơn hàng",
+	subtotal: "Tạm tính",
+	deliveryFee: "Phí giao hàng",
+	discount: "Giảm giá",
+	total: "Tổng cộng",
+	additionalNotes: "Ghi chú thêm",
+	expectedDelivery: "Dự kiến giao hàng",
+	saveMoney: "Tiết kiệm",
+	voucher: "Mã giảm giá",
+
+	// Order cancellation and refund
+	cancelOrderTitle: 'Hủy đơn hàng',
+	cancelOrderContent: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
+	cancelOrderWithRefundContent: 'Bạn có chắc chắn muốn hủy đơn hàng này? Chúng tôi sẽ hoàn tiền qua ví MoMo cho bạn.',
+	orderCancelledSuccess: 'Đã hủy đơn hàng thành công',
+	orderCancelledWithRefundSuccess: 'Đã hủy đơn hàng thành công. Tiền sẽ được hoàn về ví MoMo của bạn.',
+	processingRefund: 'Đang xử lý hoàn tiền...',
+	refundFailedError: 'Không thể hoàn tiền. Vui lòng liên hệ hỗ trợ khách hàng.',
+	generalError: 'Đã xảy ra lỗi. Vui lòng thử lại.',
 };

@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
 		fontSize: 32,
 		color: '#27214D',
 		marginBottom: 12,
-		textAlign: 'center',
+		// textAlign: 'center',
 	},
 	messageText: {
 		fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto Condensed',
@@ -186,6 +186,8 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Medium',
 		fontSize: 16,
 		color: '#964B00', // Brown text color
+		// flexWrap: 'wrap',
+		textAlign: 'center',
 	},
 	buttonIcon: {
 		marginRight: 8,

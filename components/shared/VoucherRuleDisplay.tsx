@@ -90,8 +90,6 @@ const VoucherRuleDisplay: React.FC<VoucherRuleDisplayProps> = ({
 			return rule.message
 		}
 
-		console.log('rule', rule)
-
 		// Otherwise generate based on rule type
 		switch (rule.voucher_rule_type) {
 			case 'min_bill_price':
@@ -149,7 +147,7 @@ const VoucherRuleDisplay: React.FC<VoucherRuleDisplayProps> = ({
 			{rulesToShow.map((rule, index) => (
 				<View key={rule.voucher_rule_id || index} style={styles.ruleItem}>
 					<Ionicons
-						name={getRuleIcon(rule.voucher_rule_type)}
+						name={getRuleIcon(rule.voucher_rule_type) as any}
 						size={12}
 						color={getRuleColor(rule)}
 						style={styles.ruleIcon}
