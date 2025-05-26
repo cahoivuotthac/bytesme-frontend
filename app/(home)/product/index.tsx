@@ -231,24 +231,19 @@ const EXPLORE_PRODUCTS = [
 ]
 
 export default function ProductScreen() {
-	const [searchQuery, setSearchQuery] = useState('')
+	// const [searchQuery, setSearchQuery] = useState('')
 	const [activeCategory, setActiveCategory] = useState('all')
 	const [favorites, setFavorites] = useState<number[]>([])
 	const { t } = useTranslation()
 
 	const categoriesRef = useRef<ScrollView>(null)
 
-	// Handle search input
-	const handleSearch = (text: string) => {
-		setSearchQuery(text)
-	}
-
 	// Handle search submission
-	const handleSearchSubmit = () => {
-		if (searchQuery.trim()) {
+	const handleSearchSubmit = (isAiMode: boolean, query: string) => {
+		if (query.trim()) {
 			router.push({
 				pathname: '/(home)/product/search-results',
-				params: { query: searchQuery },
+				params: { query, isAiMode: String(isAiMode) },
 			})
 		}
 	}
@@ -297,13 +292,9 @@ export default function ProductScreen() {
 				>
 					{/* Search Section */}
 					<SearchBar
-						searchQuery={searchQuery}
-						handleInputChange={handleSearch}
 						showAiButton={true}
 						handleSearchSubmit={handleSearchSubmit}
-						handleAiButtonPress={() => {
-							router.push('/(home)/product/ai-search')
-						}}
+						handleAiButtonPress={() => {}}
 					/>
 				</LinearGradient>
 

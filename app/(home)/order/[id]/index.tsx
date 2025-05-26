@@ -366,7 +366,11 @@ export default function OrderDetailsScreen() {
 									},
 								]}
 							>
-								{orderDetails.order_is_paid ? t('paid') : t('unpaid')}
+								{orderDetails.order_status === 'cancelled'
+									? t('refunded')
+									: orderDetails.order_is_paid
+									? t('paid')
+									: t('unpaid')}
 							</Text>
 						</View>
 					</View>

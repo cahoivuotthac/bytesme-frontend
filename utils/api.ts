@@ -251,7 +251,13 @@ export const productAPI = {
 				new URLSearchParams({
 					product_id: productId.toString(),
 					limit: limit.toString(),
-				}).toString()
+				}).toString(),
+			{
+				headers: {
+					// "Content-Type": 'application/json',
+					Accept: "text/event-stream",
+				},
+			}
 		);
 	},
 
@@ -267,6 +273,20 @@ export const productAPI = {
 					offset: offset.toString(),
 					limit: limit.toString(),
 				}).toString()
+		);
+	},
+
+	// This will be used for the SSE endpoint
+	getSearchRagEndpoint: (query: string) => {
+		return (
+			URLs.serverBaseUrl +
+			"/product/search/rag?" +
+			new URLSearchParams({ query }).toString()
+		);
+	},
+	searchRag: (query: string) => {
+		return APIClient.get(
+			"/product/search/rag?" + new URLSearchParams({ query }).toString()
 		);
 	},
 };

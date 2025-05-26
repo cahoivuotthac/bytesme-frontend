@@ -56,7 +56,7 @@ export default {
 
 	// Search
 	searchProductPlaceholder: "Tìm kiếm món ngon...",
-	searchProductPlaceholderAI: "Tìm kiếm món ngon với Bytesme AI...",
+	aiSearchPlaceholder: "Tìm kiếm sản phẩm với Bytesme AI",
 	viewAll: "Xem tất cả",
 	search: "Tìm kiếm",
 	searchResults: "Kết quả tìm kiếm",
@@ -65,6 +65,11 @@ export default {
 	filter: "Lọc",
 	priceRange: "Khoảng giá",
 	productCategories: "Danh mục sản phẩm",
+	unAuthenticated: "Bạn cần đăng nhập để sử dụng tính năng này",
+	isThinking:
+		"Trợ lý Bytesme đang tìm kiếm sản phẩm phù hợp với nhu cầu của bạn",
+	isThinking: "Việc gì khó cứ để Bytesme lo ^^",
+	viewAllProducts: "Xem tất cả sản phẩm",
 
 	// Product Categories
 	all: "Tất cả",
@@ -551,6 +556,9 @@ export default {
 	errorReordering: "Lỗi khi thêm sản phẩm vào giỏ hàng",
 	fromDate: "Từ ngày",
 	toDate: "Đến ngày",
+	all: "Tất cả",
+	pending: "Đã tiếp nhận",
+	delivering: "Đang giao",
 
 	// Order history and cards
 	followOrder: "Theo dõi đơn",
@@ -586,14 +594,18 @@ export default {
 	expectedDelivery: "Dự kiến giao hàng",
 	saveMoney: "Tiết kiệm",
 	voucher: "Mã giảm giá",
+	refunded: "Đã hoàn tiền",
 
 	// Order cancellation and refund
-	cancelOrderTitle: 'Hủy đơn hàng',
-	cancelOrderContent: 'Bạn có chắc chắn muốn hủy đơn hàng này?',
-	cancelOrderWithRefundContent: 'Bạn có chắc chắn muốn hủy đơn hàng này? Chúng tôi sẽ hoàn tiền qua ví MoMo cho bạn.',
-	orderCancelledSuccess: 'Đã hủy đơn hàng thành công',
-	orderCancelledWithRefundSuccess: 'Đã hủy đơn hàng thành công. Tiền sẽ được hoàn về ví MoMo của bạn.',
-	processingRefund: 'Đang xử lý hoàn tiền...',
-	refundFailedError: 'Không thể hoàn tiền. Vui lòng liên hệ hỗ trợ khách hàng.',
-	generalError: 'Đã xảy ra lỗi. Vui lòng thử lại.',
+	cancelOrderTitle: "Hủy đơn hàng",
+	cancelOrderContent: "Bạn có chắc chắn muốn hủy đơn hàng này?",
+	cancelOrderWithRefundContent:
+		"Bạn có chắc chắn muốn hủy đơn hàng này? Chúng tôi sẽ hoàn tiền qua ví MoMo cho bạn.",
+	orderCancelledSuccess: "Đã hủy đơn hàng thành công",
+	orderCancelledWithRefundSuccess:
+		"Đã hủy đơn hàng thành công. Tiền sẽ được hoàn về ví MoMo của bạn.",
+	processingRefund: "Đang xử lý hoàn tiền...",
+	refundFailedError:
+		"Không thể hoàn tiền. Vui lòng liên hệ hỗ trợ khách hàng.",
+	generalError: "Đã xảy ra lỗi. Vui lòng thử lại.",
 };

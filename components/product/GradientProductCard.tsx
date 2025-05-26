@@ -114,7 +114,7 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 
 			{/* Card container with gradient background */}
 			<LinearGradient
-				colors={gradientColors}
+				colors={gradientColors as any}
 				style={styles.card}
 				start={{ x: 0.5, y: 0 }}
 				end={{ x: 0.5, y: 1 }}
@@ -230,7 +230,8 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 16,
-		backgroundColor: 'rgba(255,255,255,0.25)',
+		// backgroundColor: 'rgba(255,255,255,0.25)',
+		backgroundColor: 'transparent',
 		justifyContent: 'center',
 		alignItems: 'center',
 		shadowColor: '#000',

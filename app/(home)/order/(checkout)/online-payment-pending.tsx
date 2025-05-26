@@ -42,7 +42,7 @@ interface OnlinePaymentEvent {
 }
 
 export default function OnlinePaymentPendingScreen() {
-	const { t } = useTranslation()
+	const { t, locale } = useTranslation()
 	const { orderId, setOrderId } = useContext(CheckoutContext)
 	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
 		useAlert()
@@ -93,7 +93,7 @@ export default function OnlinePaymentPendingScreen() {
 	const handleCancelOrder = async () => {
 		try {
 			showConfirm(t('cancelOrderMessage'), async () => {
-				await orderAPI.cancelOrder(orderId as number)
+				await orderAPI.cancelOrder(orderId as number, locale)
 			})
 		} catch (error) {
 			console.error('Error canceling order:', error)

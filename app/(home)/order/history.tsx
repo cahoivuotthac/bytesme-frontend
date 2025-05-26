@@ -273,7 +273,7 @@ export default function OrderHistoryScreen() {
 								selectedFilter === 'all' && styles.filterChipTextActive,
 							]}
 						>
-							Tất cả
+							{t('all')}
 						</Text>
 					</TouchableOpacity>
 
@@ -290,7 +290,7 @@ export default function OrderHistoryScreen() {
 								selectedFilter === 'pending' && styles.filterChipTextActive,
 							]}
 						>
-							Đã tiếp nhận
+							{t('pending')}
 						</Text>
 					</TouchableOpacity>
 
@@ -307,11 +307,11 @@ export default function OrderHistoryScreen() {
 								selectedFilter === 'delivering' && styles.filterChipTextActive,
 							]}
 						>
-							Đang giao
+							{t('delivering')}
 						</Text>
 					</TouchableOpacity>
 
-					<TouchableOpacity
+					{/* <TouchableOpacity
 						style={[
 							styles.filterChip,
 							selectedFilter === 'delivered' && styles.filterChipActive,
@@ -326,7 +326,7 @@ export default function OrderHistoryScreen() {
 						>
 							Đã giao
 						</Text>
-					</TouchableOpacity>
+					</TouchableOpacity> */}
 				</ScrollView>
 			</View>
 		)
@@ -463,39 +463,35 @@ export default function OrderHistoryScreen() {
 				>
 					{/* Order items image display */}
 					<View style={styles.orderImagesRow}>
-						<View style={styles.orderImagesCompound}>
-							{displayItems.map((item, index) => (
-								<View
-									key={`${item.product_id}-${index}`}
-									style={[styles.dishImageContainer, { zIndex: 3 - index }]}
-								>
-									<DishDecoration
-										imageSource={{ uri: item.image_url }}
-										size={index === 0 ? 110 : 90}
-										adjustForBowl={false}
-										imageScale={1}
-										containerStyle={{ backgroundColor: '#FFFFFF' }}
-									/>
-								</View>
-							))}
-
-							{extraItemsCount > 0 && (
-								<View style={styles.extraItemsBadge}>
-									<Text style={styles.extraItemsText}>+{extraItemsCount}</Text>
-								</View>
-							)}
+						<View style={styles.orderImagesInfo}>
+							<View style={styles.orderImagesCompound}>
+								{displayItems.map((item, index) => (
+									<View
+										key={`${item.product_id}-${index}`}
+										style={[styles.dishImageContainer, { zIndex: 3 - index }]}
+									>
+										<DishDecoration
+											imageSource={{ uri: item.image_url }}
+											size={index === 0 ? 100 : 85}
+											adjustForBowl={false}
+											imageScale={1}
+											containerStyle={{ backgroundColor: '#FFFFFF' }}
+										/>
+									</View>
+								))}
+								{extraItemsCount > 0 && (
+									<View style={styles.extraItemsBadge}>
+										<Text style={styles.extraItemsText}>
+											+{extraItemsCount}
+										</Text>
+									</View>
+								)}
+							</View>
 						</View>
 
 						{/* Order ID and Date */}
 						<View style={styles.orderIdAndDate}>
-							<Text
-								style={[
-									styles.orderNumber,
-									{ textDecorationLine: 'underline', alignSelf: 'flex-end' },
-								]}
-							>
-								#{order.order_id}
-							</Text>
+							<Text style={[styles.orderNumber]}>#{order.order_id}</Text>
 							<Text style={styles.orderDate}>
 								{formatDateTime(order.created_at, locale)}
 							</Text>
@@ -681,10 +677,10 @@ const styles = StyleSheet.create({
 	orderImagesCompound: {
 		flexDirection: 'row',
 		left: -5, // Overflow order card
-		top: -20,
+		top: -50,
 		alignItems: 'center',
 		justifyContent: 'flex-start',
-		gap: -20, // Overlap images
+		gap: -30, // Overlap images
 		marginRight: 20, // Space for extra items badge
 	},
 	headerSection: {
@@ -792,11 +788,11 @@ const styles = StyleSheet.create({
 		color: '#9E9E9E',
 	},
 	ordersList: {
-		marginTop: 10,
+		marginTop: 20,
 		padding: 20,
 		paddingTop: 20,
 		paddingBottom: 100,
-		gap: 30,
+		gap: 40,
 	},
 	orderCard: {
 		borderRadius: 30,
@@ -808,19 +804,33 @@ const styles = StyleSheet.create({
 		overflow: 'visible',
 		// height: "40%"
 	},
-	orderIdAndDate: {
-		flexDirection: 'column',
+	orderImagesRow: {
+		flexDirection: 'row',
+		alignItems: 'flex-start',
 		justifyContent: 'space-between',
+		height: 70,
+		gap: 10,
+	},
+	orderImagesInfo: {
+		flex: 1,
+		flexDirection: 'row',
 		alignItems: 'center',
-		marginBottom: 8,
+		justifyContent: 'flex-start',
+		maxWidth: '60%',
+	},
+	orderIdAndDate: {
+		flexShrink: 0,
+		alignItems: 'flex-end',
+		paddingRight: 10,
 	},
 	orderNumber: {
 		fontSize: 14,
 		fontFamily: 'Inter-Medium',
 		color: '#FFFFFF',
+		marginBottom: 4,
 	},
 	orderDate: {
-		fontSize: 16,
+		fontSize: 14,
 		fontFamily: 'Inter-Medium',
 		color: '#FFFFFF',
 		textAlign: 'right',
@@ -869,12 +879,6 @@ const styles = StyleSheet.create({
 		color: '#FFFFFF',
 		textAlign: 'center',
 	},
-	orderImagesRow: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		height: 70,
-	},
 	dishImageContainer: {
 		marginLeft: -25,
 		position: 'relative',
@@ -890,6 +894,7 @@ const styles = StyleSheet.create({
 		// position: 'absolute',
 		top: 0,
 		// right: -10,
+		left: -20,
 		backgroundColor: '#FFCC00',
 		borderRadius: 15,
 		width: 40,

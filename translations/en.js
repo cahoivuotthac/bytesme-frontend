@@ -55,16 +55,21 @@ export default {
 	removeFromFavorites: "Remove from favorites",
 
 	// Search
-	searchProductPlaceholder: "Search for delicious food...",
-	searchProductPlaceholderAI: "Search for delicious food with Bytesme AI...",
-	viewAll: "View all",
+	searchProductPlaceholder: "Search for mouthwatering delights...",
+	aiSearchPlaceholder:
+		"Craving snacks? Let Bytesme’s AI assistant guide your taste buds...",
+	viewAll: "View All",
 	search: "Search",
-	searchResults: "Search results",
-	noSearchResults: "No results found",
-	tryDifferentKeywords: "Please try different keywords or check spelling.",
+	searchResults: "Search Results",
+	noSearchResults: "No Results Found",
+	tryDifferentKeywords: "Try different keywords or check your spelling.",
 	filter: "Filter",
-	priceRange: "Price range",
-	productCategories: "Product categories",
+	priceRange: "Price Range",
+	productCategories: "Product Categories",
+	unAuthenticated: "Please sign in to use this feature.",
+	isThinking:
+		"Bytesme’s assistant is searching for the perfect products to satisfy your cravings…",
+	viewAllProducts: "View all products",
 
 	// Product Categories
 	all: "All",
@@ -529,8 +534,8 @@ export default {
 	foodAndDrink: "Food & Drinks",
 	food: "Food",
 	drink: "Drinks",
-	fromDate: 'From date',
-	toDate: 'To date',
+	fromDate: "From date",
+	toDate: "To date",
 
 	// Order History page
 	orderHistory: "Order History",
@@ -551,6 +556,9 @@ export default {
 	orderReorderSuccess: "Items added to cart successfully",
 	errorReordering: "Error adding items to cart",
 	giveFeedback: "Give Feedback",
+	all: "All",
+	pending: "Processing",
+	delivering: "Delivering",
 
 	// Error handling for addItemsFromOrder
 	cartAlreadyOccupied:
@@ -561,7 +569,6 @@ export default {
 		"Sorry, product {productName} is currently out of stock.",
 
 	// Order Details
-
 	orderDetails: "Order Details",
 	track: "Track",
 	orderNumber: "Order #",
@@ -578,14 +585,18 @@ export default {
 	expectedDelivery: "Expected delivery",
 	saveMoney: "Save",
 	Voucher: "Voucher",
+	refunded: "Refunded",
 
 	// Order cancellation and refund
-	cancelOrderTitle: 'Cancel Order',
-	cancelOrderContent: 'Are you sure you want to cancel this order?',
-	cancelOrderWithRefundContent: 'Are you sure you want to cancel this order? We will process a refund for your payment through MoMo.',
-	orderCancelledSuccess: 'Order cancelled successfully',
-	orderCancelledWithRefundSuccess: 'Order cancelled successfully. Your refund will be processed through MoMo.',
-	processingRefund: 'Processing refund...',
-	refundFailedError: 'Failed to process refund. Please contact customer support.',
-	generalError: 'An error occurred. Please try again.',
+	cancelOrderTitle: "Cancel Order",
+	cancelOrderContent: "Are you sure you want to cancel this order?",
+	cancelOrderWithRefundContent:
+		"Are you sure you want to cancel this order? We will process a refund for your payment through MoMo.",
+	orderCancelledSuccess: "Order cancelled successfully",
+	orderCancelledWithRefundSuccess:
+		"Order cancelled successfully. Your refund will be processed through MoMo.",
+	processingRefund: "Processing refund...",
+	refundFailedError:
+		"Failed to process refund. Please contact customer support.",
+	generalError: "An error occurred. Please try again.",
 };
