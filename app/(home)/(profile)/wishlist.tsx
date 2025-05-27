@@ -11,11 +11,11 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
-import { getWishlist, removeFromWishlist } from '@/utils/api'
+import { cartAPI, getWishlist, removeFromWishlist } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
-import DishDecoration from '@/components/shared/DishDecoration'
 import { useTranslation } from '@/providers/locale'
 
+import DishDecoration from '@/components/shared/DishDecoration'
 const { width } = Dimensions.get('window')
 const ITEM_WIDTH = width * 0.9
 
@@ -66,7 +66,7 @@ export default function FavoritesScreen() {
 		null
 	)
 
-	const { AlertComponent, showError } = useAlert()
+	const { AlertComponent, showError, showInfo } = useAlert()
 
 	// Initialize sizes and prices of products
 	useEffect(() => {
@@ -164,8 +164,8 @@ export default function FavoritesScreen() {
 				quantity: 1, // Default to 1 when adding from wishlist
 			})
 
-			// Implement your cart addition logic here
-			// You might want to show a success toast
+			cartAPI.addItemToCart(product.productId, 1, productSizes[0])
+			showInfo(t('addedOneToCart').replace('{productName}', product.name))
 		}
 	}
 
@@ -205,7 +205,7 @@ export default function FavoritesScreen() {
 				</Text>
 
 				<View style={styles.productControls}>
-					<View style={styles.sizeSelector}>
+					{/* <View style={styles.sizeSelector}>
 						{item.sizes.map((size: string, sizeIndex: number) => (
 							<TouchableOpacity
 								key={size}
@@ -226,8 +226,8 @@ export default function FavoritesScreen() {
 									{size}
 								</Text>
 							</TouchableOpacity>
-						))}
-					</View>
+						))} */}
+					{/* </View> */}
 
 					<TouchableOpacity
 						style={styles.addToCartButton}
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
 		marginRight: 12,
 	},
 	dishContainer: {
-		backgroundColor: '#EDE9E0',
+		backgroundColor: '#FFFFFF',
 		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.2,
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
 	},
 	productControls: {
 		flexDirection: 'row',
-		justifyContent: 'space-between',
+		justifyContent: 'flex-end',
 		alignItems: 'center',
 	},
 	sizeSelector: {
@@ -374,6 +374,7 @@ const styles = StyleSheet.create({
 		width: 34,
 		height: 34,
 		borderRadius: 17,
+		alignSelf: 'flex-end',
 		backgroundColor: '#C67C4E',
 		justifyContent: 'center',
 		alignItems: 'center',

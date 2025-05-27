@@ -143,7 +143,7 @@ const GradientProductCard: React.FC<GradientProductCardProps> = ({
 						<Ionicons
 							name={isFavorite ? 'heart' : 'heart-outline'}
 							size={18}
-							color={isFavorite ? '#DF7A82' : '#FFFFFF'}
+							color={'#DF7A82'}
 						/>
 					)}
 				</TouchableOpacity>
@@ -187,7 +187,8 @@ const styles = StyleSheet.create({
 		height: CARD_WIDTH * 0.1, // Reduced height since dish is now above
 	},
 	dishContainer: {
-		backgroundColor: '#FFF8EF', // Updated to match our warm palette
+		// backgroundColor: '#FFF8EF', // Warm pallet
+		backgroundColor: 'white',
 		shadowColor: '#8A5A44',
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.4,
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
 		height: 32,
 		borderRadius: 16,
 		// backgroundColor: 'rgba(255,255,255,0.25)',
-		backgroundColor: 'transparent',
+		backgroundColor: 'beige',
 		justifyContent: 'center',
 		alignItems: 'center',
 		shadowColor: '#000',

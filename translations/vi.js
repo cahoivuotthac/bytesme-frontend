@@ -70,6 +70,7 @@ export default {
 		"Trợ lý Bytesme đang tìm kiếm sản phẩm phù hợp với nhu cầu của bạn",
 	isThinking: "Việc gì khó cứ để Bytesme lo ^^",
 	viewAllProducts: "Xem tất cả sản phẩm",
+	loadingMore: "Đang tải thêm sản phẩm...",
 
 	// Product Categories
 	all: "Tất cả",
@@ -302,6 +303,7 @@ export default {
 	noFavorites: "Chưa có sản phẩm yêu thích",
 	browseProducts: "Mua sắm ngay",
 	addAllToCart: "Thêm tất cả vào giỏ hàng",
+	addedOneToCart: "Đã thêm 1 sản phẩm {productName} vào giỏ hàng",
 	removingFromFavorites: "Đang xóa khỏi yêu thích...",
 	errorFetchingWishlist:
 		"Không thể lấy danh sách yêu thích. Vui lòng thử lại.",

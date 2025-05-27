@@ -233,23 +233,25 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 						<Text style={styles.title}>{title}</Text>
 						<View style={styles.spinnerContainer}>
 							<Text style={styles.thinkingText}>{t('isThinking')}</Text>
-							<Animated.View
-								style={[
-									styles.spinner,
-									{
-										transform: [{ rotate: spinnerRotation }],
-									},
-								]}
-							>
-								<LinearGradient
-									colors={['#4A90E2', '#00D4FF']}
-									style={styles.spinnerGradient}
-								>
-									<View style={styles.spinnerInner} />
-								</LinearGradient>
-							</Animated.View>
 						</View>
 					</View>
+
+					{/* Absolutely positioned loading spinner (at the middle of card) */}
+					<Animated.View
+						style={[
+							styles.spinner,
+							{
+								transform: [{ rotate: spinnerRotation }],
+							},
+						]}
+					>
+						<LinearGradient
+							colors={['#4A90E2', '#00D4FF']}
+							style={styles.spinnerGradient}
+						>
+							<View style={styles.spinnerInner} />
+						</LinearGradient>
+					</Animated.View>
 
 					{/* Streaming background text with continuous sliding animation */}
 					<View style={styles.streamTextContainer}>
@@ -415,6 +417,9 @@ const styles = StyleSheet.create({
 	spinner: {
 		width: 22,
 		height: 22,
+		position: 'absolute',
+		top: '60%',
+		left: '53%',
 		justifyContent: 'center',
 		alignItems: 'center',
 	},

@@ -70,6 +70,7 @@ export default {
 	isThinking:
 		"Bytesme’s assistant is searching for the perfect products to satisfy your cravings…",
 	viewAllProducts: "View all products",
+	loadingMore: "Loading more products...",
 
 	// Product Categories
 	all: "All",
@@ -303,6 +304,7 @@ export default {
 	noFavorites: "No favorite products",
 	browseProducts: "Go shopping",
 	addAllToCart: "Add all to cart",
+	addedOneToCart: "Added 1 product {productName} to cart",
 	removingFromFavorites: "Removing from favorites...",
 	errorFetchingWishlist: "Unable to get wishlist. Please try again.",
 	errorAddingToWishlist: "Unable to add to wishlist. Please try again.",

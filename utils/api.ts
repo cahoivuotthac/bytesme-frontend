@@ -289,6 +289,21 @@ export const productAPI = {
 			"/product/search/rag?" + new URLSearchParams({ query }).toString()
 		);
 	},
+
+	searchSemantics: (
+		query: string,
+		offset: number = 0,
+		limit: number = 10
+	) => {
+		return APIClient.get(
+			"/product/search/semantics?" +
+				new URLSearchParams({
+					query,
+					offset: offset.toString(),
+					limit: limit.toString(),
+				}).toString()
+		);
+	},
 };
 
 export const voucherAPI = {

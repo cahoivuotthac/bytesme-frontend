@@ -183,7 +183,7 @@ export default function ProductDetailScreen() {
 
 	// Close review image view
 	const closeReviewImageView = () => {
-		setSelectedReviewImage(null)
+		setSelectedReviewImage('')
 	}
 
 	// Handle add to cart
@@ -396,7 +396,7 @@ export default function ProductDetailScreen() {
 											style={styles.reviewImagesContainer}
 											contentContainerStyle={styles.reviewImagesContent}
 										>
-											{review.images.map((image) => (
+											{review.images.map((image: any) => (
 												<TouchableOpacity
 													key={`review-img-${image.id}`}
 													activeOpacity={0.9}

@@ -6,11 +6,15 @@ import {
 	TouchableOpacity,
 	Image,
 	Dimensions,
+	ActivityIndicator,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { formatPrice } from '@/utils/display'
 import { useTranslation } from '@/providers/locale'
+import { cartAPI } from '@/utils/api'
+import { useAlert } from '@/hooks/useAlert'
+import { LinearGradient } from 'expo-linear-gradient'
 import QuantityControl from '../ui/QuantityControl'
 
 // Get screen dimensions for responsive sizing
@@ -41,8 +45,10 @@ interface RAGProductCardProps {
 const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 	// State to track selected size index
 	const [selectedSizeIndex, setSelectedSizeIndex] = useState(0)
-	const [selectedQuantity, setSelectedQuantity] = useState(0)
-	const { locale } = useTranslation()
+	const [selectedQuantity, setSelectedQuantity] = useState(1) // Default to 1 instead of 0
+	const [addingToCart, setAddingToCart] = useState(false)
+	const { locale, t } = useTranslation()
+	const { showError, showSuccess } = useAlert()
 
 	// Parse the sizes_prices JSON string
 	const parseSizesAndPrices = () => {
@@ -82,10 +88,11 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 			const prices =
 				typeof priceValue === 'string' && priceValue.includes('|')
 					? priceValue.split('|').map((p) => parseInt(p, 10))
-					: [typeof priceValue === 'number' ? priceValue : parseInt(priceValue || '0', 10)]
-
-			console.log('Parsed sizes:', sizes)
-			console.log('Parsed prices:', prices)
+					: [
+							typeof priceValue === 'number'
+								? priceValue
+								: parseInt(priceValue || '0', 10),
+					  ]
 
 			return {
 				sizes,
@@ -104,6 +111,30 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 
 	// Get parsed sizes and prices
 	const { sizes, prices, hasMultipleSizes } = parseSizesAndPrices()
+
+	// Handle add to cart button press
+	const handleAddToCart = async () => {
+		if (selectedQuantity <= 0) {
+			showError(t('pleaseSelectQuantity'))
+			return
+		}
+
+		setAddingToCart(true)
+		try {
+			await cartAPI.addItemToCart(
+				product.product_id,
+				selectedQuantity,
+				sizes[selectedSizeIndex]
+			)
+			showSuccess(t('productAddedToCart'))
+			setSelectedQuantity(1) // Reset quantity after adding
+		} catch (error) {
+			console.error('Error adding to cart:', error)
+			showError(t('errorAddingToCart'))
+		} finally {
+			setAddingToCart(false)
+		}
+	}
 
 	const handlePress = () => {
 		// Navigate to product detail page using the product code
@@ -143,27 +174,55 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 			activeOpacity={0.9}
 		>
 			<View style={styles.card}>
-				<Image
-					source={{ uri: imageUrl }}
-					style={styles.image}
-					resizeMode="cover"
-				/>
+				<View style={styles.imageContainer}>
+					<Image
+						source={{ uri: imageUrl }}
+						style={styles.image}
+						resizeMode="cover"
+					/>
+					{product.discount_percentage && (
+						<View style={styles.discountTag}>
+							<Text style={styles.discountText}>
+								-{product.discount_percentage}%
+							</Text>
+						</View>
+					)}
+				</View>
 
 				<View style={styles.content}>
-					<View style={styles.tagContainer}>
-						<Text style={styles.tag}>{product.category_name}</Text>
-						{product.total_orders && product.total_orders > 100 && (
-							<Text style={styles.hot}>HOT</Text>
+					<View>
+						{/* Fix the category and HOT tag rendering */}
+						<View style={styles.categoryContainer}>
+							<Text style={styles.category} numberOfLines={1}>
+								{product.category_name}
+							</Text>
+							{product.total_orders && product.total_orders > 100 && (
+								<Text style={styles.hotTag}>HOT</Text>
+							)}
+						</View>
+
+						<Text style={styles.name} numberOfLines={2}>
+							{product.product_name}
+						</Text>
+
+						{/* Rating row */}
+						{formattedRating && (
+							<View style={styles.ratingRow}>
+								<Ionicons name="star" size={14} color="#FFD700" />
+								<Text style={styles.rating}>{formattedRating}</Text>
+								{product.total_ratings && (
+									<Text style={styles.ratingCount}>
+										({product.total_ratings})
+									</Text>
+								)}
+							</View>
 						)}
 					</View>
-					<Text style={styles.name} numberOfLines={2}>
-						{product.product_name}
-					</Text>
 
-					{/* Size selector if multiple sizes are available */}
+					{/* Size selection row */}
 					{hasMultipleSizes && (
-						<View style={styles.sizesContainer}>
-							{sizes.map((size, index) => (
+						<View style={styles.sizesRow}>
+							{sizes.map((size: string, index: number) => (
 								<TouchableOpacity
 									key={index}
 									style={[
@@ -185,65 +244,42 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 						</View>
 					)}
 
-					{/* Rating display if available */}
-					{formattedRating && (
-						<View style={styles.ratingContainer}>
-							<Ionicons name="star" size={14} color="#FFD700" />
-							<Text style={styles.rating}>{formattedRating}</Text>
-							{product.total_ratings && (
-								<Text style={styles.totalRating}>
-									({product.total_ratings})
-								</Text>
-							)}
-							{product.total_orders && (
-								<Text style={styles.soldCount}>
-									• Đã bán {product.total_orders}
-								</Text>
-							)}
-						</View>
-					)}
-
-					{/* Price display with discount if applicable */}
-					<View style={styles.priceContainer}>
-						{product.discount_percentage ? (
-							<>
-								<Text style={styles.price}>
-									{formatPrice(finalPrice, locale)}
-								</Text>
+					{/* Bottom row with price and controls */}
+					<View style={styles.bottomRow}>
+						<View style={styles.priceContainer}>
+							<Text style={styles.price}>
+								{formatPrice(finalPrice, locale)}
+							</Text>
+							{product.discount_percentage && (
 								<Text style={styles.originalPrice}>
 									{formatPrice(currentPrice, locale)}
 								</Text>
-								<View style={styles.discountBadge}>
-									<Text style={styles.discountText}>
-										-{product.discount_percentage}%
-									</Text>
-								</View>
-							</>
-						) : (
-							<Text style={styles.price}>
-								{formatPrice(currentPrice, locale)}
-							</Text>
-						)}
-					</View>
+							)}
+						</View>
 
-					{/* Add to cart button */}
-					{/* <TouchableOpacity style={styles.addButton}>
-						<Ionicons name="add" size={18} color="#FFFFFF" />
-					</TouchableOpacity> */}
+						<View style={styles.controls}>
+							<QuantityControl
+								value={selectedQuantity}
+								onIncrement={() => setSelectedQuantity((prev) => prev + 1)}
+								onDecrement={() =>
+									setSelectedQuantity((prev) => Math.max(prev - 1, 1))
+								}
+								style={styles.quantityControl}
+								minValue={1}
+							/>
 
-					<View style={styles.quantityControlContainer}>
-						<QuantityControl
-							value={selectedQuantity}
-							onIncrement={() => setSelectedQuantity((prev) => prev + 1)}
-							onDecrement={() =>
-								setSelectedQuantity((prev) => Math.max(prev - 1, 0))
-							}
-							// productId={product.product_id}
-							// productCode={product.product_code}
-							// size={sizes[selectedSizeIndex]}
-							// price={currentPrice}
-							// style={styles.addButton}
-						/>
+							<TouchableOpacity
+								style={styles.addButton}
+								onPress={handleAddToCart}
+								disabled={addingToCart}
+							>
+								{addingToCart ? (
+									<ActivityIndicator size="small" color="#FFFFFF" />
+								) : (
+									<Ionicons name="cart-outline" size={20} color="#FFFFFF" />
+								)}
+							</TouchableOpacity>
+						</View>
 					</View>
 				</View>
 			</View>
@@ -252,18 +288,119 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 }
 
 const styles = StyleSheet.create({
-	sizesContainer: {
+	container: {
+		width: width - 32,
+		marginHorizontal: 16,
+		marginBottom: 12,
+	},
+	card: {
 		flexDirection: 'row',
+		backgroundColor: 'white',
+		borderRadius: 16,
+		overflow: 'hidden',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.08,
+		shadowRadius: 2,
+		elevation: 2,
+		borderColor: '#E8E8E8',
+		borderWidth: 1,
+		height: 'auto', // Let content determine height
+		minHeight: 120, // Set minimum height
+	},
+	imageContainer: {
+		width: width * 0.28,
+		height: '100%', // Fill entire card height
+		position: 'relative',
+	},
+	image: {
+		width: '100%',
+		height: '100%', // Fill entire container
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+	},
+	discountTag: {
+		position: 'absolute',
+		top: 8,
+		left: 0,
+		backgroundColor: '#FF6B4E',
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+		borderTopRightRadius: 8,
+		borderBottomRightRadius: 8,
+	},
+	discountText: {
+		color: 'white',
+		fontSize: 10,
+		fontFamily: 'Inter-SemiBold',
+	},
+	content: {
+		flex: 1,
+		padding: 12,
+		justifyContent: 'space-between',
+	},
+	categoryContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 4,
+	},
+	category: {
+		fontSize: 12,
+		color: '#666',
+		fontFamily: 'Inter-Regular',
+		flex: 1,
+	},
+	hotTag: {
+		color: '#FFFFFF',
+		backgroundColor: '#FF6B4E',
+		fontSize: 10,
+		fontFamily: 'Inter-SemiBold',
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+		borderRadius: 4,
+		marginLeft: 4,
+	},
+	name: {
+		fontSize: 15,
+		fontFamily: 'Inter-SemiBold',
+		color: '#303030',
+		marginBottom: 4,
+		lineHeight: 20,
+	},
+	ratingRow: {
+		flexDirection: 'row',
+		alignItems: 'center',
 		marginBottom: 8,
+	},
+	rating: {
+		fontSize: 12,
+		color: '#303030',
+		fontFamily: 'Inter-Medium',
+		marginLeft: 4,
+	},
+	ratingCount: {
+		fontSize: 11,
+		color: '#888',
+		marginLeft: 3,
+		fontFamily: 'Inter-Regular',
+	},
+	sizesRow: {
+		flexDirection: 'row',
+		flexWrap: 'wrap',
+		marginVertical: 6,
 	},
 	sizeButton: {
 		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 4,
+		paddingVertical: 3,
+		borderRadius: 6,
 		borderWidth: 1,
-		borderColor: '#DEDEDE',
+		borderColor: '#E0E0E0',
 		marginRight: 6,
-		backgroundColor: '#F8F8F8',
+		marginBottom: 6,
+		backgroundColor: '#F9F9F9',
 	},
 	selectedSizeButton: {
 		borderColor: '#C67C4E',
@@ -271,150 +408,49 @@ const styles = StyleSheet.create({
 	},
 	sizeText: {
 		fontSize: 11,
-		fontFamily: 'Inter-Medium',
+		fontFamily: 'Inter-Regular',
 		color: '#6A6A6A',
 	},
 	selectedSizeText: {
 		color: '#C67C4E',
+		fontFamily: 'Inter-Medium',
 	},
-
-	container: {
-		width: width - 32,
-		marginHorizontal: 16,
-		marginVertical: 6,
-	},
-	card: {
+	bottomRow: {
 		flexDirection: 'row',
-		backgroundColor: '#FFFFFF',
-		borderRadius: 23,
-		// height: "40%",
-		overflow: 'hidden',
-		shadowColor: '#222',
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 4,
-		elevation: 3,
-		borderColor: '#EDC8C9', // Soft pink border
-		borderWidth: 1,
-	},
-	image: {
-		width: '30%',
-		height: '100%',
-		borderTopRightRadius: 20,
-		borderBottomRightRadius: 20,
-	},
-	content: {
-		flex: 1,
-		padding: 12,
-		position: 'relative',
-	},
-	tagContainer: {
-		flexDirection: 'row',
+		justifyContent: 'space-between',
 		alignItems: 'center',
-		marginBottom: 6,
-	},
-	tag: {
-		fontSize: 11,
-		color: '#666',
-		backgroundColor: '#F4F4F4',
-		paddingHorizontal: 8,
-		paddingVertical: 2,
-		borderRadius: 8,
-		overflow: 'hidden',
-		fontFamily: 'Inter-Regular',
-		marginRight: 6,
-	},
-	hot: {
-		fontSize: 11,
-		color: '#FFFFFF',
-		backgroundColor: '#FF6B4E',
-		paddingHorizontal: 8,
-		paddingVertical: 2,
-		borderRadius: 8,
-		overflow: 'hidden',
-		fontFamily: 'Inter-Medium',
-	},
-	name: {
-		fontSize: 15,
-		fontFamily: 'Inter-Medium',
-		color: '#303030',
-		marginBottom: 6,
-		height: 40, // Fixed height for 2 lines
-	},
-	ratingContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 6,
-	},
-	rating: {
-		fontSize: 12,
-		fontFamily: 'Inter-Medium',
-		color: '#303030',
-		marginLeft: 2,
-	},
-	totalRating: {
-		fontSize: 12,
-		fontFamily: 'Inter-Regular',
-		color: '#888',
-		marginLeft: 2,
-	},
-	soldCount: {
-		fontSize: 12,
-		fontFamily: 'Inter-Regular',
-		color: '#888',
-		marginLeft: 8,
+		marginTop: 8,
+		paddingTop: 8,
+		borderTopWidth: 1,
+		borderTopColor: '#F5F5F5',
 	},
 	priceContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginRight: 40, // Make room for the add button
+		flex: 1,
 	},
 	price: {
-		fontSize: 14,
+		fontSize: 15,
 		fontFamily: 'Inter-SemiBold',
 		color: '#C67C4E',
 	},
 	originalPrice: {
 		fontSize: 12,
-		fontFamily: 'Inter-Regular',
 		color: '#999',
 		textDecorationLine: 'line-through',
-		marginLeft: 6,
+		fontFamily: 'Inter-Regular',
 	},
-	discountBadge: {
-		backgroundColor: '#FFEBE5',
-		borderRadius: 4,
-		paddingHorizontal: 4,
-		paddingVertical: 2,
-		marginLeft: 6,
+	controls: {
+		flexDirection: 'row',
+		alignItems: 'center',
 	},
-	discountText: {
-		fontSize: 10,
-		fontFamily: 'Inter-Medium',
-		color: '#FF6B4E',
-	},
-	stockStatus: {
-		position: 'absolute',
-		bottom: 12,
-		right: 12,
-		backgroundColor: '#EFEFEF',
-		paddingHorizontal: 8,
-		paddingVertical: 4,
-		borderRadius: 4,
-	},
-	outOfStockText: {
-		fontSize: 10,
-		fontFamily: 'Inter-Medium',
-		color: '#888',
-	},
-	quantityControlContainer: {
-		position: 'absolute',
-		bottom: 12,
-		right: 20,
-		// backgroundColor: '#C67C4E',
-		width: 28,
+	quantityControl: {
 		height: 28,
-		borderRadius: 14,
+		marginRight: 8,
+	},
+	addButton: {
+		width: 36,
+		height: 36,
+		borderRadius: 18,
+		backgroundColor: '#C67C4E',
 		justifyContent: 'center',
 		alignItems: 'center',
 	},

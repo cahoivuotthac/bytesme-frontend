@@ -37,61 +37,20 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 const { width, height } = Dimensions.get('window')
 
-// Mock data for search results - in a real app, this would come from an API
-const MOCK_PRODUCTS = [
-	{
-		productId: 1,
-		name: 'Bánh xu kem',
-		price: 30000,
-		imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e',
-		isFavorite: false,
-	},
-	{
-		productId: 2,
-		name: 'Bánh sầu riêng',
-		price: 75000,
-		imageUrl: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812',
-		isFavorite: true,
-	},
-	{
-		productId: 3,
-		name: 'Bia nhiệt đới',
-		price: 30000,
-		imageUrl: 'https://images.unsplash.com/photo-1600788886242-5c96aabe3757',
-		isFavorite: false,
-	},
-	{
-		productId: 4,
-		name: 'Bánh Tiramisu',
-		price: 55000,
-		imageUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9',
-		isFavorite: true,
-		gradientColors: ['#923B3C', '#D7595B'],
-	},
-	{
-		productId: 5,
-		name: 'Xu Kem bơ nướng giòn tan',
-		price: 30000,
-		imageUrl: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e',
-		isFavorite: false,
-	},
-	{
-		productId: 6,
-		name: 'Bánh sừng bò nhân sầu riêng',
-		price: 30000,
-		imageUrl: 'https://images.unsplash.com/photo-1509365465985-25d11c17e812',
-		isFavorite: false,
-	},
-]
-
-// Filter categories
-const FILTER_CATEGORIES = [
-	{ id: 'all', name: 'all' },
-	{ id: 'coffee', name: 'coffee' },
-	{ id: 'pastry', name: 'pastry' },
-	{ id: 'tea', name: 'tea' },
-	{ id: 'colddrinks', name: 'coldDrinks' },
-	{ id: 'cake', name: 'cake' },
+const FILTER_CATEGORIES: { id: number; name: string }[] = [
+	{ id: 0, name: 'all' },
+	{ id: 1, name: 'bingsu' },
+	{ id: 3, name: 'cakesPastries' },
+	{ id: 4, name: 'layeredCakesCrispyBread' },
+	{ id: 5, name: 'bread' },
+	{ id: 6, name: 'coldCreamCakes' },
+	{ id: 7, name: 'cookies' },
+	{ id: 8, name: 'seasonalSpecial' },
+	{ id: 9, name: 'productSets' },
+	{ id: 10, name: 'icedDrinks' },
+	{ id: 11, name: 'tea' },
+	{ id: 12, name: 'chocolateCacao' },
+	{ id: 13, name: 'coffee' },
 ]
 
 // Price ranges
@@ -119,13 +78,14 @@ interface RAGProductData {
 		product_code: string
 		product_name: string
 		category_name: string
+		category_id: number
 		description: string
 		product_id: number
 		total_ratings: number
 		overall_stars: number
 		total_orders: number
 		image_url: string
-		sizes_prices: string // JSON string of sizes and prices
+		sizes_prices: Record<string, any> // JSON of sizes and prices
 		discount_percentage: number
 	}
 }
@@ -137,6 +97,22 @@ interface RAGThinkingChunk {
 }
 
 type RAGChunk = RAGTextChunk | RAGProductData | RAGThinkingChunk
+
+// Type definitions for semantic search results
+interface SemanticProductData {
+	product_code: string
+	product_name: string
+	category_id: number
+	category_name: string
+	product_id: number
+	total_ratings: number
+	overall_stars: number
+	total_orders: number
+	discount_percentage: number
+	image_url: string
+	price: string
+	is_favorited: boolean
+}
 
 export default function SearchResultsScreen() {
 	// Params
@@ -150,7 +126,6 @@ export default function SearchResultsScreen() {
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const scrollViewRef = useRef<ScrollView>(null)
 	const [isLoading, setIsLoading] = useState(false)
-	const [results, setResults] = useState<typeof MOCK_PRODUCTS>([])
 	const [activeFilter, setActiveFilter] = useState('all')
 	const [showFilterModal, setShowFilterModal] = useState(false)
 	const [showScrollButton, setShowScrollButton] = useState(false)
@@ -161,22 +136,21 @@ export default function SearchResultsScreen() {
 	const [ragAnswer, setRagAnswer] = useState('')
 	const [ragProducts, setRagProducts] = useState<RAGProductData['data'][]>([])
 	const [isStreaming, setIsStreaming] = useState(false)
-	// New state for thinking stream
 	const [thinkingText, setThinkingText] = useState('')
-	// Track if we're in the thinking phase
 	const [isThinking, setIsThinking] = useState(false)
 	const [showProducts, setShowProducts] = useState(false)
 	const [animatingProducts, setAnimatingProducts] = useState(false)
 	const productAnimRefs = useRef<Animated.Value[]>([])
-	// Add the missing reference
 	const hasCompletedAnswering = useRef(false)
 
 	// Filter states
-	const [selectedCategory, setSelectedCategory] = useState('')
+	const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+		null
+	)
 	const [selectedPriceRange, setSelectedPriceRange] = useState('')
 	const [activeFilters, setActiveFilters] = useState<
 		{
-			id: string
+			id: string | number
 			type: 'category' | 'price'
 			name: string
 		}[]
@@ -184,6 +158,20 @@ export default function SearchResultsScreen() {
 
 	// Auth context
 	const { authState } = useAuth()
+
+	// Simplified state for semantic search results
+	const [semanticResults, setSemanticResults] = useState<SemanticProductData[]>(
+		[]
+	)
+	const [filteredResults, setFilteredResults] = useState<SemanticProductData[]>(
+		[]
+	)
+
+	// Add pagination state for semantic search
+	const [hasMore, setHasMore] = useState(false)
+	const [currentOffset, setCurrentOffset] = useState(0)
+	const [isLoadingMore, setIsLoadingMore] = useState(false)
+	const ITEMS_PER_PAGE = 10
 
 	// Search initial results on page load
 	useEffect(() => {
@@ -200,10 +188,22 @@ export default function SearchResultsScreen() {
 	}, [])
 
 	const performSearch = async (isAiMode: boolean, query: string) => {
+		console.log('Performing search:', { isAiMode, query })
+		// Reset pagination state when performing a new search
+		setCurrentOffset(0)
+		setHasMore(false)
+		setSemanticResults([])
+		setFilteredResults([])
+
+		if (!query) {
+			console.log('Empty query, skipping search')
+			return
+		}
+
 		if (isAiMode) {
 			performRagSearch(query)
 		} else {
-			performNormalSearch(query)
+			performNormalSearch(query, 0, true)
 		}
 	}
 
@@ -260,8 +260,13 @@ export default function SearchResultsScreen() {
 						setTimeout(() => {
 							// Initialize animation values for each product
 							if (ragProducts.length > 0) {
-								console.log('Preparing to show products, count:', ragProducts.length)
-								productAnimRefs.current = ragProducts.map(() => new Animated.Value(0))
+								console.log(
+									'Preparing to show products, count:',
+									ragProducts.length
+								)
+								productAnimRefs.current = ragProducts.map(
+									() => new Animated.Value(0)
+								)
 								hasCompletedAnswering.current = true
 								setShowProducts(true)
 								setAnimatingProducts(true)
@@ -319,33 +324,167 @@ export default function SearchResultsScreen() {
 		}
 	}
 
-	const performNormalSearch = async (query: string) => {
-		setIsLoading(true)
+	const performNormalSearch = async (
+		query: string,
+		offset: number = 0,
+		shouldReplace: boolean = true
+	) => {
+		if (offset === 0) {
+			setIsLoading(true)
+		} else {
+			setIsLoadingMore(true)
+		}
 
 		try {
-			// Simulate network request
-			await new Promise((resolve) => setTimeout(resolve, 600))
-
-			// Filter products based on query (case insensitive)
-			const filtered = MOCK_PRODUCTS.filter((product) =>
-				product.name.toLowerCase().includes(query.toLowerCase())
+			console.log(
+				'API Call - Query:',
+				query,
+				'Offset:',
+				offset,
+				'Limit:',
+				ITEMS_PER_PAGE
 			)
 
-			setResults(filtered)
+			const response = await productAPI.searchSemantics(
+				query,
+				offset,
+				ITEMS_PER_PAGE
+			)
+
+			if (response.data?.products && Array.isArray(response.data.products)) {
+				const searchResults = response.data.products as SemanticProductData[]
+				const hasMoreFromAPI = response.data.has_more || false
+
+				console.log(
+					'API Response - Products count:',
+					searchResults.length,
+					'Has more:',
+					hasMoreFromAPI
+				)
+				console.log(
+					'API Response - Product IDs:',
+					searchResults.map((p) => p.product_id)
+				)
+
+				let allSemanticResults: SemanticProductData[]
+
+				if (shouldReplace) {
+					allSemanticResults = searchResults
+					setSemanticResults(searchResults)
+					setCurrentOffset(searchResults.length)
+				} else {
+					// Check for duplicates before appending
+					const existingIds = new Set(semanticResults.map((p) => p.product_id))
+					const newUniqueResults = searchResults.filter(
+						(p) => !existingIds.has(p.product_id)
+					)
+
+					console.log('Existing IDs:', Array.from(existingIds))
+					console.log('New unique results count:', newUniqueResults.length)
+
+					allSemanticResults = [...semanticResults, ...newUniqueResults]
+					setSemanticResults(allSemanticResults)
+					setCurrentOffset(allSemanticResults.length)
+				}
+
+				setHasMore(hasMoreFromAPI)
+
+				// Apply any active filters to all results
+				const filtered = applyActiveFilters(allSemanticResults)
+				setFilteredResults(filtered)
+			} else {
+				// Handle empty or invalid response
+				if (shouldReplace) {
+					setSemanticResults([])
+					setFilteredResults([])
+					setHasMore(false)
+					setCurrentOffset(0)
+				}
+			}
 		} catch (error) {
+			console.error('Semantic search error:', error)
 			showError(t('errorRetry'))
-			console.error('Search error:', error)
+
+			// Reset results on error only if it's the first load
+			if (shouldReplace) {
+				setSemanticResults([])
+				setFilteredResults([])
+				setHasMore(false)
+				setCurrentOffset(0)
+			}
 		} finally {
-			setIsLoading(false)
+			if (offset === 0) {
+				setIsLoading(false)
+			} else {
+				setIsLoadingMore(false)
+			}
 		}
 	}
 
+	// Function to load more results
+	const loadMoreResults = async () => {
+		if (!hasMore || isLoadingMore || isLoading) {
+			console.log('Load more blocked:', { hasMore, isLoadingMore, isLoading })
+			return
+		}
+
+		console.log('Loading more results with offset:', currentOffset)
+		await performNormalSearch(currentQuery, currentOffset, false)
+	}
+
+	// Update applyActiveFilters to work with category IDs
+	const applyActiveFilters = (
+		products: SemanticProductData[]
+	): SemanticProductData[] => {
+		if (activeFilters.length === 0) {
+			return products
+		}
+
+		let filtered = [...products]
+
+		// Apply category filter using category_id
+		const categoryFilter = activeFilters.find((f) => f.type === 'category')
+		if (categoryFilter) {
+			filtered = filtered.filter((product) => {
+				// Use category_id for filtering instead of category_name
+				return product.category_id === categoryFilter.id
+			})
+		}
+
+		// Apply price filter
+		const priceFilter = activeFilters.find((f) => f.type === 'price')
+		if (priceFilter) {
+			const priceRange = PRICE_RANGES.find((p) => p.id === priceFilter.id)
+			if (priceRange) {
+				filtered = filtered.filter((product) => {
+					const productPrice = parseInt(product.price)
+					return (
+						productPrice >= priceRange.min && productPrice <= priceRange.max
+					)
+				})
+			}
+		}
+
+		return filtered
+	}
+
+	// Toggle favorite status of a product - now works with semanticResults
 	const toggleFavorite = (productId: number) => {
-		setResults((prev) =>
+		// Update the semantic results
+		setSemanticResults((prev) =>
 			prev.map((product) =>
-				product.productId === productId
-					? { ...product, isFavorite: !product.isFavorite }
-					: product
+				product.product_id === productId
+					? { ...product }
+					: { ...product, is_favorited: !product.is_favorited }
+			)
+		)
+
+		// Update filtered results if they exist
+		setFilteredResults((prev) =>
+			prev.map((product) =>
+				product.product_id === productId
+					? { ...product, isFavorite: !product.is_favorited }
+					: { ...product, isFavorite: product.is_favorited || false }
 			)
 		)
 	}
@@ -391,8 +530,10 @@ export default function SearchResultsScreen() {
 		const newActiveFilters = []
 
 		// Add category filter if selected
-		if (selectedCategory && selectedCategory !== 'all') {
-			const category = FILTER_CATEGORIES.find((c) => c.id === selectedCategory)
+		if (selectedCategoryId && selectedCategoryId !== 0) {
+			const category = FILTER_CATEGORIES.find(
+				(c) => c.id === selectedCategoryId
+			)
 			if (category) {
 				newActiveFilters.push({
 					id: category.id,
@@ -420,104 +561,137 @@ export default function SearchResultsScreen() {
 		// Close modal
 		closeFilterModal()
 
-		// In a real app, you would filter search results here
-		filterResults()
+		// Apply filters to current semantic results using the NEW filters (not the state)
+		if (!isRagMode && semanticResults.length > 0) {
+			console.log(
+				'Actually applying filters to semantic results with new filters:',
+				newActiveFilters
+			)
+			const filtered = applyActiveFiltersWithProvidedFilters(
+				semanticResults,
+				newActiveFilters
+			)
+			setFilteredResults(filtered)
+		}
 	}
 
-	// Filter results based on active filters
-	const filterResults = () => {
-		// if (activeFilters.length === 0) {
-		// 	// Reset to original search results if no active filters
-		// 	performNormalSearch(searchQuery)
-		// 	return
-		// }
-		// setIsLoading(true)
-		// Simulate filtering with delay
-		// setTimeout(() => {
-		// 	let filtered = [...MOCK_PRODUCTS]
-		// 	// Filter by search query
-		// 	if (searchQuery.trim()) {
-		// 		filtered = filtered.filter((product) =>
-		// 			product.name.toLowerCase().includes(searchQuery.toLowerCase())
-		// 		)
-		// 	}
-		// 	// Apply category filter
-		// 	const categoryFilter = activeFilters.find((f) => f.type === 'category')
-		// 	if (categoryFilter) {
-		// 		// In a real app, filter by category here
-		// 		// This is just a simulation
-		// 	}
-		// 	// Apply price filter
-		// 	const priceFilter = activeFilters.find((f) => f.type === 'price')
-		// 	if (priceFilter) {
-		// 		const priceRange = PRICE_RANGES.find((p) => p.id === priceFilter.id)
-		// 		if (priceRange) {
-		// 			filtered = filtered.filter(
-		// 				(product) =>
-		// 					product.price >= priceRange.min && product.price <= priceRange.max
-		// 			)
-		// 		}
-		// 	}
-		// 	setResults(filtered)
-		// 	setIsLoading(false)
-		// }, 500)
+	// Create a version of applyActiveFilters that accepts filters as parameter
+	const applyActiveFiltersWithProvidedFilters = (
+		products: SemanticProductData[],
+		filters: typeof activeFilters
+	): SemanticProductData[] => {
+		if (filters.length === 0) {
+			return products
+		}
+
+		let filtered = [...products]
+
+		// Apply category filter using category_id
+		const categoryFilter = filters.find((f) => f.type === 'category')
+		if (categoryFilter) {
+			filtered = filtered.filter((product) => {
+				// Use category_id for filtering instead of category_name
+				return product.category_id === categoryFilter.id
+			})
+		}
+
+		// Apply price filter
+		const priceFilter = filters.find((f) => f.type === 'price')
+		if (priceFilter) {
+			const priceRange = PRICE_RANGES.find((p) => p.id === priceFilter.id)
+			if (priceRange) {
+				filtered = filtered.filter((product) => {
+					const productPrice = parseInt(product.price)
+					return (
+						productPrice >= priceRange.min && productPrice <= priceRange.max
+					)
+				})
+			}
+		}
+
+		return filtered
 	}
 
 	// Remove a specific filter
-	const removeFilter = (filterId: string) => {
-		setActiveFilters((prev) => prev.filter((filter) => filter.id !== filterId))
+	const removeFilter = (filterId: string | number) => {
+		const newActiveFilters = activeFilters.filter(
+			(filter) => filter.id !== filterId
+		)
+		setActiveFilters(newActiveFilters)
 
 		// Reset the corresponding filter state
-		if (filterId === selectedCategory) {
-			setSelectedCategory('')
+		if (filterId === selectedCategoryId) {
+			setSelectedCategoryId(null)
 		} else if (filterId === selectedPriceRange) {
 			setSelectedPriceRange('')
 		}
 
-		// Re-filter results
-		filterResults()
+		// Re-apply remaining filters to semantic results using the NEW filters
+		if (!isRagMode && semanticResults.length > 0) {
+			const filtered = applyActiveFiltersWithProvidedFilters(
+				semanticResults,
+				newActiveFilters
+			)
+			setFilteredResults(filtered)
+		}
 	}
 
-	// Clear all filters
-	// const clearAllFilters = () => {
-	// 	setActiveFilters([])
-	// 	setSelectedCategory('')
-	// 	setSelectedPriceRange('')
+	// Add function to clear all filters
+	const clearAllFilters = () => {
+		setActiveFilters([])
+		setSelectedCategoryId(null)
+		setSelectedPriceRange('')
 
-	// 	// Reset to original search results
-	// 	performSearch(searchQuery)
-	// }
+		// Reset to original search results without filters
+		if (!isRagMode && semanticResults.length > 0) {
+			setFilteredResults([]) // Clear filtered results to show all semantic results
+		}
+	}
 
+	// Update the refreshResults function to reset offset properly
 	const refreshResults = async () => {
-		// Apply current filters to refresh results
+		if (!currentQuery) {
+			console.log('No query to refresh results for')
+			return
+		}
+		console.log('Refreshing results')
+		setCurrentOffset(0)
+		setHasMore(false)
+		setSemanticResults([])
+		setFilteredResults([])
 		setIsLoading(true)
 
-		// Wait for search to complete
 		try {
-			if (isRagMode) {
-				await performRagSearch(currentQuery)
-			} else {
-				await performNormalSearch(currentQuery)
-				filterResults()
-			}
+			performSearch(isRagMode, currentQuery)
 		} catch (error) {
 			console.error('Error refreshing results:', error)
 			showError(t('errorRetry'))
 		} finally {
-			// Use a shorter timeout for better UX
 			setIsLoading(false)
 		}
 	}
+
+	// Convert semantic product to UI format for rendering
+	const convertToUIFormat = (product: SemanticProductData) => ({
+		productId: product.product_id,
+		name: product.product_name,
+		price: parseInt(product.price),
+		imageUrl: product.image_url,
+		isFavorite: product.is_favorited || false,
+		gradientColors: undefined,
+	})
 
 	const renderItem = ({
 		item,
 		index,
 	}: {
-		item: (typeof MOCK_PRODUCTS)[0]
+		item: SemanticProductData
 		index: number
 	}) => {
 		// Calculate grid positioning
 		const isEven = index % 2 === 0
+		const uiProduct = convertToUIFormat(item)
+
 		return (
 			<View
 				style={[
@@ -526,7 +700,7 @@ export default function SearchResultsScreen() {
 				]}
 			>
 				<GradientProductCard
-					product={item}
+					product={uiProduct}
 					onToggleFavorite={toggleFavorite}
 					style={styles.productCard}
 				/>
@@ -555,17 +729,17 @@ export default function SearchResultsScreen() {
 	// Add debounce mechanism
 	const isCheckingScroll = useRef(false)
 	const scrollTimer = useRef<NodeJS.Timeout | null>(null)
-	const buttonAnimInProgress = useRef(false);
+	const buttonAnimInProgress = useRef(false)
 
 	// Function to show scroll-to-bottom button with animation
 	const showScrollToBottomButton = () => {
 		// Prevent animation interruption if already showing
-		if (showScrollButton || buttonAnimInProgress.current) return;
-		
+		if (showScrollButton || buttonAnimInProgress.current) return
+
 		console.log('Showing scroll button')
-		buttonAnimInProgress.current = true;
+		buttonAnimInProgress.current = true
 		setShowScrollButton(true)
-		
+
 		// Reset animation value before animating
 		scrollButtonAnim.setValue(0)
 		Animated.timing(scrollButtonAnim, {
@@ -573,23 +747,23 @@ export default function SearchResultsScreen() {
 			duration: 300,
 			useNativeDriver: true,
 		}).start(() => {
-			buttonAnimInProgress.current = false;
+			buttonAnimInProgress.current = false
 		})
 	}
 
 	// Function to hide scroll-to-bottom button with animation
 	const hideScrollToBottomButton = () => {
 		// Prevent animation interruption if already hiding
-		if (!showScrollButton || buttonAnimInProgress.current) return;
-		
-		buttonAnimInProgress.current = true;
+		if (!showScrollButton || buttonAnimInProgress.current) return
+
+		buttonAnimInProgress.current = true
 		Animated.timing(scrollButtonAnim, {
 			toValue: 0,
 			duration: 300,
 			useNativeDriver: true,
 		}).start(() => {
 			setShowScrollButton(false)
-			buttonAnimInProgress.current = false;
+			buttonAnimInProgress.current = false
 		})
 	}
 
@@ -611,8 +785,9 @@ export default function SearchResultsScreen() {
 			const paddingToBottom = 200
 
 			// Make visibility decision more stable by using a higher threshold
-			const distanceFromBottom = contentSize.height - layoutMeasurement.height - contentOffset.y;
-			
+			const distanceFromBottom =
+				contentSize.height - layoutMeasurement.height - contentOffset.y
+
 			if (
 				distanceFromBottom > paddingToBottom &&
 				showProducts &&
@@ -632,13 +807,13 @@ export default function SearchResultsScreen() {
 	const checkScrollPosition = ({ nativeEvent }) => {
 		debouncedScrollCheck(nativeEvent)
 	}
-	
+
 	// Function to scroll to bottom smoothly
 	const scrollToBottom = () => {
 		if (scrollViewRef.current) {
 			// Get the ScrollView instance and scroll to end with animation
 			scrollViewRef.current.scrollToEnd({ animated: true })
-			
+
 			// Hide the button after scrolling starts, with a delay to let animation begin
 			setTimeout(() => {
 				hideScrollToBottomButton()
@@ -652,7 +827,7 @@ export default function SearchResultsScreen() {
 			if (scrollTimer.current) {
 				clearTimeout(scrollTimer.current)
 			}
-			buttonAnimInProgress.current = false;
+			buttonAnimInProgress.current = false
 		}
 	}, [])
 
@@ -720,6 +895,40 @@ export default function SearchResultsScreen() {
 		}
 	}
 
+	// Handle end reached for FlatList
+	const handleEndReached = () => {
+		if (!isRagMode && hasMore && !isLoadingMore && !isLoading) {
+			console.log('Loading more results...', {
+				hasMore,
+				isLoadingMore,
+				isLoading,
+			})
+			loadMoreResults()
+		}
+	}
+
+	// Add render footer component for loading more indicator
+	const renderFooter = () => {
+		if (!isLoadingMore) return null
+
+		return (
+			<View style={styles.loadingMoreContainer}>
+				<ActivityIndicator size="small" color="#C67C4E" />
+				<Text style={styles.loadingMoreText}>{t('loadingMore')}</Text>
+			</View>
+		)
+	}
+
+	// Determine which results to display
+	const displayResults = (() => {
+		// If there are active filters, always show filtered results (even if empty)
+		if (activeFilters.length > 0) {
+			return filteredResults
+		}
+		// If no active filters, show all semantic results
+		return semanticResults
+	})()
+
 	return (
 		<LinearGradient
 			colors={['#FFFFFF', '#EDC8C9']}
@@ -747,7 +956,6 @@ export default function SearchResultsScreen() {
 					handleInputChange={setCurrentQuery}
 					handleSearchSubmit={performSearch}
 					showAiButton={true}
-					// handleAiButtonPress={toggleRagMode}
 					handleFilterPress={openFilterModal}
 					showFiltersButton={!isRagMode} // Hide filters button in RAG mode
 					isInitiallyAiMode={isRagMode}
@@ -837,7 +1045,10 @@ export default function SearchResultsScreen() {
 											{ marginBottom: 12 },
 											showProducts
 												? getProductAnimatedStyle(index)
-												: { opacity: 0, transform: [{ translateY: 50 }, { scale: 0.92 }] },
+												: {
+														opacity: 0,
+														transform: [{ translateY: 50 }, { scale: 0.92 }],
+												  },
 										]}
 									>
 										<RAGProductCard product={product} />
@@ -902,16 +1113,26 @@ export default function SearchResultsScreen() {
 							</TouchableOpacity>
 						</Animated.View>
 					</View>
-				) : // Normal search results
-				results.length > 0 ? (
+				) : // Normal search results with infinite scrolling
+				displayResults.length > 0 ? (
 					<FlatList
-						data={results}
+						data={displayResults}
 						renderItem={renderItem}
-						keyExtractor={(item) => item.productId.toString()}
+						keyExtractor={(item, index) =>
+							`product-${item.product_id}-${index}`
+						}
 						numColumns={2}
 						showsVerticalScrollIndicator={false}
 						contentContainerStyle={styles.resultsContainer}
 						columnWrapperStyle={styles.row}
+						onEndReached={handleEndReached}
+						onEndReachedThreshold={0.1}
+						ListFooterComponent={renderFooter}
+						removeClippedSubviews={false}
+						initialNumToRender={10}
+						maxToRenderPerBatch={10}
+						updateCellsBatchingPeriod={50}
+						windowSize={10}
 					/>
 				) : (
 					renderEmptyState()
@@ -949,19 +1170,19 @@ export default function SearchResultsScreen() {
 											{t('productCategories').toUpperCase()}
 										</Text>
 										<View style={styles.filterOptionsContainer}>
-											{FILTER_CATEGORIES.filter((cat) => cat.id !== 'all').map(
+											{FILTER_CATEGORIES.filter((cat) => cat.id !== null).map(
 												(category) => (
 													<TouchableOpacity
 														key={category.id}
 														style={[
 															styles.checkboxContainer,
-															selectedCategory === category.id &&
+															selectedCategoryId === category.id &&
 																styles.selectedCheckbox,
 														]}
 														onPress={() =>
-															setSelectedCategory(
-																selectedCategory === category.id
-																	? ''
+															setSelectedCategoryId(
+																selectedCategoryId === category.id
+																	? null
 																	: category.id
 															)
 														}
@@ -969,11 +1190,11 @@ export default function SearchResultsScreen() {
 														<View
 															style={[
 																styles.checkbox,
-																selectedCategory === category.id &&
+																selectedCategoryId === category.id &&
 																	styles.checkboxChecked,
 															]}
 														>
-															{selectedCategory === category.id && (
+															{selectedCategoryId === category.id && (
 																<Ionicons
 																	name="checkmark"
 																	size={16}
@@ -1198,6 +1419,7 @@ const styles = StyleSheet.create({
 		borderColor: '#B17F59',
 		borderStyle: 'dashed',
 		marginHorizontal: 'auto',
+		marginBottom: 8,
 		alignSelf: 'center',
 		width: '80%',
 		height: 'auto',
@@ -1236,7 +1458,7 @@ const styles = StyleSheet.create({
 		backgroundColor: '#FFFFFF',
 		justifyContent: 'center',
 		alignItems: 'center',
-		marginLeft: 8,
+		marginLeft: 10,
 		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.15,
@@ -1380,7 +1602,7 @@ const styles = StyleSheet.create({
 	},
 	scrollToBottomButtonText: {
 		fontFamily: 'Inter-Medium',
-		fontSize: 14,
+		fontSize: 13,
 		color: '#FFFFFF',
 		marginRight: 8,
 	},
@@ -1393,5 +1615,16 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: '#999',
 		fontStyle: 'italic',
+	},
+	loadingMoreContainer: {
+		paddingVertical: 20,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	loadingMoreText: {
+		marginTop: 8,
+		fontSize: 14,
+		fontFamily: 'Inter-Regular',
+		color: '#6A6A6A',
 	},
 })
