@@ -14,6 +14,50 @@ interface RAGResponseBubbleProps {
 }
 
 /**
+ * Parses text for basic markdown-style formatting
+ * @param text The input text to parse
+ * @returns Array of formatted text segments with type and content
+ */
+const parseFormattedText = (text: string) => {
+	// Regex to match markdown-style bold text (**bold**)
+	const boldRegex = /\*\*(.*?)\*\*/g
+	
+	let lastIndex = 0
+	const segments = []
+	let match
+	
+	// Find all bold segments
+	while ((match = boldRegex.exec(text)) !== null) {
+		// Add any regular text before this match
+		if (match.index > lastIndex) {
+			segments.push({
+				type: 'regular',
+				content: text.substring(lastIndex, match.index)
+			})
+		}
+		
+		// Add the bold text without the ** markers
+		segments.push({
+			type: 'bold',
+			content: match[1]
+		})
+		
+		// Update lastIndex to continue after this match
+		lastIndex = match.index + match[0].length
+	}
+	
+	// Add any remaining text after the last match
+	if (lastIndex < text.length) {
+		segments.push({
+			type: 'regular',
+			content: text.substring(lastIndex)
+		})
+	}
+	
+	return segments
+}
+
+/**
  * A tech-inspired transparent bubble that displays AI response with word-by-word streaming animation
  */
 const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
@@ -22,6 +66,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 }) => {
 	const [displayedText, setDisplayedText] = useState('')
 	const [wordIndex, setWordIndex] = useState(0)
+	const [formattedSegments, setFormattedSegments] = useState<Array<{type: string, content: string}>>([])
 	
 	// Animation refs
 	const fadeAnim = useRef(new Animated.Value(0)).current
@@ -67,6 +112,8 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 				const timer = setTimeout(() => {
 					setDisplayedText(prev => {
 						const newText = prev + (prev ? ' ' : '') + words[wordIndex]
+						// Parse formatted text whenever we update displayed text
+						setFormattedSegments(parseFormattedText(newText))
 						return newText
 					})
 					setWordIndex(prev => prev + 1)
@@ -83,6 +130,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 	useEffect(() => {
 		setDisplayedText('')
 		setWordIndex(0)
+		setFormattedSegments([])
 	}, [text])
 
 	// Cursor blinking animation
@@ -122,6 +170,35 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 		inputRange: [0, 0.5, 1],
 		outputRange: ['rgba(0, 212, 255, 0.3)', 'rgba(124, 58, 237, 0.3)', 'rgba(0, 212, 255, 0.3)'],
 	})
+
+	// Render formatted text segments
+	const renderFormattedText = () => {
+		return (
+			<Text style={styles.streamingText}>
+				{formattedSegments.map((segment, index) => (
+					<Text 
+						key={index} 
+						style={segment.type === 'bold' ? styles.boldText : undefined}
+					>
+						{segment.content}
+					</Text>
+				))}
+				
+				{(isLoading || wordIndex < words.length) && (
+					<Animated.Text
+						style={[
+							styles.cursor,
+							{
+								opacity: cursorOpacity,
+							},
+						]}
+					>
+						▊
+					</Animated.Text>
+				)}
+			</Text>
+		)
+	}
 
 	return (
 		<Animated.View
@@ -172,23 +249,9 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 						<Text style={styles.aiLabel}>AI</Text>
 					</View>
 
-					{/* Streaming text */}
+					{/* Streaming text with formatting */}
 					<View style={styles.textContainer}>
-						<Text style={styles.streamingText}>
-							{displayedText}
-							{(isLoading || wordIndex < words.length) && (
-								<Animated.Text
-									style={[
-										styles.cursor,
-										{
-											opacity: cursorOpacity,
-										},
-									]}
-								>
-									▊
-								</Animated.Text>
-							)}
-						</Text>
+						{renderFormattedText()}
 					</View>
 				</View>
 
@@ -323,6 +386,10 @@ const styles = StyleSheet.create({
 		color: '#1E293B',
 		lineHeight: 22,
 		letterSpacing: 0.3,
+	},
+	boldText: {
+		fontFamily: 'Inter-SemiBold',
+		fontWeight: '600',
 	},
 	cursor: {
 		color: '#00D4FF',
