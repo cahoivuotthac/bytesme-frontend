@@ -106,8 +106,8 @@ const DiscountProductCard: React.FC<DiscountProductCardProps> = ({
 			<View style={styles.discountBadgeContainer}>
 				<Svg
 					// xmlns="http://www.w3.org/2000/svg"
-					width={CARD_WIDTH * 0.36}
-					height={CARD_WIDTH * 0.36}
+					width={CARD_WIDTH * 0.5}
+					height={CARD_WIDTH * 0.5}
 				>
 					{/* <title>{t('discount')}</title> */}
 					<G id="sale_fill" fill="none" fillRule="evenodd">
@@ -242,11 +242,12 @@ const styles = StyleSheet.create({
 	},
 	discountText: {
 		position: 'absolute',
-		top: 10,
-		left: 12,
-		color: '#FFFFFF',
+		top: 16,
+		left: 8,
+		color: '#FF9F67',
+		elevation: 8,
 		fontFamily: 'Inter-Bold',
-		fontSize: 14,
+		fontSize: 17,
 	},
 	infoContainer: {
 		paddingHorizontal: 6,

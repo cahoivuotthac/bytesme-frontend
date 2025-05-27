@@ -628,4 +628,8 @@ export default {
 	freshPastriesDesc: "New bakery items just arrived",
 	craftBeveragesTitle: "Craft Beverages",
 	craftBeveragesDesc: "Handcrafted with love",
+	mostLovedByCustomers: "Most loved by customers",
+	topChoice: "Top Choice",
+	orders: "orders",
+	sold: "sold",
 };

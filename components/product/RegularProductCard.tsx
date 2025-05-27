@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
 		height: CARD_WIDTH * 0.23, // Reduced height since dish is now above
 	},
 	dishContainer: {
-		backgroundColor: '#FFF8EF', // Updated to match our warm palette
+		// backgroundColor: '#FFF8EF', // Updated to match our warm palette
 		shadowColor: '#896450',
 		shadowOffset: { width: 0, height: 6 },
 		shadowOpacity: 0.35,

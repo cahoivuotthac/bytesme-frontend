@@ -362,6 +362,13 @@ export default function ProductScreen() {
 		</View>
 	)
 
+	// Helper function for ranking badge colors
+	const getRankingBadgeColor = (rank: number) => {
+		if (rank === 2) return { backgroundColor: '#C0C0C0' } // Silver
+		if (rank === 3) return { backgroundColor: '#CD7F32' } // Bronze
+		return { backgroundColor: '#8B6F47' } // Brown for others
+	}
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<StatusBar barStyle="dark-content" backgroundColor="#F8E8D8" />
@@ -448,35 +455,172 @@ export default function ProductScreen() {
 						</BlurView>
 					</View>
 
-					{/* Enhanced Featured Banner Carousel */}
+					{/* Featured Banner Carousel */}
 					<FeaturedBannerCarousel />
 
-					{/* Best-selling Products */}
+					{/* Best-selling Products - Premium Section */}
 					{homepageData?.best_sellers &&
 						homepageData.best_sellers.length > 0 && (
-							<View style={styles.sectionContainer}>
-								<SectionHeader
-									title={t('bestSellers')}
-									icon="trending-up"
-									onViewAll={() =>
-										router.push('/(home)/product/sections/featured')
-									}
-								/>
+							<View style={[styles.sectionContainer, styles.bestSellerSection]}>
+								{/* Premium Header with Crown Icon and Statistics */}
+								<View style={styles.bestSellerHeader}>
+									<View style={styles.bestSellerTitleSection}>
+										<View style={styles.crownIconContainer}>
+											<Ionicons name="diamond" size={26} color="#FFD700" />
+											<View style={styles.crownGlow} />
+										</View>
+										<View style={styles.bestSellerTitleWrapper}>
+											<Text style={styles.bestSellerTitle}>{t('bestSellers')}</Text>
+											<Text style={styles.bestSellerSubtitle}>
+												{t('mostLovedByCustomers')}
+											</Text>
+										</View>
+									</View>
+									
+									<TouchableOpacity 
+										style={styles.premiumViewAllButton} 
+										onPress={() => router.push('/(home)/product/sections/featured')}
+									>
+										<Text style={styles.premiumViewAllText}>{t('viewAll')}</Text>
+										<View style={styles.viewAllArrowContainer}>
+											<MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />
+										</View>
+									</TouchableOpacity>
+								</View>
 
+								{/* Featured Best Seller Card */}
+								{homepageData.best_sellers[0] && (
+									<View style={styles.featuredBestSellerContainer}>
+										<TouchableOpacity
+											style={styles.featuredBestSellerCard}
+											onPress={() =>
+												router.push({
+													pathname: '/(home)/product/[id]',
+													params: { id: homepageData.best_sellers[0].product_id },
+												})
+											}
+											activeOpacity={0.9}
+										>
+											<LinearGradient
+												colors={['#C67C4E', '#8B5A3C', '#6B4423']}
+												style={styles.featuredBestSellerGradient}
+												start={{ x: 0, y: 0 }}
+												end={{ x: 1, y: 1 }}
+											/>
+											
+											{/* Crown Badge */}
+											<View style={styles.crownBadge}>
+												<Ionicons name="diamond" size={16} color="#FFD700" />
+												<Text style={styles.crownBadgeText}>{t('topChoice')}</Text>
+											</View>
+											
+											{/* Product Image */}
+											<View style={styles.featuredBestSellerImageContainer}>
+												<Image
+													source={{ uri: homepageData.best_sellers[0].product_image_url }}
+													style={styles.featuredBestSellerImage}
+													resizeMode="cover"
+												/>
+											</View>
+											
+											{/* Content */}
+											<View style={styles.featuredBestSellerContent}>
+												<Text style={styles.featuredBestSellerName} numberOfLines={2}>
+													{homepageData.best_sellers[0].product_name}
+												</Text>
+												<View style={styles.featuredBestSellerStats}>
+													<View style={styles.statItem}>
+														<Ionicons name="star" size={14} color="#FFD700" />
+														<Text style={styles.statText}>
+															{homepageData.best_sellers[0].product_overall_stars.toFixed(1)}
+														</Text>
+													</View>
+													<View style={styles.statDivider} />
+													<View style={styles.statItem}>
+														<Ionicons name="people" size={14} color="#FFFFFF" />
+														<Text style={styles.statText}>
+															{homepageData.best_sellers[0].product_total_orders}+ {t('orders')}
+														</Text>
+													</View>
+												</View>
+												<Text style={styles.featuredBestSellerPrice}>
+													{Math.min(...homepageData.best_sellers[0].product_prices).toLocaleString()}đ
+												</Text>
+											</View>
+										</TouchableOpacity>
+									</View>
+								)}
+
+								{/* Other Best Sellers Grid */}
 								<ScrollView
 									horizontal
 									showsHorizontalScrollIndicator={false}
-									contentContainerStyle={styles.featuredScrollContent}
+									contentContainerStyle={styles.bestSellerScrollContent}
+									style={styles.bestSellerScroll}
 									decelerationRate="fast"
-									snapToAlignment="center"
-									style={styles.productsScroll}
+									snapToAlignment="start"
+									snapToInterval={170}
 								>
-									{homepageData.best_sellers.slice(0, 6).map((product) => (
-										<FeaturedProductCard
+									{homepageData.best_sellers.slice(1, 7).map((product, index) => (
+										<TouchableOpacity
 											key={product.product_id}
-											product={convertToFeaturedProduct(product)}
-											onToggleFavorite={handleToggleFavorite}
-										/>
+											style={[
+												styles.bestSellerCard,
+												index === 0 && styles.bestSellerCardFirst
+											]}
+											onPress={() =>
+												router.push({
+													pathname: '/(home)/product/[id]',
+													params: { id: product.product_id },
+												})
+											}
+											activeOpacity={0.8}
+										>
+											{/* Ranking Badge */}
+											<View style={[styles.rankingBadge, getRankingBadgeColor(index + 2)]}>
+												<Text style={styles.rankingText}>#{index + 2}</Text>
+											</View>
+											
+											{/* Product Image */}
+											<View style={styles.bestSellerImageContainer}>
+												<Image
+													source={{ uri: product.product_image_url }}
+													style={styles.bestSellerImage}
+													resizeMode="cover"
+												/>
+												<TouchableOpacity
+													style={styles.bestSellerHeartButton}
+													onPress={() => handleToggleFavorite(product.product_id)}
+												>
+													<Ionicons
+														name={favorites.includes(product.product_id) ? "heart" : "heart-outline"}
+														size={16}
+														color={favorites.includes(product.product_id) ? "#FF6B6B" : "#999"}
+													/>
+												</TouchableOpacity>
+											</View>
+											
+											{/* Product Info */}
+											<View style={styles.bestSellerInfo}>
+												<Text style={styles.bestSellerName} numberOfLines={2}>
+													{product.product_name}
+												</Text>
+												<View style={styles.bestSellerMeta}>
+													<View style={styles.ratingContainer}>
+														<Ionicons name="star" size={12} color="#FFD700" />
+														<Text style={styles.ratingText}>
+															{product.product_overall_stars.toFixed(1)}
+														</Text>
+													</View>
+													<Text style={styles.ordersText}>
+														{product.product_total_orders}+ {t('sold')}
+													</Text>
+												</View>
+												<Text style={styles.bestSellerPrice}>
+													{Math.min(...product.product_prices).toLocaleString()}đ
+												</Text>
+											</View>
+										</TouchableOpacity>
 									))}
 								</ScrollView>
 							</View>
@@ -1142,4 +1286,285 @@ const styles = StyleSheet.create({
 		fontFamily: 'Inter-Medium',
 		color: '#C67C4E',
 	},
+	bestSellerSection: {
+		backgroundColor: '#FFF9F5',
+		borderWidth: 2,
+		borderColor: '#F4E6D9',
+		marginTop: 32,
+		paddingVertical: 24,
+		shadowColor: '#C67C4E',
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.15,
+		shadowRadius: 16,
+		elevation: 8,
+	},
+	bestSellerHeader: {
+		marginHorizontal: 16,
+		marginBottom: 20,
+	},
+	bestSellerTitleSection: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 16,
+	},
+	crownIconContainer: {
+		position: 'relative',
+		marginRight: 12,
+	},
+	crownGlow: {
+		position: 'absolute',
+		top: -2,
+		left: -2,
+		right: -2,
+		bottom: -2,
+		backgroundColor: '#FFD700',
+		opacity: 0.2,
+		borderRadius: 20,
+		transform: [{ scale: 1.2 }],
+	},
+	bestSellerTitleWrapper: {
+		flex: 1,
+	},
+	bestSellerTitle: {
+		fontSize: 24,
+		fontFamily: 'Inter-Bold',
+		color: '#2D1810',
+		marginBottom: 2,
+	},
+	bestSellerSubtitle: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#8B6F47',
+	},
+	premiumViewAllButton: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: '#C67C4E',
+		paddingVertical: 10,
+		paddingHorizontal: 16,
+		borderRadius: 20,
+		shadowColor: '#C67C4E',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.3,
+		shadowRadius: 8,
+		elevation: 4,
+	},
+	premiumViewAllText: {
+		color: '#FFFFFF',
+		fontSize: 14,
+		fontFamily: 'Inter-SemiBold',
+		marginRight: 6,
+	},
+	viewAllArrowContainer: {
+		backgroundColor: 'rgba(255, 255, 255, 0.2)',
+		borderRadius: 12,
+		padding: 2,
+	},
+	featuredBestSellerContainer: {
+		marginHorizontal: 16,
+		marginBottom: 24,
+	},
+	featuredBestSellerCard: {
+		height: 140,
+		borderRadius: 24,
+		overflow: 'hidden',
+		position: 'relative',
+		flexDirection: 'row',
+		shadowColor: '#C67C4E',
+		shadowOffset: { width: 0, height: 8 },
+		shadowOpacity: 0.3,
+		shadowRadius: 16,
+		elevation: 10,
+	},
+	featuredBestSellerGradient: {
+		position: 'absolute',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 0,
+	},
+	crownBadge: {
+		position: 'absolute',
+		top: 12,
+		left: 12,
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: 'rgba(255, 215, 0, 0.15)',
+		borderWidth: 1,
+		borderColor: '#FFD700',
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		borderRadius: 16,
+		zIndex: 10,
+	},
+	crownBadgeText: {
+		color: '#FFD700',
+		fontSize: 11,
+		fontFamily: 'Inter-Bold',
+		marginLeft: 4,
+		textTransform: 'uppercase',
+	},
+	featuredBestSellerImageContainer: {
+		width: '40%',
+		padding: 12,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	featuredBestSellerImage: {
+		width: '100%',
+		height: '100%',
+		borderRadius: 16,
+	},
+	featuredBestSellerContent: {
+		flex: 1,
+		padding: 16,
+		justifyContent: 'center',
+	},
+	featuredBestSellerName: {
+		fontSize: 18,
+		fontFamily: 'Inter-Bold',
+		color: '#FFFFFF',
+		marginBottom: 8,
+		textShadowColor: 'rgba(0, 0, 0, 0.3)',
+		textShadowOffset: { width: 1, height: 1 },
+		textShadowRadius: 2,
+	},
+	featuredBestSellerStats: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	statItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	statText: {
+		color: '#FFFFFF',
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		marginLeft: 4,
+	},
+	statDivider: {
+		width: 1,
+		height: 12,
+		backgroundColor: 'rgba(255, 255, 255, 0.3)',
+		marginHorizontal: 12,
+	},
+	featuredBestSellerPrice: {
+		fontSize: 16,
+		fontFamily: 'Inter-Bold',
+		color: '#FFFFFF',
+		textShadowColor: 'rgba(0, 0, 0, 0.3)',
+		textShadowOffset: { width: 1, height: 1 },
+		textShadowRadius: 2,
+	},
+	bestSellerScroll: {
+		marginTop: 8,
+	},
+	bestSellerScrollContent: {
+		paddingLeft: 16,
+		paddingRight: 8,
+	},
+	bestSellerCard: {
+		width: 160,
+		backgroundColor: '#FFFFFF',
+		borderRadius: 20,
+		marginRight: 12,
+		shadowColor: '#C67C4E',
+		shadowOffset: { width: 0, height: 6 },
+		shadowOpacity: 0.1,
+		shadowRadius: 12,
+		elevation: 3,
+		borderWidth: 1,
+		borderColor: '#F4E6D9',
+		marginBottom: 7,
+	},
+	bestSellerCardFirst: {
+		marginLeft: 0,
+	},
+	rankingBadge: {
+		position: 'absolute',
+		top: 8,
+		left: 8,
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		justifyContent: 'center',
+		alignItems: 'center',
+		zIndex: 10,
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.2,
+		shadowRadius: 4,
+		elevation: 3,
+	},
+	rankingText: {
+		color: '#FFFFFF',
+		fontSize: 10,
+		fontFamily: 'Inter-Bold',
+	},
+	bestSellerImageContainer: {
+		position: 'relative',
+		height: 100,
+		borderTopLeftRadius: 20,
+		borderTopRightRadius: 20,
+		overflow: 'hidden',
+	},
+	bestSellerImage: {
+		width: '100%',
+		height: '100%',
+	},
+	bestSellerHeartButton: {
+		position: 'absolute',
+		top: 8,
+		right: 8,
+		width: 28,
+		height: 28,
+		borderRadius: 14,
+		backgroundColor: 'rgba(255, 255, 255, 0.9)',
+		justifyContent: 'center',
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	bestSellerInfo: {
+		padding: 12,
+	},
+	bestSellerName: {
+		fontSize: 14,
+		fontFamily: 'Inter-SemiBold',
+		color: '#2D1810',
+		marginBottom: 6,
+		lineHeight: 18,
+	},
+	bestSellerMeta: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	ratingContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	ratingText: {
+		fontSize: 11,
+		fontFamily: 'Inter-Medium',
+		color: '#8B6F47',
+		marginLeft: 2,
+	},
+	ordersText: {
+		fontSize: 10,
+		fontFamily: 'Inter-Medium',
+		color: '#8B6F47',
+	},
+	bestSellerPrice: {
+		fontSize: 14,
+		fontFamily: 'Inter-Bold',
+		color: '#C67C4E',
+	},
+	// ...existing styles...
 })

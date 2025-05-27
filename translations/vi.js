@@ -123,6 +123,10 @@ export default {
 	newProducts: "Sản phẩm mới",
 	new: "Mới",
 	tryNow: "Thử ngay",
+	mostLovedByCustomers: "Được khách hàng yêu thích nhất",
+	topChoice: "Lựa chọn hàng đầu",
+	orders: "đơn",
+	sold: "đã bán",
 
 	// Address Input Screen
 	deliveryLocation: "Địa điểm giao hàng",

@@ -22,7 +22,7 @@ import { cartAPI, addToWishlist, removeFromWishlist } from '@/utils/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DishDecoration from '@/components/shared/DishDecoration'
 import BottomSpacer from '@/components/shared/BottomSpacer'
-// import DashedLine from '@/components/ui/DashedLine'
+import DashedLine from 'react-native-dashed-line'
 import { formatPrice } from '@/utils/display'
 
 // Get screen dimensions
@@ -57,8 +57,6 @@ interface CoOccurData {
 interface ProductSuggestion {
 	productId: number
 	productName: string
-	imageUrl: string
-	price: number
 	originalProductId: number
 	suggestionText: string
 }
@@ -66,7 +64,7 @@ interface ProductSuggestion {
 export default function CartScreen() {
 	const { t, locale } = useTranslation()
 	const router = useRouter()
-	const { AlertComponent, showError } = useAlert()
+	const { AlertComponent, showError, showSuccess } = useAlert()
 
 	// State variables
 	const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -245,16 +243,12 @@ export default function CartScreen() {
 							const productResponse = await cartAPI.getCoOccurProducts(
 								coProduct.product_id.toString()
 							)
-							const productDetails = productResponse.data
-
-							const imageUrl =
-								productDetails?.product_images?.[0]?.product_image_url || ''
+							// const imageUrl =
+							// 	productDetails?.product_images?.[0]?.product_image_url || ''
 
 							suggestions.push({
 								productId: coProduct.product_id,
 								productName: productName,
-								imageUrl: imageUrl,
-								price: productDetails?.product_unit_price?.prices?.[0] || 0,
 								originalProductId: parseInt(origProductId),
 								// Generate a personalized suggestion text with product name
 								suggestionText: getRandomSuggestionText(productName),
@@ -439,7 +433,7 @@ export default function CartScreen() {
 	const addSuggestedProductToCart = async (productId: number) => {
 		try {
 			await cartAPI.addItemToCart(productId, 1, 'M')
-			showError(t('addedToCart'))
+			showSuccess(t('addedToCart'))
 		} catch (error) {
 			console.error('Failed to add suggested product to cart:', error)
 			showError(t('errorAddingToCart'))
@@ -485,7 +479,7 @@ export default function CartScreen() {
 						>
 							<Checkbox
 								isChecked={item.isSelected}
-								onToggle={toggleSelectItem}
+								onToggle={() => toggleSelectItem(item.productId)}
 								size={22}
 							/>
 						</TouchableOpacity>
@@ -699,13 +693,7 @@ export default function CartScreen() {
 						ListFooterComponent={
 							// <DashedLine dashColor="#A0998E" dashGap={5} dashThickness={1} />
 
-							<View style={styles.dashedLine}>
-								{Array.from({ length: Math.ceil(height / 6) }).map(
-									(_, index) => (
-										<View key={index} style={styles.dashedLine} />
-									)
-								)}
-							</View>
+							<DashedLine dashColor="#A0998E" dashGap={5} dashThickness={1} />
 						}
 					/>
 
@@ -807,6 +795,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingTop: 12,
 		paddingBottom: 16,
+		flexGrow: 1, // Change from flex: 1 to flexGrow: 1
 	},
 	heartButton: {
 		width: 32,
@@ -997,6 +986,7 @@ const styles = StyleSheet.create({
 	dashedLine: {
 		marginVertical: 8,
 	},
+
 	// Suggestion styles
 	suggestionsContainer: {
 		marginLeft: 8,
