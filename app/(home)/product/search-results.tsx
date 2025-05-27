@@ -955,6 +955,7 @@ export default function SearchResultsScreen() {
 				<SearchBar
 					handleInputChange={setCurrentQuery}
 					handleSearchSubmit={performSearch}
+					handleAiButtonPress={() => setIsRagMode(!isRagMode)}
 					showAiButton={true}
 					handleFilterPress={openFilterModal}
 					showFiltersButton={!isRagMode} // Hide filters button in RAG mode

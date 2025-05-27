@@ -276,7 +276,7 @@ export default function ProductScreen() {
 
 	return (
 		<SafeAreaView style={styles.container}>
-			<StatusBar barStyle="dark-content" backgroundColor="#FAF5ED" />
+			<StatusBar barStyle="dark-content" backgroundColor="#F8E8D8" />
 
 			<ScrollView
 				style={styles.scrollView}

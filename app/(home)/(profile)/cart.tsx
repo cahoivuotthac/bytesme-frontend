@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
 	View,
 	Text,
@@ -45,6 +45,24 @@ export interface CartItem {
 	recommendationMessage?: string // Recommendation message
 }
 
+// Update the CoOccurData interface to match the new server response format
+interface CoOccurData {
+	[key: string]: {
+		product_id: number
+		product_name: string
+	}[]
+}
+
+// Update the ProductSuggestion interface to include the suggestion text
+interface ProductSuggestion {
+	productId: number
+	productName: string
+	imageUrl: string
+	price: number
+	originalProductId: number
+	suggestionText: string
+}
+
 export default function CartScreen() {
 	const { t, locale } = useTranslation()
 	const router = useRouter()
@@ -55,6 +73,18 @@ export default function CartScreen() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [selectAll, setSelectAll] = useState(false)
 	const [totalPrice, setTotalPrice] = useState(0)
+	const [coOccurProducts, setCoOccurProducts] = useState<ProductSuggestion[]>(
+		[]
+	)
+	const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+
+	// New state to store stable suggestion data
+	const [stableSuggestions, setStableSuggestions] = useState<
+		Record<number, ProductSuggestion[]>
+	>({})
+
+	// Flag to track if suggestions have been initialized
+	const suggestionsInitialized = useRef(false)
 
 	// Fetch cart items on component mount
 	useEffect(() => {
@@ -65,6 +95,51 @@ export default function CartScreen() {
 	useEffect(() => {
 		calculateTotalPrice()
 	}, [cartItems])
+
+	// Fetch co-occurring products when cart items are loaded
+	useEffect(() => {
+		if (cartItems.length > 0) {
+			fetchCoOccurProducts()
+		}
+	}, [cartItems])
+
+	// Set up stable suggestions ONLY ONCE when co-occur products are first loaded
+	useEffect(() => {
+		// Skip if no co-occur products or if suggestions were already initialized
+		if (coOccurProducts.length === 0 || suggestionsInitialized.current) return
+
+		console.log(
+			'Initializing stable suggestions - this should happen only once'
+		)
+
+		const suggestionsMap: Record<number, ProductSuggestion[]> = {}
+
+		// Group suggestions by original product
+		cartItems.forEach((item) => {
+			const itemSuggestions = coOccurProducts.filter(
+				(suggestion) => suggestion.originalProductId === item.productId
+			)
+
+			// Randomly determine how many suggestions to show (0-2)
+			const maxToShow = Math.min(
+				itemSuggestions.length,
+				Math.floor(Math.random() * 3)
+			)
+
+			// Shuffle and get a stable subset
+			const selectedSuggestions = [...itemSuggestions]
+				.sort(() => 0.5 - Math.random())
+				.slice(0, maxToShow)
+
+			// Store the stable suggestions
+			suggestionsMap[item.productId] = selectedSuggestions
+		})
+
+		setStableSuggestions(suggestionsMap)
+
+		// Mark suggestions as initialized to prevent future updates
+		suggestionsInitialized.current = true
+	}, [coOccurProducts]) // Only depends on coOccurProducts, not cartItems
 
 	// Fetch cart items from API (or use mock data for now)
 	const fetchCartItems = async () => {
@@ -125,6 +200,77 @@ export default function CartScreen() {
 			setIsLoading(false)
 		} finally {
 			setIsLoading(false)
+		}
+	}
+
+	// Get a random suggestion template from translations and format with product name
+	const getRandomSuggestionText = (productName: string) => {
+		// There are 10 suggestion templates
+		const templateIndex = Math.floor(Math.random() * 10) + 1
+		const template = t(`suggestionTemplate_${templateIndex}`)
+		return template.replace('{productName}', productName)
+	}
+
+	// Fetch co-occurring products
+	const fetchCoOccurProducts = async () => {
+		if (cartItems.length === 0) return
+
+		setLoadingSuggestions(true)
+		try {
+			// Create comma-separated string of product IDs
+			const productIds = cartItems.map((item) => item.productId).join(',')
+
+			// Call API to get co-occur products
+			const response = await cartAPI.getCoOccurProducts(productIds)
+			const coOccurData: CoOccurData = response.data
+
+			if (!coOccurData) {
+				setLoadingSuggestions(false)
+				return
+			}
+
+			// Process co-occur data to get product details
+			const suggestions: ProductSuggestion[] = []
+
+			// For each original product, get co-occurring products from the new data format
+			for (const [origProductId, coProducts] of Object.entries(coOccurData)) {
+				console.log('Co-occurring products for:', origProductId, coProducts)
+				if (coProducts && coProducts.length > 0) {
+					for (const coProduct of coProducts) {
+						try {
+							// Now we directly have the product name from the response
+							const productName = coProduct.product_name || 'sản phẩm này'
+
+							// We'll still need to get the product image URL through a separate API call
+							const productResponse = await cartAPI.getCoOccurProducts(
+								coProduct.product_id.toString()
+							)
+							const productDetails = productResponse.data
+
+							const imageUrl =
+								productDetails?.product_images?.[0]?.product_image_url || ''
+
+							suggestions.push({
+								productId: coProduct.product_id,
+								productName: productName,
+								imageUrl: imageUrl,
+								price: productDetails?.product_unit_price?.prices?.[0] || 0,
+								originalProductId: parseInt(origProductId),
+								// Generate a personalized suggestion text with product name
+								suggestionText: getRandomSuggestionText(productName),
+							})
+						} catch (error) {
+							console.error('Error fetching co-occur product details:', error)
+						}
+					}
+				}
+			}
+
+			setCoOccurProducts(suggestions)
+		} catch (error) {
+			console.error('Failed to fetch co-occur products:', error)
+		} finally {
+			setLoadingSuggestions(false)
 		}
 	}
 
@@ -289,6 +435,17 @@ export default function CartScreen() {
 		}
 	}
 
+	// Add suggested product to cart
+	const addSuggestedProductToCart = async (productId: number) => {
+		try {
+			await cartAPI.addItemToCart(productId, 1, 'M')
+			showError(t('addedToCart'))
+		} catch (error) {
+			console.error('Failed to add suggested product to cart:', error)
+			showError(t('errorAddingToCart'))
+		}
+	}
+
 	// Handle checkout
 	const handleCheckout = async () => {
 		if (totalPrice === 0) {
@@ -313,149 +470,185 @@ export default function CartScreen() {
 		})
 	}
 
-	// Render a cart item
-	const renderCartItem = ({
-		item,
-		index,
-	}: {
-		item: CartItem
-		index: number
-	}) => (
-		<>
-			<View style={styles.cartItem}>
-				<TouchableOpacity
-					style={styles.checkboxContainer}
-					onPress={() => toggleSelectItem(item.productId)}
-				>
-					<Checkbox
-						isChecked={item.isSelected}
-						onToggle={() => toggleSelectItem(item.productId)}
-						size={22}
-					/>
-				</TouchableOpacity>
+	// Create a memoized version of renderCartItem that doesn't change on re-renders
+	const renderCartItem = React.useCallback(
+		({ item, index }: { item: CartItem; index: number }) => {
+			// Use the pre-determined stable suggestions from the ref
+			const itemSuggestions = stableSuggestions[item.productId] || []
 
-				<View style={styles.itemContentContainer}>
-					<TouchableOpacity
-						style={styles.productImageContainer}
-						onPress={() => navigateToProduct(item.productId)}
-					>
-						<DishDecoration
-							imageSource={{ uri: item.imageUrl }}
-							containerStyle={styles.dishContainer}
-							imageStyle={styles.dishImage}
-							resizeMode="contain"
-							adjustForBowl={true}
-							imageScale={1.4}
-						/>
-					</TouchableOpacity>
+			return (
+				<>
+					<View style={styles.cartItem}>
+						<TouchableOpacity
+							style={styles.checkboxContainer}
+							onPress={() => toggleSelectItem(item.productId)}
+						>
+							<Checkbox
+								isChecked={item.isSelected}
+								onToggle={toggleSelectItem}
+								size={22}
+							/>
+						</TouchableOpacity>
 
-					<View style={styles.itemDetails}>
-						<View style={styles.itemHeaderRow}>
+						<View style={styles.itemContentContainer}>
 							<TouchableOpacity
+								style={styles.productImageContainer}
 								onPress={() => navigateToProduct(item.productId)}
-								style={styles.productNameContainer}
 							>
-								<Text style={styles.itemName} numberOfLines={1}>
-									{item.productName}
-								</Text>
+								<DishDecoration
+									imageSource={{ uri: item.imageUrl }}
+									containerStyle={styles.dishContainer}
+									imageStyle={styles.dishImage}
+									resizeMode="contain"
+									adjustForBowl={true}
+									imageScale={1.4}
+								/>
 							</TouchableOpacity>
-							<TouchableOpacity
-								onPress={() => removeFromCart(item.productId)}
-								hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-								style={styles.deleteButton}
-							>
-								<Feather name="trash-2" size={20} color="#8D8D8D" />
-							</TouchableOpacity>
-						</View>
 
-						{/* Size selector */}
-						<View style={styles.sizeContainer}>
-							<Text style={styles.sizeLabel}>{t('size')}:</Text>
-							<View style={styles.sizeSelector}>
-								{item.sizes.map((size, sizeIndex) => (
+							<View style={styles.itemDetails}>
+								<View style={styles.itemHeaderRow}>
 									<TouchableOpacity
-										key={`${item.productId}-${size}`}
-										style={[
-											styles.sizeButton,
-											sizeIndex === item.selectedSizeIndex &&
-												styles.selectedSizeButton,
-										]}
-										onPress={() => changeSize(item.productId, sizeIndex)}
+										onPress={() => navigateToProduct(item.productId)}
+										style={styles.productNameContainer}
 									>
-										<Text
-											style={[
-												styles.sizeButtonText,
-												sizeIndex === item.selectedSizeIndex &&
-													styles.selectedSizeButtonText,
-											]}
-										>
-											{size}
+										<Text style={styles.itemName} numberOfLines={1}>
+											{item.productName}
 										</Text>
 									</TouchableOpacity>
-								))}
+									<TouchableOpacity
+										onPress={() => removeFromCart(item.productId)}
+										hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+										style={styles.deleteButton}
+									>
+										<Feather name="trash-2" size={20} color="#8D8D8D" />
+									</TouchableOpacity>
+								</View>
+
+								{/* Size selector */}
+								<View style={styles.sizeContainer}>
+									<Text style={styles.sizeLabel}>{t('size')}:</Text>
+									<View style={styles.sizeSelector}>
+										{item.sizes.map((size, sizeIndex) => (
+											<TouchableOpacity
+												key={`${item.productId}-${size}`}
+												style={[
+													styles.sizeButton,
+													sizeIndex === item.selectedSizeIndex &&
+														styles.selectedSizeButton,
+												]}
+												onPress={() => changeSize(item.productId, sizeIndex)}
+											>
+												<Text
+													style={[
+														styles.sizeButtonText,
+														sizeIndex === item.selectedSizeIndex &&
+															styles.selectedSizeButtonText,
+													]}
+												>
+													{size}
+												</Text>
+											</TouchableOpacity>
+										))}
+									</View>
+								</View>
+
+								<View style={styles.itemPriceRow}>
+									<Text style={styles.itemPrice}>
+										{item.discountPercentage && item.discountPercentage > 0 ? (
+											<>
+												<Text
+													style={{
+														textDecorationLine: 'line-through',
+														color: '#9B9B9B',
+													}}
+												>
+													{formatPrice(
+														item.prices[item.selectedSizeIndex],
+														locale
+													)}
+												</Text>
+												{'  '}
+											</>
+										) : null}
+										{formatPrice(
+											Math.round(
+												item.prices[item.selectedSizeIndex] *
+													(1 - item.discountPercentage / 100)
+											),
+											locale
+										)}
+									</Text>
+									{/* Heart button */}
+									<TouchableOpacity
+										style={styles.heartButton}
+										onPress={() => toggleIsWishlisted(item.productId)}
+									>
+										{item.isWishlisted ? (
+											<AntDesign name="heart" size={22} color="#C67C4E" />
+										) : (
+											<AntDesign name="hearto" size={22} color="#C67C4E" />
+										)}
+									</TouchableOpacity>
+								</View>
+								<View style={styles.quantityControlContainer}>
+									<QuantityControl
+										value={item.quantity}
+										onIncrement={() => incrementQuantity(item.productId)}
+										onDecrement={() => decrementQuantity(item.productId)}
+										size="small"
+										buttonColor="#968B7B"
+									/>
+								</View>
 							</View>
 						</View>
-
-						<View style={styles.itemPriceRow}>
-							<Text style={styles.itemPrice}>
-								{item.discountPercentage && item.discountPercentage > 0 ? (
-									<>
-										<Text
-											style={{
-												textDecorationLine: 'line-through',
-												color: '#9B9B9B',
-											}}
-										>
-											{formatPrice(item.prices[item.selectedSizeIndex], locale)}
-										</Text>
-										{'  '}
-									</>
-								) : null}
-								{formatPrice(
-									Math.round(
-										item.prices[item.selectedSizeIndex] *
-											(1 - item.discountPercentage / 100)
-									),
-									locale
-								)}
-							</Text>
-							{/* Heart button */}
-							<TouchableOpacity
-								style={styles.heartButton}
-								onPress={() => toggleIsWishlisted(item.productId)}
-							>
-								{item.isWishlisted ? (
-									<AntDesign name="heart" size={22} color="#C67C4E" />
-								) : (
-									<AntDesign name="hearto" size={22} color="#C67C4E" />
-								)}
-							</TouchableOpacity>
-						</View>
-						<View style={styles.quantityControlContainer}>
-							<QuantityControl
-								value={item.quantity}
-								onIncrement={() => incrementQuantity(item.productId)}
-								onDecrement={() => decrementQuantity(item.productId)}
-								size="small"
-								buttonColor="#968B7B"
-							/>
-						</View>
 					</View>
-				</View>
-			</View>
 
-			{/* Recommendation message */}
-			{item.recommendationMessage && (
-				<View style={styles.recommendationContainer}>
-					<Text style={styles.recommendationText}>
-						{item.recommendationMessage}
-					</Text>
-				</View>
-			)}
+					{/* Suggestion cards - only show if we have any stable suggestions */}
+					{itemSuggestions.length > 0 && (
+						<View style={styles.suggestionsContainer}>
+							{itemSuggestions.map((suggestion) =>
+								renderSuggestionCard(suggestion)
+							)}
+						</View>
+					)}
 
-			{/* Separator line - show for all items except the last one */}
-			{index < cartItems.length - 1 && <View style={styles.separatorLine} />}
-		</>
+					{/* Separator line - show for all items except the last one */}
+					{index < cartItems.length - 1 && (
+						<View style={styles.separatorLine} />
+					)}
+				</>
+			)
+		},
+		[stableSuggestions]
+	) // Only depends on stableSuggestions, which is set once
+
+	// Memoize the renderSuggestionCard function too
+	const renderSuggestionCard = React.useCallback(
+		(suggestion: ProductSuggestion) => {
+			return (
+				<TouchableOpacity
+					key={`suggestion-${suggestion.productId}`}
+					style={styles.suggestionCard}
+					onPress={() => navigateToProduct(suggestion.productId)}
+				>
+					<View style={styles.suggestionContent}>
+						<View style={styles.suggestionIconContainer}>
+							<Ionicons name="sparkles" size={14} color="#C67C4E" />
+						</View>
+						<Text style={styles.suggestionText}>
+							{suggestion.suggestionText}
+						</Text>
+						<TouchableOpacity
+							style={styles.addSuggestionButton}
+							onPress={() => addSuggestedProductToCart(suggestion.productId)}
+						>
+							<AntDesign name="plus" size={16} color="#fff" />
+						</TouchableOpacity>
+					</View>
+				</TouchableOpacity>
+			)
+		},
+		[]
 	)
 
 	return (
@@ -500,9 +693,7 @@ export default function CartScreen() {
 					<FlatList
 						data={cartItems}
 						renderItem={renderCartItem}
-						keyExtractor={(item, index) =>
-							!!item ? item.productId.toString() : index.toString()
-						}
+						keyExtractor={(item) => item.productId.toString()}
 						contentContainerStyle={styles.listContainer}
 						showsVerticalScrollIndicator={false}
 						ListFooterComponent={
@@ -778,7 +969,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 		marginRight: 8,
-		alignSelf: 'flex-start',
+		alignSelf: 'center',
 	},
 	selectedSizeButton: {
 		backgroundColor: '#C67C4E',
@@ -797,5 +988,62 @@ const styles = StyleSheet.create({
 	},
 	dashedLine: {
 		marginVertical: 8,
+	},
+	// Suggestion styles
+	suggestionsContainer: {
+		marginLeft: 8,
+		marginRight: 8,
+		marginBottom: 16,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'flex-start',
+	},
+	suggestionCard: {
+		backgroundColor: 'rgba(249, 246, 244, 0.85)',
+		borderRadius: 20,
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		marginRight: 8,
+		flexDirection: 'row',
+		alignItems: 'center',
+		width: width * 0.91,
+		height: 45,
+		shadowColor: '#8D6E63',
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.08,
+		shadowRadius: 4,
+		elevation: 1,
+		borderWidth: 0.5,
+		borderColor: 'rgba(198, 124, 78, 0.2)',
+	},
+	suggestionContent: {
+		flex: 1,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+	},
+	suggestionIconContainer: {
+		width: 22,
+		height: 22,
+		borderRadius: 11,
+		backgroundColor: 'rgba(198, 124, 78, 0.1)',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginRight: 8,
+	},
+	suggestionText: {
+		fontFamily: 'Inter-Medium',
+		fontSize: 13,
+		color: '#5D4037',
+		flex: 1,
+		marginRight: 8,
+	},
+	addSuggestionButton: {
+		backgroundColor: '#C67C4E',
+		width: 26,
+		height: 26,
+		borderRadius: 13,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
 })

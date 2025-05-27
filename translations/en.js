@@ -601,4 +601,18 @@ export default {
 	refundFailedError:
 		"Failed to process refund. Please contact customer support.",
 	generalError: "An error occurred. Please try again.",
+	thúDùngChungVới: "Try adding only 5k for upsize, amazing!",
+	thúDùngChungVớiCroissant: "Try pairing with Croissant for a perfect match!",
+
+	// Suggestion templates for co-occur products
+	suggestionTemplate_1: "Try pairing with {productName} for a perfect match!",
+	suggestionTemplate_2: "Even better with {productName}",
+	suggestionTemplate_3: "Customers often buy {productName} together",
+	suggestionTemplate_4: "You'll love {productName} with your selection",
+	suggestionTemplate_5: "Add {productName} for a more complete experience",
+	suggestionTemplate_6: "Consider adding {productName}, it's a great match!",
+	suggestionTemplate_7: "Add {productName} for just 5K more!",
+	suggestionTemplate_8: "Make your meal complete with {productName}",
+	suggestionTemplate_9: "80% of customers add {productName}",
+	suggestionTemplate_10: "Perfect combo: add {productName} now!",
 };

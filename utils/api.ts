@@ -141,6 +141,14 @@ export const cartAPI = {
 			}
 		}
 	},
+
+	// productIds: 1,2,4,5 (comma-separated string)
+	getCoOccurProducts: async (productIds: string) => {
+		return await APIClient.get(
+			"/product/related/co-occur?" +
+				new URLSearchParams({ product_ids: productIds }).toString()
+		);
+	},
 };
 
 export const addressAPI = {

@@ -610,4 +610,17 @@ export default {
 	refundFailedError:
 		"Không thể hoàn tiền. Vui lòng liên hệ hỗ trợ khách hàng.",
 	generalError: "Đã xảy ra lỗi. Vui lòng thử lại.",
+	thúDùngChungVới: "Tớ mạch cầu: Upsize chỉ với 5k, mê lị",
+	thúDùngChungVớiCroissant: "Thử dùng chung với Croissant xem sao bạn ơi!",
+	// Suggestion templates for co-occur products
+	suggestionTemplate_1: "Thử dùng chung với {productName} xem sao!",
+	suggestionTemplate_2: "Tuyệt vời hơn khi dùng với {productName}",
+	suggestionTemplate_3: "Khách hàng thường mua kèm {productName}",
+	suggestionTemplate_4: "Bạn sẽ thích {productName} khi dùng cùng",
+	suggestionTemplate_5: "Món {productName} sẽ giúp bữa ăn trọn vẹn hơn",
+	suggestionTemplate_6: "Cân nhắc thêm {productName}, rất hợp đấy!",
+	suggestionTemplate_7: "{productName} chỉ thêm 5K, mê lị",
+	suggestionTemplate_8: "Thêm {productName} để trải nghiệm phong phú hơn",
+	suggestionTemplate_9: "80% khách hàng đặt kèm {productName}",
+	suggestionTemplate_10: "Combo hoàn hảo: thêm {productName} ngay!",
 };
