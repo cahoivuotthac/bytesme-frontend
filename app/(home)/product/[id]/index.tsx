@@ -26,6 +26,16 @@ import BottomSpacer from '@/components/shared/BottomSpacer'
 
 const { width, height } = Dimensions.get('window')
 
+interface RelatedProduct {
+	category_id: number
+	discount_percentage: number
+	product_id: number
+	product_name: string
+	image_url: string
+	sizes: string[]
+	prices: number[]
+}
+
 export default function ProductDetailScreen() {
 	const params = useLocalSearchParams()
 	const productId = Number(params.id)
@@ -44,8 +54,9 @@ export default function ProductDetailScreen() {
 	const [feedbackLoading, setFeedbackLoading] = useState(false)
 	const [feedbackHasMore, setFeedbackHasMore] = useState(true)
 	const FEEDBACK_PAGE_SIZE = 10
-	const [similarProducts, setSimilarProducts] = useState<any[]>([])
-	const SIMILAR_PRODUCTS_LIMIT = 5
+	const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([])
+	const [loadingRelatedProducts, setLoadingRelatedProducts] = useState(false)
+	const RELATED_PRODUCTS_LIMIT = 7
 
 	const { AlertComponent, showError, showInfo } = useAlert()
 
@@ -114,17 +125,21 @@ export default function ProductDetailScreen() {
 		}
 	}
 
-	// Fucntion to fetch similar products
-	const fetchSimilarProducts = async () => {
+	// Function to fetch similar products
+	const fetchRelatedProducts = async () => {
+		setLoadingRelatedProducts(true)
 		try {
-			const response = await productAPI.getSimilarProducts(
+			const response = await productAPI.getRelatedProducts(
 				productId,
-				SIMILAR_PRODUCTS_LIMIT
+				RELATED_PRODUCTS_LIMIT
 			)
-			setSimilarProducts(response.data)
+			console.log('Fetched related products: ', response.data)
+			setRelatedProducts(response.data)
 		} catch (error) {
 			console.error('Error fetching similar products:', error)
 			showError(t('errorFetchingProductDetails'))
+		} finally {
+			setLoadingRelatedProducts(false)
 		}
 	}
 
@@ -132,6 +147,7 @@ export default function ProductDetailScreen() {
 		if (productId) {
 			fetchProductDetails()
 			fetchProductFeedbacks(0, 5) // only fetch 5 on initial load
+			fetchRelatedProducts() // Add this line to fetch related products
 		}
 	}, [productId])
 
@@ -192,7 +208,7 @@ export default function ProductDetailScreen() {
 		try {
 			await cartAPI.addItemToCart(productId, quantity, selectedSize)
 			showInfo(t('addedToCart'))
-			setQuantity(1) // Reset quantity after adding to cart
+			setQuantity(1) // Reset quantity
 		} catch (err) {
 			console.error('Error adding to cart:', err)
 			showError(t('errorAddingToCart'))
@@ -203,6 +219,154 @@ export default function ProductDetailScreen() {
 	const toggleDescriptionModal = () => {
 		setDescriptionModalVisible(!descriptionModalVisible)
 	}
+
+	// Custom Related Product Card Component
+	const RelatedProductCard = ({ product }: { product: RelatedProduct }) => {
+		const getSelectedSizeIndex = () => {
+			return product.sizes
+				? product.sizes.indexOf('M') !== -1
+					? product.sizes.indexOf('M')
+					: 0
+				: 0
+		}
+
+		const getPrice = () => {
+			const sizeIndex = getSelectedSizeIndex()
+			return product.prices && product.prices[sizeIndex]
+				? product.prices[sizeIndex]
+				: 0
+		}
+
+		const getDiscountedPrice = () => {
+			const originalPrice = getPrice()
+			return Math.round(originalPrice * (1 - product.discount_percentage / 100))
+		}
+
+		const navigateToProduct = () => {
+			router.push({
+				pathname: '/(home)/product/[id]',
+				params: { id: product.product_id },
+			})
+		}
+
+		return (
+			<TouchableOpacity
+				style={styles.relatedProductCard}
+				onPress={navigateToProduct}
+				activeOpacity={0.8}
+			>
+				<View style={styles.relatedProductImageContainer}>
+					<View style={styles.relatedProductImagePlaceholder}>
+						{product.image_url ? (
+							<Image
+								source={{ uri: product.image_url }}
+								style={{
+									width: '100%',
+									height: '100%',
+									borderRadius: 10,
+									resizeMode: 'cover',
+								}}
+							/>
+						) : (
+							<Ionicons name="image-outline" size={32} color="#C67C4E" />
+						)}
+					</View>
+					{product.discount_percentage > 0 && (
+						<View style={styles.relatedProductDiscountBadge}>
+							<Text style={styles.relatedProductDiscountText}>
+								-{product.discount_percentage}%
+							</Text>
+						</View>
+					)}
+				</View>
+
+				<View style={styles.relatedProductInfo}>
+					<Text style={styles.relatedProductName} numberOfLines={2}>
+						{product.product_name}
+					</Text>
+
+					<View style={styles.relatedProductPriceContainer}>
+						{product.discount_percentage > 0 ? (
+							<>
+								<Text style={styles.relatedProductDiscountedPrice}>
+									{getDiscountedPrice().toLocaleString()}₫
+								</Text>
+								<Text style={styles.relatedProductOriginalPrice}>
+									{getPrice().toLocaleString()}₫
+								</Text>
+							</>
+						) : (
+							<Text style={styles.relatedProductPrice}>
+								{getPrice().toLocaleString()}₫
+							</Text>
+						)}
+					</View>
+
+					<View style={styles.relatedProductFooter}>
+						<View style={styles.relatedProductSizeIndicator}>
+							<Text style={styles.relatedProductSizeText}>
+								{product.sizes && product.sizes.length > 0
+									? product.sizes[0]
+									: 'M'}
+							</Text>
+						</View>
+
+						<TouchableOpacity
+							style={styles.relatedProductAddButton}
+							onPress={(e) => {
+								e.stopPropagation()
+								handleAddToCart()
+							}}
+						>
+							<Ionicons name="add" size={16} color="#FFFFFF" />
+						</TouchableOpacity>
+					</View>
+				</View>
+			</TouchableOpacity>
+		)
+	}
+
+	// Loading skeleton component for related products
+	const RelatedProductSkeleton = () => (
+		<View style={styles.relatedProductCard}>
+			<View style={styles.relatedProductImageContainer}>
+				<View
+					style={[
+						styles.relatedProductImagePlaceholder,
+						styles.skeletonShimmer,
+					]}
+				/>
+			</View>
+			<View style={styles.relatedProductInfo}>
+				<View
+					style={[
+						styles.skeletonLine,
+						{ width: '80%', height: 16, marginBottom: 8 },
+					]}
+				/>
+				<View
+					style={[
+						styles.skeletonLine,
+						{ width: '60%', height: 14, marginBottom: 8 },
+					]}
+				/>
+				<View style={styles.relatedProductFooter}>
+					<View
+						style={[
+							styles.skeletonLine,
+							{ width: 30, height: 20, borderRadius: 6 },
+						]}
+					/>
+					<View
+						style={[
+							styles.skeletonLine,
+							{ width: 28, height: 28, borderRadius: 8 },
+						]}
+					/>
+				</View>
+			</View>
+		</View>
+	)
 
 	return (
 		<SafeAreaView style={styles.container}>
@@ -435,25 +599,57 @@ export default function ProductDetailScreen() {
 						</View>
 						<View style={styles.divider} />
 						{/* Similar Products Section */}
-						<View style={styles.sectionContainer}>
-							<Text style={styles.similarProductsTitle}>
-								{t('similarProducts').toUpperCase()}
+						<View style={styles.relatedProductsSection}>
+							<View style={styles.relatedProductsHeader}>
+								<View style={styles.relatedProductsHeaderDecoration} />
+								<Text style={styles.relatedProductsTitle}>
+									{t('similarProducts')}
+								</Text>
+								<View style={styles.relatedProductsHeaderLine} />
+							</View>
+
+							<Text style={styles.relatedProductsSubtitle}>
+								{t('relatedProducts')}
 							</Text>
 
-							<ScrollView
-								horizontal
-								showsHorizontalScrollIndicator={false}
-								contentContainerStyle={styles.similarProductsScrollContent}
-							>
-								{product?.similarProducts?.map((product) => (
-									<RegularProductCard
-										key={product.productId}
-										product={product}
-										onToggleFavorite={() => {}}
-										style={styles.similarProductCard}
+							{/* Related Products List */}
+							{loadingRelatedProducts ? (
+								<ScrollView
+									horizontal
+									showsHorizontalScrollIndicator={false}
+									contentContainerStyle={styles.relatedProductsScrollContent}
+									style={styles.relatedProductsScroll}
+								>
+									{Array.from({ length: 3 }).map((_, index) => (
+										<RelatedProductSkeleton key={`skeleton-${index}`} />
+									))}
+								</ScrollView>
+							) : relatedProducts.length > 0 ? (
+								<ScrollView
+									horizontal
+									showsHorizontalScrollIndicator={false}
+									contentContainerStyle={styles.relatedProductsScrollContent}
+									style={styles.relatedProductsScroll}
+								>
+									{relatedProducts.map((product, index) => (
+										<RelatedProductCard
+											key={`related-${product.product_id}-${index}`}
+											product={product}
+										/>
+									))}
+								</ScrollView>
+							) : (
+								<View style={styles.noRelatedProductsContainer}>
+									<Ionicons
+										name="storefront-outline"
+										size={48}
+										color="#C67C4E"
 									/>
-								))}
-							</ScrollView>
+									<Text style={styles.noRelatedProductsText}>
+										{t('noRelatedProducts')}
+									</Text>
+								</View>
+							)}
 						</View>
 						{/* Add extra space at the bottom to account for the buttons */}
 						<View style={styles.bottomButtonSpacer} />
@@ -538,7 +734,7 @@ export default function ProductDetailScreen() {
 								</View>
 
 								<View style={styles.sizeOptionsContainer}>
-									{product.sizes.map((size) => (
+									{product.sizes.map((size: string) => (
 										<TouchableOpacity
 											key={size}
 											style={[
@@ -1171,5 +1367,169 @@ const styles = StyleSheet.create({
 	fullscreenImage: {
 		width: '90%',
 		height: '90%',
+	},
+
+	// Related Products Section Styles
+	relatedProductsSection: {
+		marginTop: 10,
+		marginBottom: 20,
+	},
+	relatedProductsHeader: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	relatedProductsHeaderDecoration: {
+		width: 4,
+		height: 24,
+		backgroundColor: '#C67C4E',
+		borderRadius: 2,
+		marginRight: 12,
+	},
+	relatedProductsTitle: {
+		fontSize: 18,
+		fontFamily: 'Inter-Bold',
+		color: '#2D2D2D',
+		marginRight: 12,
+	},
+	relatedProductsHeaderLine: {
+		flex: 1,
+		height: 1,
+		backgroundColor: '#E8E8E8',
+	},
+	relatedProductsSubtitle: {
+		fontSize: 14,
+		fontFamily: 'Inter-Regular',
+		color: '#7C7C7C',
+		marginBottom: 16,
+		marginLeft: 16,
+	},
+	relatedProductsScroll: {
+		marginHorizontal: -20,
+	},
+	relatedProductsScrollContent: {
+		paddingHorizontal: 20,
+		paddingBottom: 8,
+	},
+	noRelatedProductsContainer: {
+		alignItems: 'center',
+		paddingVertical: 32,
+		backgroundColor: '#FAFAFA',
+		borderRadius: 16,
+		marginHorizontal: 4,
+	},
+	noRelatedProductsText: {
+		fontSize: 14,
+		fontFamily: 'Inter-Medium',
+		color: '#999999',
+		marginTop: 12,
+	},
+
+	// Related Product Card Styles
+	relatedProductCard: {
+		width: width * 0.42,
+		backgroundColor: '#FFFFFF',
+		borderRadius: 16,
+		marginRight: 16,
+		shadowColor: '#C67C4E',
+		shadowOffset: { width: 0, height: 4 },
+		shadowOpacity: 0.08,
+		shadowRadius: 12,
+		elevation: 4,
+		borderWidth: 0.5,
+		borderColor: 'rgba(198, 124, 78, 0.1)',
+	},
+	relatedProductImageContainer: {
+		position: 'relative',
+		height: width * 0.32,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+		overflow: 'hidden',
+	},
+	relatedProductImagePlaceholder: {
+		flex: 1,
+		backgroundColor: '#F8F4EF',
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	relatedProductDiscountBadge: {
+		position: 'absolute',
+		top: 8,
+		right: 8,
+		backgroundColor: '#FF4757',
+		borderRadius: 8,
+		paddingHorizontal: 6,
+		paddingVertical: 2,
+	},
+	relatedProductDiscountText: {
+		fontSize: 10,
+		fontFamily: 'Inter-Bold',
+		color: '#FFFFFF',
+	},
+	relatedProductInfo: {
+		padding: 12,
+		flex: 1,
+		justifyContent: 'space-between',
+	},
+	relatedProductName: {
+		fontSize: 14,
+		fontFamily: 'Inter-SemiBold',
+		color: '#2D2D2D',
+		lineHeight: 18,
+		marginBottom: 8,
+		minHeight: 36,
+	},
+	relatedProductPriceContainer: {
+		marginBottom: 8,
+	},
+	relatedProductPrice: {
+		fontSize: 16,
+		fontFamily: 'Inter-Bold',
+		color: '#C67C4E',
+	},
+	relatedProductDiscountedPrice: {
+		fontSize: 16,
+		fontFamily: 'Inter-Bold',
+		color: '#C67C4E',
+		marginBottom: 2,
+	},
+	relatedProductOriginalPrice: {
+		fontSize: 12,
+		fontFamily: 'Inter-Regular',
+		color: '#999999',
+		textDecorationLine: 'line-through',
+	},
+	relatedProductFooter: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	relatedProductSizeIndicator: {
+		backgroundColor: 'rgba(198, 124, 78, 0.1)',
+		borderRadius: 6,
+		paddingHorizontal: 8,
+		paddingVertical: 4,
+	},
+	relatedProductSizeText: {
+		fontSize: 12,
+		fontFamily: 'Inter-Medium',
+		color: '#C67C4E',
+	},
+	relatedProductAddButton: {
+		backgroundColor: '#C67C4E',
+		borderRadius: 8,
+		width: 28,
+		height: 28,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+
+	// Loading skeleton styles
+	skeletonShimmer: {
+		backgroundColor: '#F0F0F0',
+	},
+	skeletonLine: {
+		backgroundColor: '#F0F0F0',
+		borderRadius: 4,
 	},
 })

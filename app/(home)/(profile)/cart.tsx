@@ -18,12 +18,12 @@ import Button from '@/components/ui/Button'
 import QuantityControl from '@/components/ui/QuantityControl'
 import Checkbox from '@/components/ui/Checkbox'
 import { useAlert } from '@/hooks/useAlert'
-import DishDecoration from '@/components/shared/DishDecoration'
-import { addToWishlist, cartAPI, removeFromWishlist } from '@/utils/api'
-import DashedLine from 'react-native-dashed-line'
+import { cartAPI, addToWishlist, removeFromWishlist } from '@/utils/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { formatPrice } from '@/utils/display'
+import DishDecoration from '@/components/shared/DishDecoration'
 import BottomSpacer from '@/components/shared/BottomSpacer'
+// import DashedLine from '@/components/ui/DashedLine'
+import { formatPrice } from '@/utils/display'
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window')
@@ -697,7 +697,15 @@ export default function CartScreen() {
 						contentContainerStyle={styles.listContainer}
 						showsVerticalScrollIndicator={false}
 						ListFooterComponent={
-							<DashedLine dashColor="#A0998E" dashGap={5} dashThickness={1} />
+							// <DashedLine dashColor="#A0998E" dashGap={5} dashThickness={1} />
+
+							<View style={styles.dashedLine}>
+								{Array.from({ length: Math.ceil(height / 6) }).map(
+									(_, index) => (
+										<View key={index} style={styles.dashedLine} />
+									)
+								)}
+							</View>
 						}
 					/>
 

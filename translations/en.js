@@ -16,6 +16,7 @@ export default {
 	info: "Information",
 	goBack: "Go back",
 	clear: "Clear",
+	loading: "Loading...",
 
 	// Input email
 	socialSigninError:
@@ -119,6 +120,9 @@ export default {
 	highestRated: "Highest rated",
 	discounted: "On sale",
 	explore: "Explore",
+	newProducts: "New Products",
+	new: "New",
+	tryNow: "Try Now",
 
 	// Address Input Screen
 	deliveryLocation: "Delivery location",
@@ -230,6 +234,7 @@ export default {
 	writeReview: "Write review",
 	viewMoreReviews: "View more reviews",
 	relatedProducts: "You might like",
+	noRelatedProducts: "No similar products available",
 	outOfStock: "Out of stock",
 	inStock: "In stock",
 	ratings: "ratings",
@@ -615,4 +620,12 @@ export default {
 	suggestionTemplate_8: "Make your meal complete with {productName}",
 	suggestionTemplate_9: "80% of customers add {productName}",
 	suggestionTemplate_10: "Perfect combo: add {productName} now!",
+
+	// Carousel banners
+	summerFlashSaleTitle: "Summer Flash Sale",
+	summerFlashSaleDesc: "30% off all cold drinks",
+	freshPastriesTitle: "Fresh Pastries",
+	freshPastriesDesc: "New bakery items just arrived",
+	craftBeveragesTitle: "Craft Beverages",
+	craftBeveragesDesc: "Handcrafted with love",
 };

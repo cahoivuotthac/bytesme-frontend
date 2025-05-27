@@ -217,22 +217,6 @@ const styles = StyleSheet.create({
 		shadowRadius: 16,
 		elevation: 10,
 	},
-	// shadowContainer: {
-	// 	position: 'absolute',
-	// 	top: 0,
-	// 	left: 0,
-	// 	right: 0,
-	// 	bottom: 0,
-	// 	backgroundColor: '#FFFFFF',
-	// 	shadowColor: '#000',
-	// 	shadowOffset: {
-	// 		width: 0,
-	// 		height: -6,
-	// 	},
-	// 	shadowOpacity: 1.0,
-	// 	shadowRadius: 8,
-	// 	elevation: 10,
-	// },
 	mainContainer: {
 		flexDirection: 'row',
 		justifyContent: 'space-around',

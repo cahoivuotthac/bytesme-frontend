@@ -144,6 +144,15 @@ export const cartAPI = {
 
 	// productIds: 1,2,4,5 (comma-separated string)
 	getCoOccurProducts: async (productIds: string) => {
+		// If it's a single product ID (for getting product details)
+		if (!productIds.includes(',')) {
+			return await APIClient.get(
+				"/product/details?" +
+					new URLSearchParams({ product_id: productIds }).toString()
+			);
+		}
+		
+		// If it's multiple product IDs (for co-occur products)
 		return await APIClient.get(
 			"/product/related/co-occur?" +
 				new URLSearchParams({ product_ids: productIds }).toString()
@@ -253,19 +262,13 @@ export const productAPI = {
 		);
 	},
 
-	getSimilarProducts: async (productId: number, limit: number) => {
+	getRelatedProducts: async (productId: number, limit: number) => {
 		return APIClient.get(
-			"/product/similar-products?" +
+			"/product/related/semantics?" +
 				new URLSearchParams({
 					product_id: productId.toString(),
 					limit: limit.toString(),
-				}).toString(),
-			{
-				headers: {
-					// "Content-Type": 'application/json',
-					Accept: "text/event-stream",
-				},
-			}
+				}).toString()
 		);
 	},
 
@@ -310,6 +313,13 @@ export const productAPI = {
 					offset: offset.toString(),
 					limit: limit.toString(),
 				}).toString()
+		);
+	},
+
+	getHomepageProducts: async (limit = 10) => {
+		return APIClient.get(
+			"/product/homepage?" +
+				new URLSearchParams({ limit: limit.toString() }).toString()
 		);
 	},
 };

@@ -16,6 +16,7 @@ export default {
 	info: "Thông báo",
 	goBack: "Quay lại",
 	clear: "Xóa",
+	loading: "Đang tải...",
 
 	// Input email
 	socialSigninError:
@@ -119,6 +120,9 @@ export default {
 	highestRated: "Đánh giá cao",
 	discounted: "Đang giảm giá",
 	explore: "Khám phá",
+	newProducts: "Sản phẩm mới",
+	new: "Mới",
+	tryNow: "Thử ngay",
 
 	// Address Input Screen
 	deliveryLocation: "Địa điểm giao hàng",
@@ -240,6 +244,7 @@ export default {
 		"Không thể tải thông tin sản phẩm. Vui lòng thử lại.",
 	errorFetchingProductFeedbacks:
 		"Không thể tải đánh giá sản phẩm. Vui lòng thử lại.",
+	noRelatedProducts: "Không tìm thấy sản phẩm liên quan",
 
 	// Profile layout
 	profile: "Hồ sơ",
@@ -358,7 +363,7 @@ export default {
 	orderCompleted: "Hoàn tất!",
 	orderReceivedMessage:
 		"Đơn hàng của bạn đã được tiếp nhận. Hãy chờ đợi ít phút nhé! ^^",
-	orderDetails: "Chi Tiết Đơn Hàng",
+	orderDetails: "Chi Tiết Đơn",
 	orderNumber: "Mã đơn hàng",
 	orderDate: "Ngày đặt hàng",
 	trackOrder: "Theo dõi đơn hàng",
@@ -623,4 +628,13 @@ export default {
 	suggestionTemplate_8: "Thêm {productName} để trải nghiệm phong phú hơn",
 	suggestionTemplate_9: "80% khách hàng đặt kèm {productName}",
 	suggestionTemplate_10: "Combo hoàn hảo: thêm {productName} ngay!",
+
+	// Carousel banners
+	summerFlashSaleTitle: "Đại Tiệc Mùa Hè Siêu Ưu Đãi",
+	summerFlashSaleDesc: "Giảm giá 30% cho tất cả đồ uống mát lạnh",
+	freshPastriesTitle: "Bánh Ngọt Vừa Ra Lò",
+	freshPastriesDesc: "Các loại bánh mới ra lò thơm lừng, hấp dẫn",
+	craftBeveragesTitle: "Đồ Uống Thủ Công",
+	craftBeveragesDesc: "Từng ly được chế biến tỉ mỉ với cả trái tim",
+	viewOffers: "Xem Ưu Đãi",
 };
