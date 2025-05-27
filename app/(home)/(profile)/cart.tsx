@@ -770,13 +770,15 @@ const styles = StyleSheet.create({
 		marginTop: 2,
 	},
 	sizeButton: {
-		width: 30,
+		// width: 30, // Removed fixed width to allow content to grow
+		paddingHorizontal: 12,
 		height: 24,
 		borderRadius: 6,
 		backgroundColor: 'rgba(191, 173, 142, 0.2)',
 		justifyContent: 'center',
 		alignItems: 'center',
 		marginRight: 8,
+		alignSelf: 'flex-start',
 	},
 	selectedSizeButton: {
 		backgroundColor: '#C67C4E',
