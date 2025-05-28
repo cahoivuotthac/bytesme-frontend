@@ -89,7 +89,7 @@ export default function OrderTrackingScreen() {
 		console.log('OrderStatusEvent event received:', event)
 		console.log('current order ID:', orderId)
 
-		if (parseInt(event.orderId) !== orderId) {
+		if (Number(event.orderId) !== Number(orderId)) {
 			console.log(
 				'Order ID does not match. Ignoring event for order ID:',
 				event.orderId
