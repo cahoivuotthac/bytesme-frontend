@@ -48,6 +48,7 @@ export default function ProfileLayout() {
 			>
 				<Stack.Screen name="wishlist"></Stack.Screen>
 				<Stack.Screen name="cart"></Stack.Screen>
+				<Stack.Screen name="notifications"></Stack.Screen>
 			</Stack>
 		</View>
 	)

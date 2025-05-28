@@ -36,7 +36,7 @@ const TABS = [
 		activeIcon: require('@/assets/icons/bottom-bar/notification-fill.png'),
 		icon: require('@/assets/icons/bottom-bar/notification-line.png'),
 		label: 'notifications',
-		path: '/(home)/notifications',
+		path: '/(home)/(profile)/notifications',
 	},
 	{
 		name: 'profile',

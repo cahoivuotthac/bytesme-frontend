@@ -29,6 +29,29 @@ export const notificationAPI = {
 			expo_push_token: token,
 		});
 	},
+	getNotifications: async () => {
+		return await APIClient.get("/user/notification");
+	},
+
+	markAsRead: async (notificationId: string) => {
+		return await APIClient.post("/user/notification/mark-as-read", {
+			notification_id: notificationId,
+		});
+	},
+
+	markAllAsRead: async () => {
+		return await APIClient.post("/user/notifications/mark-all-as-read");
+	},
+
+	deleteNotification: async (notificationId: string) => {
+		return await APIClient.post("/user/notification/delete", {
+			notification_id: notificationId,
+		});
+	},
+
+	getUnreadCount: async () => {
+		return await APIClient.get("/user/notification/unread-count");
+	},
 };
 
 // Wishlist API endpoints
@@ -145,13 +168,13 @@ export const cartAPI = {
 	// productIds: 1,2,4,5 (comma-separated string)
 	getCoOccurProducts: async (productIds: string) => {
 		// If it's a single product ID (for getting product details)
-		if (!productIds.includes(',')) {
+		if (!productIds.includes(",")) {
 			return await APIClient.get(
 				"/product/details?" +
 					new URLSearchParams({ product_id: productIds }).toString()
 			);
 		}
-		
+
 		// If it's multiple product IDs (for co-occur products)
 		return await APIClient.get(
 			"/product/related/co-occur?" +
@@ -462,6 +485,15 @@ export const orderAPI = {
 	getOrderDetails: (orderId: number) => {
 		return APIClient.get(
 			"/order/details?" +
+				new URLSearchParams({
+					order_id: orderId.toString(),
+				}).toString()
+		);
+	},
+
+	getOrderStatus: (orderId: number) => {
+		return APIClient.get(
+			"/order/status?" +
 				new URLSearchParams({
 					order_id: orderId.toString(),
 				}).toString()

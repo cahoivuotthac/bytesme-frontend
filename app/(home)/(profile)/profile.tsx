@@ -76,7 +76,7 @@ export default function ProfileMainScreen() {
 	}
 
 	const navigateToNotifications = () => {
-		router.push('/notifications')
+		router.push('/(home)/(profile)/notifications')
 	}
 
 	return (

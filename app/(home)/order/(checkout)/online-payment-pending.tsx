@@ -22,9 +22,9 @@ import { useEchoChannel } from '@/hooks/useEchoChannel'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useAlert } from '@/hooks/useAlert'
 import { useMemo } from 'react'
+import { orderAPI } from '@/utils/api'
 import QRCode from 'react-native-qrcode-svg'
 import BottomSpacer from '@/components/shared/BottomSpacer'
-import { orderAPI } from '@/utils/api'
 
 const ACCENT_ORANGE = '#FF9F67' // Slightly deeper orange for better contrast
 const SOFT_ORANGE = '#FFE5D0'
@@ -88,6 +88,15 @@ export default function OnlinePaymentPendingScreen() {
 		mobile: string // Deep link for mobile (opens Momo app), e.g momo  ://app?action=payWithApp&isScanQR=false&serviceType=app&sid=TU9NT3wxMDAwMDEx&v=3.0
 		web: string // A web-based payment link provided by the payment gateway
 	}
+
+	// Preset orderId if available
+	const presetOrderId = Number(params.orderId as string)
+	// Effect to set orderId from params if not already set
+	useEffect(() => {
+		if (!orderId && presetOrderId && !isNaN(presetOrderId)) {
+			setOrderId(presetOrderId)
+		}
+	}, [orderId, presetOrderId, setOrderId])
 
 	// Cancel order handler
 	const handleCancelOrder = async () => {
