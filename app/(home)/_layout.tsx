@@ -13,7 +13,7 @@ import BottomBar from '@/components/shared/BottomBar'
 import * as Notifications from 'expo-notifications'
 import Constants from 'expo-constants'
 import { userAPI } from '@/utils/api'
-import { NotificationService } from '@/services/NotificationServices'
+import { PushNotificationService } from '@/services/PushNotificationService'
 
 /**
  * Layout for all authenticated screens in the app
@@ -29,12 +29,12 @@ export default function HomeLayout() {
 			return
 		}
 
-		const notificationService = new NotificationService()
+		const pushNotificationService = new PushNotificationService()
 		// Get push token
-		notificationService.registerForPushNotifications()
+		pushNotificationService.registerForPushNotifications()
 
 		// Setup listener
-		const subscriptions = notificationService.setupNotificationListeners()
+		const subscriptions = pushNotificationService.setupNotificationListeners()
 
 		return () => {
 			subscriptions.foregroundSubscription.remove()
