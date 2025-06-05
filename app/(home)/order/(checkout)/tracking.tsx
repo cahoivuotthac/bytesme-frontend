@@ -671,12 +671,13 @@ export default function OrderTrackingScreen() {
 										: t('backToHome')
 								}
 								onPress={() => {
-									if (trackingOrder?.order_status === 'delivered') {
-										router.navigate('/(home)/order/(checkout)/feedback')
-									} else if (trackingOrder.order_status === 'cancelled') {
-										router.navigate('/(home)/product') // go to home
-									} else if (trackingOrder.order_status === 'pending') {
-										router.navigate('/(home)/product') // go to home
+									switch (trackingOrder?.order_status) {
+										case 'delivered':
+											router.navigate('/(home)/order/(checkout)/feedback')
+											break
+										default:
+											router.navigate('/(home)/product') // go to home
+											break
 									}
 								}}
 								backgroundColor="transparent"
