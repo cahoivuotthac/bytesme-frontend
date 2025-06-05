@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
 	View,
 	Text,
@@ -16,6 +16,8 @@ import {
 	ScrollView,
 	Animated,
 	Easing,
+	KeyboardAvoidingView,
+	Platform,
 } from 'react-native'
 import { router, useLocalSearchParams, Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -34,6 +36,7 @@ import URLs from '@/constants/URLs'
 import EventSource from 'react-native-sse'
 import { useAuth } from '@/providers/auth'
 import { LinearGradient } from 'expo-linear-gradient'
+import BottomSpacer from '@/components/shared/BottomSpacer'
 
 const { width, height } = Dimensions.get('window')
 
@@ -96,7 +99,17 @@ interface RAGThinkingChunk {
 	chunk: string
 }
 
-type RAGChunk = RAGTextChunk | RAGProductData | RAGThinkingChunk
+// Type for session_id response
+interface RAGSessionIdChunk {
+	type: 'session_id'
+	session_id: string
+}
+
+type RAGChunk =
+	| RAGTextChunk
+	| RAGProductData
+	| RAGThinkingChunk
+	| RAGSessionIdChunk
 
 // Type definitions for semantic search results
 interface SemanticProductData {
@@ -112,6 +125,15 @@ interface SemanticProductData {
 	image_url: string
 	price: string
 	is_favorited: boolean
+}
+
+// Add conversation message type
+interface ConversationMessage {
+	id: string
+	type: 'user' | 'assistant'
+	content: string
+	timestamp: Date
+	products?: RAGProductData['data'][]
 }
 
 export default function SearchResultsScreen() {
@@ -130,6 +152,14 @@ export default function SearchResultsScreen() {
 	const [showFilterModal, setShowFilterModal] = useState(false)
 	const [showScrollButton, setShowScrollButton] = useState(false)
 	const scrollButtonAnim = useRef(new Animated.Value(0)).current
+
+	// Add session and conversation state
+	const [sessionId, setSessionId] = useState<string | null>(null)
+	const [conversationHistory, setConversationHistory] = useState<
+		ConversationMessage[]
+	>([])
+	const [chatInput, setChatInput] = useState('')
+	const [isSendingMessage, setIsSendingMessage] = useState(false)
 
 	// RAG search state
 	const [isRagMode, setIsRagMode] = useState(params.isAiMode === 'true')
@@ -173,6 +203,14 @@ export default function SearchResultsScreen() {
 	const [isLoadingMore, setIsLoadingMore] = useState(false)
 	const ITEMS_PER_PAGE = 10
 
+	// Add state to track which messages should be animated
+	const [animatedMessageIds, setAnimatedMessageIds] = useState<Set<string>>(
+		new Set()
+	)
+	const [currentStreamingMessageId, setCurrentStreamingMessageId] = useState<
+		string | null
+	>(null)
+
 	// Search initial results on page load
 	useEffect(() => {
 		performSearch(params.isAiMode === 'true', currentQuery)
@@ -208,14 +246,38 @@ export default function SearchResultsScreen() {
 	}
 
 	// Most important function: perform RAG search
-	const performRagSearch = async (query: string) => {
-		setIsLoading(true)
-		setIsStreaming(true)
+	const performRagSearch = async (
+		query: string,
+		isFollowUp: boolean = false
+	) => {
+		const messageId = Date.now().toString()
+
+		// Add user message to conversation history
+		const userMessage: ConversationMessage = {
+			id: `user-${messageId}`,
+			type: 'user',
+			content: query,
+			timestamp: new Date(),
+		}
+
+		if (isFollowUp) {
+			setConversationHistory((prev) => [...prev, userMessage])
+			setIsSendingMessage(true)
+		} else {
+			setIsLoading(true)
+			setIsStreaming(true)
+			setConversationHistory([userMessage])
+		}
+
+		// Set current streaming message ID for animation tracking
+		setCurrentStreamingMessageId(`assistant-${messageId}`)
+
+		// Reset current streaming state (keep conversation history intact)
 		setRagAnswer('')
 		setRagProducts([])
 		setThinkingText('')
 		setIsThinking(true)
-		setShowProducts(false)
+		// setShowProducts(false)
 		setAnimatingProducts(false)
 		productAnimRefs.current = []
 		hasCompletedAnswering.current = false
@@ -227,22 +289,37 @@ export default function SearchResultsScreen() {
 				eventSourceRef.current = null
 			}
 
-			// Create a new EventSource connection to the server
-			const endpoint = productAPI.getSearchRagEndpoint(query)
+			// Create endpoint with session ID if available
+			let endpoint = productAPI.getSearchRagEndpoint(query)
+			if (sessionId && isFollowUp) {
+				endpoint += `&session_id=${sessionId}`
+			}
 
-			const eventSource = new EventSource(endpoint, {
-				headers: {
-					Authorization: authState.authToken,
-					Accept: 'text/event-stream',
-					'Cache-Control': 'no-cache',
-				},
-			})
+			const headers: Record<string, string> = {
+				Authorization: authState.authToken ?? '',
+				Accept: 'text/event-stream',
+				'Cache-Control': 'no-cache',
+			}
+
+			// Add session ID to headers if available
+			if (sessionId && isFollowUp) {
+				headers['X-Session-ID'] = sessionId
+			}
+
+			const eventSource = new EventSource(endpoint, { headers })
 			eventSourceRef.current = eventSource
 
+			// Track assistant message content
+			let assistantContent = ''
+			let assistantProducts: RAGProductData['data'][] = []
+
 			// Set up event listeners
-			eventSource.addEventListener('open', () => {
+			eventSource.addEventListener('open', (event) => {
 				console.log('SSE connection opened')
-				setIsLoading(false)
+
+				if (!isFollowUp) {
+					setIsLoading(false)
+				}
 			})
 
 			eventSource.addEventListener('message', (event) => {
@@ -250,43 +327,88 @@ export default function SearchResultsScreen() {
 					console.log('Received SSE message:', event.data)
 
 					if (event.data === '[DONE]') {
+						// Create assistant message for conversation history
+						const assistantMessage: ConversationMessage = {
+							id: `assistant-${messageId}`,
+							type: 'assistant',
+							content: assistantContent,
+							timestamp: new Date(),
+							products:
+								assistantProducts.length > 0 ? assistantProducts : undefined,
+						}
+
+						// Add to conversation history
+						setConversationHistory((prev) => [...prev, assistantMessage])
+
+						// Mark this message for animation
+						setAnimatedMessageIds(
+							(prev) => new Set([...prev, assistantMessage.id])
+						)
+
 						// End of stream, close connection
 						eventSource.close()
 						eventSourceRef.current = null
 						setIsStreaming(false)
 						setIsThinking(false)
+						setIsSendingMessage(false)
 
-						// Start product card animations after the text animation is done
-						setTimeout(() => {
-							// Initialize animation values for each product
-							if (ragProducts.length > 0) {
-								console.log(
-									'Preparing to show products, count:',
-									ragProducts.length
-								)
-								productAnimRefs.current = ragProducts.map(
-									() => new Animated.Value(0)
-								)
-								hasCompletedAnswering.current = true
-								setShowProducts(true)
-								setAnimatingProducts(true)
-							}
-						}, 1000)
+						// Clear current streaming state since it's now in conversation history
+						setRagProducts([])
+						setRagAnswer('')
+						setCurrentStreamingMessageId(null)
+
+						// Trigger animations for the new assistant message IMMEDIATELY
+						if (assistantProducts.length > 0) {
+							console.log(
+								'Setting up animations for new message products, count:',
+								assistantProducts.length
+							)
+
+							// Set up animation refs for the products
+							productAnimRefs.current = assistantProducts.map(
+								() => new Animated.Value(0)
+							)
+
+							// Start animation immediately
+							setAnimatingProducts(true)
+
+							// Create animation sequence
+							const productShowDelay = 5000
+							setTimeout(() => {
+								const animations = assistantProducts.map((_, index) => {
+									return Animated.timing(productAnimRefs.current[index], {
+										toValue: 1,
+										duration: 500,
+										delay: index * 250,
+										useNativeDriver: true,
+										easing: Easing.bezier(0.16, 1, 0.3, 1),
+									})
+								})
+
+								// Run animations
+								Animated.stagger(500, animations).start(() => {
+									console.log('Product animations completed')
+									setAnimatingProducts(false)
+								})
+							}, productShowDelay)
+						}
 						return
 					}
 
 					const data: RAGChunk = JSON.parse(event.data || '{}')
 
 					if (data.type === 'thinking') {
-						// Accumulate thinking text for display in the thinking card
 						console.log('Thinking chunk received:', data.chunk)
 						setThinkingText((prev) => prev + (data.chunk || '') + '\n')
 					} else if (data.type === 'answer') {
-						// Add the answer chunk to the displayed answer
-						setRagAnswer((prev) => prev + (data.chunk || ''))
+						const chunk = data.chunk || ''
+						assistantContent += chunk
+						setRagAnswer((prev) => prev + chunk)
 					} else if (data.type === 'product') {
-						// Store product data but don't show it yet
+						assistantProducts.push(data.data)
 						setRagProducts((prev) => [...prev, data.data])
+					} else if (data.type === 'session_id') {
+						setSessionId(data.session_id)
 					}
 				} catch (error) {
 					console.error('Error parsing SSE message:', error)
@@ -306,15 +428,15 @@ export default function SearchResultsScreen() {
 				setIsStreaming(false)
 				setIsLoading(false)
 				setIsThinking(false)
+				setIsSendingMessage(false)
 			})
-
-			// The server will handle the response through SSE events
 		} catch (error) {
 			console.error('Error setting up RAG search:', error)
 			showError(t('errorRetry'))
 			setIsStreaming(false)
 			setIsLoading(false)
 			setIsThinking(false)
+			setIsSendingMessage(false)
 
 			// Close any existing connection on error
 			if (eventSourceRef.current) {
@@ -322,6 +444,15 @@ export default function SearchResultsScreen() {
 				eventSourceRef.current = null
 			}
 		}
+	}
+
+	// Add function to handle sending follow-up messages
+	const handleSendMessage = () => {
+		const trimmedInput = chatInput.trim()
+		if (!trimmedInput || isSendingMessage || isStreaming) return
+
+		setChatInput('')
+		performRagSearch(trimmedInput, true)
 	}
 
 	const performNormalSearch = async (
@@ -831,70 +962,6 @@ export default function SearchResultsScreen() {
 		}
 	}, [])
 
-	// Modify the useEffect that tracks when products should be shown
-	useEffect(() => {
-		// Only check when we have text and streaming has completed
-		if (ragAnswer && !isStreaming && !isThinking && ragProducts.length > 0) {
-			console.log('Checking if we should show products now')
-
-			// Show products after a short delay
-			setTimeout(() => {
-				productAnimRefs.current = ragProducts.map(() => new Animated.Value(0))
-				setShowProducts(true)
-				setAnimatingProducts(true)
-
-				// Show the scroll button once products are ready to appear
-				showScrollToBottomButton()
-			}, 800)
-		}
-	}, [ragAnswer, isStreaming, isThinking, ragProducts.length])
-
-	// Manage product card animations
-	useEffect(() => {
-		if (animatingProducts && showProducts && ragProducts.length > 0) {
-			console.log('Starting product animations')
-			// Create animation sequence for products to appear one after another
-			const animations = ragProducts.map((_, index) => {
-				return Animated.timing(productAnimRefs.current[index], {
-					toValue: 1,
-					duration: 500,
-					delay: index * 250, // Stagger the animations
-					useNativeDriver: true,
-					easing: Easing.bezier(0.16, 1, 0.3, 1), // Nice spring-like curve
-				})
-			})
-
-			// Run animations in sequence with staggered timing
-			Animated.stagger(200, animations).start(() => {
-				console.log('Product animations completed')
-				setAnimatingProducts(false)
-			})
-		}
-	}, [animatingProducts, showProducts, ragProducts])
-
-	// Function to get animation style for a product card
-	const getProductAnimatedStyle = (index: number) => {
-		if (!productAnimRefs.current[index]) return {}
-
-		return {
-			opacity: productAnimRefs.current[index],
-			transform: [
-				{
-					translateY: productAnimRefs.current[index].interpolate({
-						inputRange: [0, 1],
-						outputRange: [50, 0], // Slide up from below
-					}),
-				},
-				{
-					scale: productAnimRefs.current[index].interpolate({
-						inputRange: [0, 1],
-						outputRange: [0.92, 1], // Grow slightly
-					}),
-				},
-			],
-		}
-	}
-
 	// Handle end reached for FlatList
 	const handleEndReached = () => {
 		if (!isRagMode && hasMore && !isLoadingMore && !isLoading) {
@@ -929,6 +996,65 @@ export default function SearchResultsScreen() {
 		return semanticResults
 	})()
 
+	// Enhanced renderConversationMessage function - handles ALL conversation display
+	const renderConversationMessage = (
+		message: ConversationMessage,
+		index: number
+	) => {
+		const shouldAnimate = animatedMessageIds.has(message.id)
+		const isCurrentStreaming = currentStreamingMessageId === message.id
+
+		if (message.type === 'user') {
+			return (
+				<View key={message.id} style={styles.userMessageContainer}>
+					<View style={styles.userMessageBubble}>
+						<Text style={styles.userMessageText}>{message.content}</Text>
+					</View>
+				</View>
+			)
+		} else {
+			// For assistant messages, show the content and products if any
+			return (
+				<View key={message.id} style={styles.assistantMessageContainer}>
+					{message.content && (
+						<RAGResponseBubble
+							text={message.content}
+							isLoading={false}
+							shouldAnimate={shouldAnimate && !isCurrentStreaming}
+							messageId={message.id}
+						/>
+					)}
+					{message.products &&
+						message.products.map((product, productIndex) => (
+							<View
+								key={`${message.id}-product-${productIndex}`}
+								style={{ marginBottom: 12 }}
+							>
+								<RAGProductCard product={product} />
+							</View>
+						))}
+				</View>
+			)
+		}
+	}
+
+	// Clean up animation tracking after animations complete - use useCallback to prevent re-renders
+	const cleanupAnimationTracking = useCallback(() => {
+		if (!animatingProducts && animatedMessageIds.size > 0) {
+			setTimeout(() => {
+				setAnimatedMessageIds(new Set())
+			}, 2000)
+		}
+	}, [animatingProducts, animatedMessageIds.size])
+
+	useEffect(() => {
+		cleanupAnimationTracking()
+	}, [cleanupAnimationTracking])
+
+	// Remove the problematic product animation effects that were causing re-renders
+	// Keep only essential animation logic
+
+	// SIMPLIFIED ScrollView content - ONLY conversation history, NO duplicates
 	return (
 		<LinearGradient
 			colors={['#FFFFFF', '#EDC8C9']}
@@ -961,6 +1087,7 @@ export default function SearchResultsScreen() {
 					showFiltersButton={!isRagMode} // Hide filters button in RAG mode
 					isInitiallyAiMode={isRagMode}
 					initialSearchQuery={currentQuery}
+					// disabled={isRagMode && (isStreaming || isSendingMessage)} // Disable during streaming
 				/>
 
 				{/* Active Filters Display - Only shown in normal search mode */}
@@ -1014,69 +1141,105 @@ export default function SearchResultsScreen() {
 
 				{/* Show RAG results if in RAG mode */}
 				{isRagMode ? (
-					<View style={styles.ragContainer}>
+					<KeyboardAvoidingView
+						style={styles.ragContainer}
+						behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+						keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+					>
 						<ScrollView
 							style={styles.ragScrollView}
 							contentContainerStyle={styles.ragContentContainer}
 							ref={scrollViewRef}
 							onScroll={checkScrollPosition}
-							scrollEventThrottle={500} // Increase throttle value to reduce event frequency
+							scrollEventThrottle={500}
+							removeClippedSubviews={true}
+							maxToRenderPerBatch={5}
+							windowSize={10}
 						>
-							{/* Thinking card - displayed during the thinking phase */}
-							<ThinkingCard
-								title={t('isThinking')}
-								streamingText={thinkingText}
-								isLoading={isThinking}
-							/>
+							{/* ONLY conversation history - renderConversationMessage handles ALL display logic */}
+							{conversationHistory.map((message, index) =>
+								renderConversationMessage(message, index)
+							)}
 
-							{/* Display the streamed text response */}
-							{!isThinking && (ragAnswer || isStreaming) && (
-								<RAGResponseBubble
-									text={ragAnswer || t('thinking')}
-									isLoading={isStreaming && ragAnswer === ''}
+							{/* Show current streaming content ONLY while streaming (before it's added to conversation) */}
+							{currentStreamingMessageId && (
+								<>
+									{/* Current thinking */}
+									{isThinking && (
+										<ThinkingCard
+											title={t('isThinking')}
+											streamingText={thinkingText}
+											isLoading={isThinking}
+										/>
+									)}
+
+									{/* Current streaming response */}
+									{(ragAnswer || isStreaming) && !isThinking && (
+										<RAGResponseBubble
+											text={ragAnswer || t('thinking')}
+											isLoading={isStreaming && ragAnswer === ''}
+											shouldAnimate={true}
+											messageId={currentStreamingMessageId}
+										/>
+									)}
+
+									{/* Current streaming products - temporary display only */}
+									{ragProducts.length > 0 &&
+										ragProducts.map((product, index) => (
+											<View
+												key={`streaming-${product.product_code}-${index}`}
+												style={{ marginBottom: 12, opacity: 0.7 }}
+											>
+												<RAGProductCard product={product} />
+											</View>
+										))}
+								</>
+							)}
+
+							{/* Loading indicator for initial response */}
+							{isLoading && conversationHistory.length === 0 && (
+								<ActivityIndicator
+									size="large"
+									color="#C67C4E"
+									style={styles.ragLoader}
 								/>
 							)}
-
-							{/* Display product cards with animation */}
-							{ragProducts.length > 0 &&
-								ragProducts.map((product, index) => (
-									<Animated.View
-										key={`${product.product_code}-${index}`}
-										style={[
-											{ marginBottom: 12 },
-											showProducts
-												? getProductAnimatedStyle(index)
-												: {
-														opacity: 0,
-														transform: [{ translateY: 50 }, { scale: 0.92 }],
-												  },
-										]}
-									>
-										<RAGProductCard product={product} />
-									</Animated.View>
-								))}
-
-							{/* Always render products but with zero opacity if not showing yet */}
-							{ragProducts.length > 0 && !showProducts && (
-								<View style={styles.productsComingSoonContainer}>
-									<Text style={styles.productsComingSoonText}>
-										{t('productsWillAppearSoon')}
-									</Text>
-								</View>
-							)}
-
-							{/* Loading indicator while waiting for initial response */}
-							{isLoading &&
-								!ragAnswer &&
-								!ragProducts.length &&
-								!isThinking && (
-									<ActivityIndicator
-										size="large"
-										color="#C67C4E"
-										style={styles.ragLoader}
-									/>
-								)}
 						</ScrollView>
+
+						{/* Chat Input - only show after first response */}
+						{sessionId && (
+							<View style={styles.chatInputContainer}>
+								<View style={styles.chatInputWrapper}>
+									<TextInput
+										style={styles.chatInput}
+										value={chatInput}
+										onChangeText={setChatInput}
+										placeholder={t('askFollowUpQuestion')}
+										placeholderTextColor="#999"
+										multiline
+										maxLength={500}
+										editable={!isSendingMessage && !isStreaming}
+									/>
+									<TouchableOpacity
+										style={[
+											styles.sendButton,
+											(!chatInput.trim() || isSendingMessage || isStreaming) &&
+												styles.sendButtonDisabled,
+										]}
+										onPress={handleSendMessage}
+										disabled={
+											!chatInput.trim() || isSendingMessage || isStreaming
+										}
+									>
+										{isSendingMessage ? (
+											<ActivityIndicator size="small" color="#FFFFFF" />
+										) : (
+											<Ionicons name="send" size={20} color="#FFFFFF" />
+										)}
+									</TouchableOpacity>
+								</View>
+							</View>
+						)}
 
 						{/* Improved button visibility - always render it, but conditionally show/hide */}
 						<Animated.View
@@ -1113,7 +1276,7 @@ export default function SearchResultsScreen() {
 								</LinearGradient>
 							</TouchableOpacity>
 						</Animated.View>
-					</View>
+					</KeyboardAvoidingView>
 				) : // Normal search results with infinite scrolling
 				displayResults.length > 0 ? (
 					<FlatList
@@ -1177,8 +1340,9 @@ export default function SearchResultsScreen() {
 														key={category.id}
 														style={[
 															styles.checkboxContainer,
-															selectedCategoryId === category.id &&
-																styles.selectedCheckbox,
+															selectedCategoryId === category.id
+																? styles.selectedCheckbox
+																: null,
 														]}
 														onPress={() =>
 															setSelectedCategoryId(
@@ -1191,8 +1355,9 @@ export default function SearchResultsScreen() {
 														<View
 															style={[
 																styles.checkbox,
-																selectedCategoryId === category.id &&
-																	styles.checkboxChecked,
+																selectedCategoryId === category.id
+																	? styles.checkboxChecked
+																	: null,
 															]}
 														>
 															{selectedCategoryId === category.id && (
@@ -1221,8 +1386,9 @@ export default function SearchResultsScreen() {
 													key={price.id}
 													style={[
 														styles.checkboxContainer,
-														selectedPriceRange === price.id &&
-															styles.selectedCheckbox,
+														selectedPriceRange === price.id
+															? styles.selectedCheckbox
+															: null,
 													]}
 													onPress={() =>
 														setSelectedPriceRange(
@@ -1233,8 +1399,9 @@ export default function SearchResultsScreen() {
 													<View
 														style={[
 															styles.checkbox,
-															selectedPriceRange === price.id &&
-																styles.checkboxChecked,
+															selectedPriceRange === price.id
+																? styles.checkboxChecked
+																: null,
 														]}
 													>
 														{selectedPriceRange === price.id && (
@@ -1265,6 +1432,7 @@ export default function SearchResultsScreen() {
 					</TouchableWithoutFeedback>
 				</Modal>
 			</SafeAreaView>
+			<BottomSpacer height={80} />
 		</LinearGradient>
 	)
 }
@@ -1367,7 +1535,7 @@ const styles = StyleSheet.create({
 		color: '#FFFFFF',
 	},
 	resultsContainer: {
-		paddingBottom: 100, // Extra space for bottom bar
+		paddingBottom: 60, // Extra space for bottom bar
 	},
 	row: {
 		justifyContent: 'space-between',
@@ -1627,5 +1795,67 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontFamily: 'Inter-Regular',
 		color: '#6A6A6A',
+	},
+	chatInputContainer: {
+		backgroundColor: '#FFFFFF',
+		borderTopWidth: 1,
+		borderTopColor: '#E8E8E8',
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		paddingBottom: Platform.OS === 'ios' ? 34 : 12,
+	},
+	chatInputWrapper: {
+		flexDirection: 'row',
+		alignItems: 'flex-end',
+		backgroundColor: '#F8F8F8',
+		borderRadius: 24,
+		borderWidth: 1,
+		borderColor: '#E0E0E0',
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		minHeight: 48,
+	},
+	chatInput: {
+		flex: 1,
+		fontSize: 16,
+		fontFamily: 'Inter-Regular',
+		color: '#3D3D3D',
+		maxHeight: 100,
+		paddingVertical: 8,
+		textAlignVertical: 'top',
+	},
+	sendButton: {
+		width: 36,
+		height: 36,
+		borderRadius: 18,
+		backgroundColor: '#C67C4E',
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginLeft: 8,
+	},
+	sendButtonDisabled: {
+		backgroundColor: '#CCCCCC',
+	},
+	userMessageContainer: {
+		alignItems: 'flex-end',
+		marginBottom: 16,
+		paddingHorizontal: 16,
+	},
+	userMessageBubble: {
+		backgroundColor: '#C67C4E',
+		borderRadius: 20,
+		borderBottomRightRadius: 4,
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+		maxWidth: '80%',
+	},
+	userMessageText: {
+		fontSize: 16,
+		fontFamily: 'Inter-Regular',
+		color: '#FFFFFF',
+		lineHeight: 20,
+	},
+	assistantMessageContainer: {
+		marginBottom: 16,
 	},
 })

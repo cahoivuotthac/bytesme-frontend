@@ -72,6 +72,7 @@ export default {
 		"Bytesme’s assistant is searching for the perfect products to satisfy your cravings…",
 	viewAllProducts: "View all products",
 	loadingMore: "Loading more products...",
+	askFollowUpQuestion: "Ask a follow-up question",
 
 	// Product Categories
 	all: "All",

@@ -72,6 +72,7 @@ export default {
 	isThinking: "Việc gì khó cứ để Bytesme lo ^^",
 	viewAllProducts: "Xem tất cả sản phẩm",
 	loadingMore: "Đang tải thêm sản phẩm...",
+	askFollowUpQuestion: "Bạn có câu hỏi nào khác không?",
 
 	// Product Categories
 	all: "Tất cả",

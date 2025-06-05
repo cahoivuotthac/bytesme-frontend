@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
@@ -11,6 +11,14 @@ interface RAGResponseBubbleProps {
 	 * Whether the response is still being generated/streamed
 	 */
 	isLoading?: boolean
+	/**
+	 * Whether this message should animate (only for new messages)
+	 */
+	shouldAnimate?: boolean
+	/**
+	 * Unique identifier for this message to prevent re-animation
+	 */
+	messageId?: string
 }
 
 /**
@@ -21,63 +29,69 @@ interface RAGResponseBubbleProps {
 const parseFormattedText = (text: string) => {
 	// Regex to match markdown-style bold text (**bold**)
 	const boldRegex = /\*\*(.*?)\*\*/g
-	
+
 	let lastIndex = 0
 	const segments = []
 	let match
-	
+
 	// Find all bold segments
 	while ((match = boldRegex.exec(text)) !== null) {
 		// Add any regular text before this match
 		if (match.index > lastIndex) {
 			segments.push({
 				type: 'regular',
-				content: text.substring(lastIndex, match.index)
+				content: text.substring(lastIndex, match.index),
 			})
 		}
-		
+
 		// Add the bold text without the ** markers
 		segments.push({
 			type: 'bold',
-			content: match[1]
+			content: match[1],
 		})
-		
+
 		// Update lastIndex to continue after this match
 		lastIndex = match.index + match[0].length
 	}
-	
+
 	// Add any remaining text after the last match
 	if (lastIndex < text.length) {
 		segments.push({
 			type: 'regular',
-			content: text.substring(lastIndex)
+			content: text.substring(lastIndex),
 		})
 	}
-	
+
 	return segments
 }
 
 /**
  * A tech-inspired transparent bubble that displays AI response with word-by-word streaming animation
  */
-const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
+const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 	text,
 	isLoading = false,
+	shouldAnimate = true,
+	messageId,
 }) => {
 	const [displayedText, setDisplayedText] = useState('')
 	const [wordIndex, setWordIndex] = useState(0)
-	const [formattedSegments, setFormattedSegments] = useState<Array<{type: string, content: string}>>([])
-	
+	const [formattedSegments, setFormattedSegments] = useState<
+		Array<{ type: string; content: string }>
+	>([])
+	const [hasAnimated, setHasAnimated] = useState(false)
+	const [isAnimationComplete, setIsAnimationComplete] = useState(false)
+
 	// Animation refs
 	const fadeAnim = useRef(new Animated.Value(0)).current
 	const borderAnim = useRef(new Animated.Value(0)).current
 	const cursorOpacity = useRef(new Animated.Value(1)).current
 	const scaleAnim = useRef(new Animated.Value(0.95)).current
+	
+	// Memoize words to prevent recalculation
+	const words = useMemo(() => text.split(' '), [text])
 
-	// Split text into words for streaming animation
-	const words = text.split(' ')
-
-	// Entrance animation
+	// Entrance animation - only run once
 	useEffect(() => {
 		Animated.parallel([
 			Animated.timing(fadeAnim, {
@@ -101,42 +115,64 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 				useNativeDriver: false,
 			})
 		).start()
-	}, [])
+	}, []) // Empty dependency array - only run once
 
-	// Word-by-word streaming animation
+	// Optimize word-by-word animation with better control
 	useEffect(() => {
-		if (words.length === 0) return
+		if (words.length === 0 || isAnimationComplete) return
 
-		const streamWords = () => {
-			if (wordIndex < words.length) {
-				const timer = setTimeout(() => {
-					setDisplayedText(prev => {
-						const newText = prev + (prev ? ' ' : '') + words[wordIndex]
-						// Parse formatted text whenever we update displayed text
-						setFormattedSegments(parseFormattedText(newText))
-						return newText
-					})
-					setWordIndex(prev => prev + 1)
-				}, 50 + Math.random() * 100) // Variable delay for natural feel
-
-				return () => clearTimeout(timer)
-			}
+		// If this message shouldn't animate or has already animated, show all text immediately
+		if (!shouldAnimate || hasAnimated) {
+			setDisplayedText(text)
+			setFormattedSegments(parseFormattedText(text))
+			setWordIndex(words.length)
+			setIsAnimationComplete(true)
+			return
 		}
 
-		return streamWords()
-	}, [wordIndex, words])
+		// Only animate if we haven't reached the end
+		if (wordIndex < words.length) {
+			const timer = setTimeout(() => {
+				setDisplayedText((prev) => {
+					const newText = prev + (prev ? ' ' : '') + words[wordIndex]
+					setFormattedSegments(parseFormattedText(newText))
+					return newText
+				})
+				setWordIndex((prev) => {
+					const newIndex = prev + 1
+					if (newIndex >= words.length) {
+						setHasAnimated(true)
+						setIsAnimationComplete(true)
+					}
+					return newIndex
+				})
+			}, 50 + Math.random() * 30)
 
-	// Reset animation when text changes
-	useEffect(() => {
-		setDisplayedText('')
-		setWordIndex(0)
-		setFormattedSegments([])
-	}, [text])
+			return () => clearTimeout(timer)
+		}
+	}, [wordIndex, words.length, shouldAnimate, hasAnimated, isAnimationComplete])
 
-	// Cursor blinking animation
+	// Reset animation when messageId changes (new message)
 	useEffect(() => {
-		if (isLoading || wordIndex < words.length) {
-			Animated.loop(
+		if (shouldAnimate && !isAnimationComplete) {
+			setDisplayedText('')
+			setWordIndex(0)
+			setFormattedSegments([])
+			setHasAnimated(false)
+			setIsAnimationComplete(false)
+		} else if (!shouldAnimate) {
+			// Show immediately if not animating
+			setDisplayedText(text)
+			setFormattedSegments(parseFormattedText(text))
+			setWordIndex(words.length)
+			setIsAnimationComplete(true)
+		}
+	}, [messageId]) // Only depend on messageId
+
+	// Optimize cursor animation
+	useEffect(() => {
+		if ((isLoading || (wordIndex < words.length && shouldAnimate && !isAnimationComplete))) {
+			const animation = Animated.loop(
 				Animated.sequence([
 					Animated.timing(cursorOpacity, {
 						toValue: 0,
@@ -149,7 +185,10 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 						useNativeDriver: true,
 					}),
 				])
-			).start()
+			)
+			animation.start()
+			
+			return () => animation.stop()
 		} else {
 			// Hide cursor when done
 			Animated.timing(cursorOpacity, {
@@ -158,33 +197,37 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 				useNativeDriver: true,
 			}).start()
 		}
-	}, [isLoading, wordIndex, words.length])
+	}, [isLoading, wordIndex, words.length, shouldAnimate, isAnimationComplete])
 
-	// Animated border color interpolation
-	const borderColor = borderAnim.interpolate({
+	// Memoize animated values to prevent recalculation
+	const borderColor = useMemo(() => borderAnim.interpolate({
 		inputRange: [0, 0.5, 1],
 		outputRange: ['#00D4FF', '#7C3AED', '#00D4FF'],
-	})
+	}), [borderAnim])
 
-	const shadowColor = borderAnim.interpolate({
+	const shadowColor = useMemo(() => borderAnim.interpolate({
 		inputRange: [0, 0.5, 1],
-		outputRange: ['rgba(0, 212, 255, 0.3)', 'rgba(124, 58, 237, 0.3)', 'rgba(0, 212, 255, 0.3)'],
-	})
+		outputRange: [
+			'rgba(0, 212, 255, 0.3)',
+			'rgba(124, 58, 237, 0.3)',
+			'rgba(0, 212, 255, 0.3)',
+		],
+	}), [borderAnim])
 
-	// Render formatted text segments
-	const renderFormattedText = () => {
+	// Memoize text rendering
+	const renderFormattedText = useCallback(() => {
 		return (
 			<Text style={styles.streamingText}>
 				{formattedSegments.map((segment, index) => (
-					<Text 
-						key={index} 
+					<Text
+						key={index}
 						style={segment.type === 'bold' ? styles.boldText : undefined}
 					>
 						{segment.content}
 					</Text>
 				))}
-				
-				{(isLoading || wordIndex < words.length) && (
+
+				{(isLoading || (wordIndex < words.length && shouldAnimate && !isAnimationComplete)) && (
 					<Animated.Text
 						style={[
 							styles.cursor,
@@ -198,7 +241,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 				)}
 			</Text>
 		)
-	}
+	}, [formattedSegments, isLoading, wordIndex, words.length, shouldAnimate, isAnimationComplete, cursorOpacity])
 
 	return (
 		<Animated.View
@@ -225,7 +268,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 					end={{ x: 1, y: 1 }}
 					style={styles.gradientBorder}
 				/>
-				
+
 				{/* Tech corner indicators */}
 				<View style={styles.cornerIndicators}>
 					<View style={[styles.corner, styles.topLeft]} />
@@ -250,9 +293,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 					</View>
 
 					{/* Streaming text with formatting */}
-					<View style={styles.textContainer}>
-						{renderFormattedText()}
-					</View>
+					<View style={styles.textContainer}>{renderFormattedText()}</View>
 				</View>
 
 				{/* Animated tech lines */}
@@ -277,7 +318,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = ({
 			</Animated.View>
 		</Animated.View>
 	)
-}
+})
 
 const { width } = Dimensions.get('window')
 
