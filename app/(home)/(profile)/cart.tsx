@@ -239,10 +239,6 @@ export default function CartScreen() {
 							// Now we directly have the product name from the response
 							const productName = coProduct.product_name || 'sản phẩm này'
 
-							// We'll still need to get the product image URL through a separate API call
-							const productResponse = await cartAPI.getCoOccurProducts(
-								coProduct.product_id.toString()
-							)
 							// const imageUrl =
 							// 	productDetails?.product_images?.[0]?.product_image_url || ''
 
