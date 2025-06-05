@@ -17,8 +17,6 @@ import { useTranslation } from '@/providers/locale'
 import { useAlert } from '@/hooks/useAlert'
 import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
 
-const { width } = Dimensions.get('window')
-
 // Order status configuration with aesthetic colors
 const ORDER_STATUS_DISPLAY = {
 	pending: {
