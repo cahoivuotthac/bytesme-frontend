@@ -13,15 +13,15 @@ Notifications.setNotificationHandler({
 	}),
 });
 
-export class NotificationService {
-	private static instance: NotificationService;
+export class PushNotificationService {
+	private static instance: PushNotificationService;
 	private expoPushToken: string | null = null;
 
-	static getInstance(): NotificationService {
-		if (!NotificationService.instance) {
-			NotificationService.instance = new NotificationService();
+	static getInstance(): PushNotificationService {
+		if (!PushNotificationService.instance) {
+			PushNotificationService.instance = new PushNotificationService();
 		}
-		return NotificationService.instance;
+		return PushNotificationService.instance;
 	}
 
 	/**
@@ -88,7 +88,6 @@ export class NotificationService {
 					"Notification received in foreground:",
 					notification
 				);
-				// You can customize foreground notification behavior here
 			});
 
 		// Handle notification tapped/clicked
@@ -96,12 +95,6 @@ export class NotificationService {
 			Notifications.addNotificationResponseReceivedListener(
 				(response) => {
 					console.log("Notification tapped:", response);
-					console.log(
-						"Notification content:",
-						response.notification.request.content
-					);
-
-					// Handle navigation based on notification data
 					this.handleNotificationTap(response.notification);
 				}
 			);
@@ -121,12 +114,10 @@ export class NotificationService {
 			notification
 		);
 
-		// Specific handlers
+		// Define specific handlers for each type of notification
 		const handleOrderStatusNotification = (notfication: any) => {
 			console.log("Handling order status notification:");
-
 			const data = notification.request.content?.data;
-
 			if (data && data?.order_id) {
 				console.log("Order ID:", data.order_id);
 				router.push({
@@ -140,8 +131,26 @@ export class NotificationService {
 			}
 		};
 
+		const handleOnlinePaymentNotification = (notification: any) => {
+			console.log("Handling online payment notification:");
+			const data = notification.request.content?.data;
+			if (data && data?.order_id) {
+				console.log("Order ID:", data.order_id);
+				// Go to order details page
+				router.push({
+					pathname: "/order/[id]",
+					params: {
+						id: data.order_id,
+					},
+				});
+			}
+		};
+		// End of specific handlers
+
+		// Register handlers for different notification types
 		const notificationTypeToHandler = {
-			order_status: handleOrderStatusNotification,
+			OrderStatusNotification: handleOrderStatusNotification,
+			OnlinePaymentNotification: handleOnlinePaymentNotification,
 		};
 
 		const notificationType = (notification.request.content.data?.type ||
