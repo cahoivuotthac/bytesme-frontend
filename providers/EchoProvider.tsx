@@ -38,8 +38,8 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 			// ;(window as any).Pusher = Pusher
 
 			console.log('Attempting to connect to WebSocket server with config:', {
-				wsHost: URLs.serverHost,
-				wsPort: URLs.websocketPort,
+				wsHost: URLs.wsHost,
+				wsPort: URLs.wsPort,
 				key: 'jv2d8id8cncc3h2xbsm5',
 				authToken: authState.authToken,
 			})
@@ -48,10 +48,9 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 				broadcaster: 'reverb',
 				Pusher,
 				key: 'jv2d8id8cncc3h2xbsm5',
-				wsHost: '192.168.2.9', // Your WebSocket server host
-				wsPort: 8080, // Reverb server port
-				httpHost: '192.168.2.9',
-				httpPort: 8000,
+				wsHost: URLs.wsHost,
+				wsPort: URLs.wsPort,
+				httpPort: URLs.wsHttpFallbackPort,
 				forceTLS: false,
 				disableStats: true,
 				enabledTransports: ['ws'],
@@ -67,19 +66,6 @@ export function EchoProvider({ children }: { children: React.ReactNode }) {
 				// 	},
 				// },
 			})
-
-			// const echoInstance = new Echo({
-			// 	Pusher: Pusher,
-			// 	broadcaster: 'reverb',
-			// 	key: 'jv2d8id8cncc3h2xbsm5',
-			// 	wsHost: '127.0.0.1',
-			// 	wsPort: 8080, // Reverb server port
-			// 	httpHost: '127.0.0.1',
-			// 	httpPort: 8080,
-			// 	forceTLS: false,
-			// 	disableStats: true,
-			// 	enabledTransports: ['ws'],
-			// })
 
 			// Test connection
 			if ('pusher' in echoInstance.connector) {
