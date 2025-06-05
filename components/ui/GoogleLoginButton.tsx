@@ -26,7 +26,6 @@ export default function GoogleLoginButton({
 	// const clientId = Constants.expoConfig?.extra?.oauth?.googleAndroidClientId
 	const clientId =
 		'895067022871-dfo8nkljsl5vcl80h0rk0ifbcdmnckb9.apps.googleusercontent.com'
-	// alert('Google client id: ' + clientId)
 	const [request, response, promptAsync] = Google.useAuthRequest({
 		androidClientId: clientId,
 		responseType: 'code',
