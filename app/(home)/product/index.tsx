@@ -61,7 +61,6 @@ const FEATURED_BANNERS = [
 	},
 ]
 
-// REAL CATEGORIES
 const CATEGORIES = [
 	{
 		id: '0',
@@ -250,7 +249,7 @@ export default function ProductScreen() {
 	}
 
 	// Select a category
-	const handleSelectCategory = (categoryId: string) => {
+	const handleCategoryPress = (categoryId: string) => {
 		setActiveCategory(categoryId)
 		if (categoryId === 'all') {
 			// Stay on current page for "all" category
@@ -300,7 +299,7 @@ export default function ProductScreen() {
 					<TouchableOpacity
 						key={banner.id}
 						style={styles.bannerSlide}
-						onPress={() => router.push(banner.linkTo)}
+						onPress={() => router.push(banner.linkTo as any)}
 						activeOpacity={0.9}
 					>
 						<Image
@@ -309,7 +308,7 @@ export default function ProductScreen() {
 							resizeMode="cover"
 						/>
 						<LinearGradient
-							colors={banner.gradientColors}
+							colors={banner.gradientColors as [string, string]}
 							style={styles.bannerGradient}
 						/>
 						<View style={styles.bannerContent}>
@@ -425,7 +424,7 @@ export default function ProductScreen() {
 									<TouchableOpacity
 										key={category.id}
 										style={styles.categoryTab}
-										onPress={() => handleSelectCategory(category.id)}
+										onPress={() => handleCategoryPress(category.id)}
 									>
 										<View
 											style={[
@@ -470,20 +469,30 @@ export default function ProductScreen() {
 											<View style={styles.crownGlow} />
 										</View>
 										<View style={styles.bestSellerTitleWrapper}>
-											<Text style={styles.bestSellerTitle}>{t('bestSellers')}</Text>
+											<Text style={styles.bestSellerTitle}>
+												{t('bestSellers')}
+											</Text>
 											<Text style={styles.bestSellerSubtitle}>
 												{t('mostLovedByCustomers')}
 											</Text>
 										</View>
 									</View>
-									
-									<TouchableOpacity 
-										style={styles.premiumViewAllButton} 
-										onPress={() => router.push('/(home)/product/sections/featured')}
+
+									<TouchableOpacity
+										style={styles.premiumViewAllButton}
+										onPress={() =>
+											router.push('/(home)/product/sections/featured')
+										}
 									>
-										<Text style={styles.premiumViewAllText}>{t('viewAll')}</Text>
+										<Text style={styles.premiumViewAllText}>
+											{t('viewAll')}
+										</Text>
 										<View style={styles.viewAllArrowContainer}>
-											<MaterialIcons name="arrow-forward" size={18} color="#FFFFFF" />
+											<MaterialIcons
+												name="arrow-forward"
+												size={18}
+												color="#FFFFFF"
+											/>
 										</View>
 									</TouchableOpacity>
 								</View>
@@ -496,7 +505,9 @@ export default function ProductScreen() {
 											onPress={() =>
 												router.push({
 													pathname: '/(home)/product/[id]',
-													params: { id: homepageData.best_sellers[0].product_id },
+													params: {
+														id: homepageData.best_sellers[0].product_id,
+													},
 												})
 											}
 											activeOpacity={0.9}
@@ -507,44 +518,60 @@ export default function ProductScreen() {
 												start={{ x: 0, y: 0 }}
 												end={{ x: 1, y: 1 }}
 											/>
-											
+
 											{/* Crown Badge */}
 											<View style={styles.crownBadge}>
 												<Ionicons name="diamond" size={16} color="#FFD700" />
-												<Text style={styles.crownBadgeText}>{t('topChoice')}</Text>
+												<Text style={styles.crownBadgeText}>
+													{t('topChoice')}
+												</Text>
 											</View>
-											
+
 											{/* Product Image */}
 											<View style={styles.featuredBestSellerImageContainer}>
 												<Image
-													source={{ uri: homepageData.best_sellers[0].product_image_url }}
+													source={{
+														uri: homepageData.best_sellers[0].product_image_url,
+													}}
 													style={styles.featuredBestSellerImage}
 													resizeMode="cover"
 												/>
 											</View>
-											
+
 											{/* Content */}
 											<View style={styles.featuredBestSellerContent}>
-												<Text style={styles.featuredBestSellerName} numberOfLines={2}>
+												<Text
+													style={styles.featuredBestSellerName}
+													numberOfLines={2}
+												>
 													{homepageData.best_sellers[0].product_name}
 												</Text>
 												<View style={styles.featuredBestSellerStats}>
 													<View style={styles.statItem}>
 														<Ionicons name="star" size={14} color="#FFD700" />
 														<Text style={styles.statText}>
-															{homepageData.best_sellers[0].product_overall_stars.toFixed(1)}
+															{homepageData.best_sellers[0].product_overall_stars.toFixed(
+																1
+															)}
 														</Text>
 													</View>
 													<View style={styles.statDivider} />
 													<View style={styles.statItem}>
 														<Ionicons name="people" size={14} color="#FFFFFF" />
 														<Text style={styles.statText}>
-															{homepageData.best_sellers[0].product_total_orders}+ {t('orders')}
+															{
+																homepageData.best_sellers[0]
+																	.product_total_orders
+															}
+															+ {t('orders')}
 														</Text>
 													</View>
 												</View>
 												<Text style={styles.featuredBestSellerPrice}>
-													{Math.min(...homepageData.best_sellers[0].product_prices).toLocaleString()}đ
+													{Math.min(
+														...homepageData.best_sellers[0].product_prices
+													).toLocaleString()}
+													đ
 												</Text>
 											</View>
 										</TouchableOpacity>
@@ -561,67 +588,87 @@ export default function ProductScreen() {
 									snapToAlignment="start"
 									snapToInterval={170}
 								>
-									{homepageData.best_sellers.slice(1, 7).map((product, index) => (
-										<TouchableOpacity
-											key={product.product_id}
-											style={[
-												styles.bestSellerCard,
-												index === 0 && styles.bestSellerCardFirst
-											]}
-											onPress={() =>
-												router.push({
-													pathname: '/(home)/product/[id]',
-													params: { id: product.product_id },
-												})
-											}
-											activeOpacity={0.8}
-										>
-											{/* Ranking Badge */}
-											<View style={[styles.rankingBadge, getRankingBadgeColor(index + 2)]}>
-												<Text style={styles.rankingText}>#{index + 2}</Text>
-											</View>
-											
-											{/* Product Image */}
-											<View style={styles.bestSellerImageContainer}>
-												<Image
-													source={{ uri: product.product_image_url }}
-													style={styles.bestSellerImage}
-													resizeMode="cover"
-												/>
-												<TouchableOpacity
-													style={styles.bestSellerHeartButton}
-													onPress={() => handleToggleFavorite(product.product_id)}
+									{homepageData.best_sellers
+										.slice(1, 7)
+										.map((product, index) => (
+											<TouchableOpacity
+												key={product.product_id}
+												style={[
+													styles.bestSellerCard,
+													index === 0 && styles.bestSellerCardFirst,
+												]}
+												onPress={() =>
+													router.push({
+														pathname: '/(home)/product/[id]',
+														params: { id: product.product_id },
+													})
+												}
+												activeOpacity={0.8}
+											>
+												{/* Ranking Badge */}
+												<View
+													style={[
+														styles.rankingBadge,
+														getRankingBadgeColor(index + 2),
+													]}
 												>
-													<Ionicons
-														name={favorites.includes(product.product_id) ? "heart" : "heart-outline"}
-														size={16}
-														color={favorites.includes(product.product_id) ? "#FF6B6B" : "#999"}
+													<Text style={styles.rankingText}>#{index + 2}</Text>
+												</View>
+
+												{/* Product Image */}
+												<View style={styles.bestSellerImageContainer}>
+													<Image
+														source={{ uri: product.product_image_url }}
+														style={styles.bestSellerImage}
+														resizeMode="cover"
 													/>
-												</TouchableOpacity>
-											</View>
-											
-											{/* Product Info */}
-											<View style={styles.bestSellerInfo}>
-												<Text style={styles.bestSellerName} numberOfLines={2}>
-													{product.product_name}
-												</Text>
-												<View style={styles.bestSellerMeta}>
-													<View style={styles.ratingContainer}>
-														<Ionicons name="star" size={12} color="#FFD700" />
-														<Text style={styles.ratingText}>
-															{product.product_overall_stars.toFixed(1)}
+													<TouchableOpacity
+														style={styles.bestSellerHeartButton}
+														onPress={() =>
+															handleToggleFavorite(product.product_id)
+														}
+													>
+														<Ionicons
+															name={
+																favorites.includes(product.product_id)
+																	? 'heart'
+																	: 'heart-outline'
+															}
+															size={16}
+															color={
+																favorites.includes(product.product_id)
+																	? '#FF6B6B'
+																	: '#999'
+															}
+														/>
+													</TouchableOpacity>
+												</View>
+
+												{/* Product Info */}
+												<View style={styles.bestSellerInfo}>
+													<Text style={styles.bestSellerName} numberOfLines={2}>
+														{product.product_name}
+													</Text>
+													<View style={styles.bestSellerMeta}>
+														<View style={styles.ratingContainer}>
+															<Ionicons name="star" size={12} color="#FFD700" />
+															<Text style={styles.ratingText}>
+																{product.product_overall_stars.toFixed(1)}
+															</Text>
+														</View>
+														<Text style={styles.ordersText}>
+															{product.product_total_orders}+ {t('sold')}
 														</Text>
 													</View>
-													<Text style={styles.ordersText}>
-														{product.product_total_orders}+ {t('sold')}
+													<Text style={styles.bestSellerPrice}>
+														{Math.min(
+															...product.product_prices
+														).toLocaleString()}
+														đ
 													</Text>
 												</View>
-												<Text style={styles.bestSellerPrice}>
-													{Math.min(...product.product_prices).toLocaleString()}đ
-												</Text>
-											</View>
-										</TouchableOpacity>
-									))}
+											</TouchableOpacity>
+										))}
 								</ScrollView>
 							</View>
 						)}
