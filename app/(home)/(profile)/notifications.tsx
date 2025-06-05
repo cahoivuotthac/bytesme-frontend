@@ -110,26 +110,16 @@ export default function NotificationsScreen() {
 		}
 	}
 
-	const deleteNotification = async (notificationId: string) => {
-		Alert.alert(t('deleteNotification'), t('confirmDeleteNotification'), [
-			{ text: t('cancel'), style: 'cancel' },
-			{
-				text: t('delete'),
-				style: 'destructive',
-				onPress: async () => {
-					try {
-						await notificationAPI.deleteNotification(notificationId)
-						setNotifications((prev) =>
-							prev.filter((notification) => notification.id !== notificationId)
-						)
-						showSuccess(t('notificationDeleted'))
-					} catch (error) {
-						console.error('Error deleting notification:', error)
-						showError(t('errorDeletingNotification'))
-					}
-				},
-			},
-		])
+	const handleRemoveNotification = async (notificationId: string) => {
+		try {
+			await notificationAPI.deleteNotification(notificationId)
+			setNotifications((prev) =>
+				prev.filter((notification) => notification.id !== notificationId)
+			)
+		} catch (error) {
+			console.log('Error deleting notification:', error)
+			showError(t('errorDeletingNotification'))
+		}
 	}
 
 	const handleNotificationPress = async (notification: BaseNotification) => {
@@ -277,7 +267,7 @@ export default function NotificationsScreen() {
 
 					<TouchableOpacity
 						style={styles.deleteButton}
-						onPress={() => deleteNotification(item.id)}
+						onPress={() => handleRemoveNotification(item.id)}
 						hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
 					>
 						<Ionicons name="close" size={20} color="#9B9B9B" />

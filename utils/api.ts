@@ -40,7 +40,7 @@ export const notificationAPI = {
 	},
 
 	markAllAsRead: async () => {
-		return await APIClient.post("/user/notifications/mark-all-as-read");
+		return await APIClient.post("/user/notification/mark-all-as-read");
 	},
 
 	deleteNotification: async (notificationId: string) => {
