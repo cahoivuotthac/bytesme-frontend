@@ -30,7 +30,20 @@
 			"output": "static",
 			"favicon": "./assets/images/favicon.png"
 		},
-		"plugins": ["expo-router", "expo-localization", "expo-secure-store"],
+		"plugins": [
+			"expo-router",
+			"expo-localization",
+			"expo-secure-store",
+			[
+				"expo-notifications",
+				{
+					"icon": "./local/assets/notification_icon.png",
+					"color": "#ffffff",
+					"defaultChannel": "default",
+					"enableBackgroundRemoteNotifications": false
+				}
+			]
+		],
 		"experiments": {
 			"typedRoutes": true
 		},

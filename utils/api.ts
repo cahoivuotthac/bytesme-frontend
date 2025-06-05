@@ -24,9 +24,9 @@ export const getCsrfToken = async () => {
 };
 
 export const notificationAPI = {
-	addExpoPushToken: async (token: string) => {
-		return await APIClient.post("/user/notification/push-tokens/add", {
-			expo_push_token: token,
+	updateExpoPushToken: async (pushToken: string) => {
+		return APIClient.post("/user/notification/update-push-token", {
+			push_token: pushToken,
 		});
 	},
 	getNotifications: async () => {
