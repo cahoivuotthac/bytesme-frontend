@@ -8,7 +8,6 @@ import {
 	Dimensions,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Ionicons } from '@expo/vector-icons'
 import { useTranslation } from '@/providers/locale'
 
 interface ThinkingCardProps {
@@ -48,6 +47,9 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 	const borderAnim = useRef(new Animated.Value(0)).current
 	const pulseAnim = useRef(new Animated.Value(1)).current
 
+	// Keep track of running animations for cleanup
+	const animationsRef = useRef<Animated.CompositeAnimation[]>([])
+
 	// Text processing
 	useEffect(() => {
 		if (streamingText && isLoading) {
@@ -55,7 +57,7 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 			setDisplayText(streamingText)
 
 			// Create a subtle pulse effect every time new text arrives
-			Animated.sequence([
+			const pulseAnimation = Animated.sequence([
 				Animated.timing(pulseAnim, {
 					toValue: 1.02,
 					duration: 200,
@@ -66,15 +68,20 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 					duration: 200,
 					useNativeDriver: true,
 				}),
-			]).start()
+			])
+			pulseAnimation.start()
 		}
-	}, [streamingText, isLoading])
+	}, [streamingText, isLoading, pulseAnim])
 
 	// Control display of the card and animations
 	useEffect(() => {
+		// Clear previous animations
+		animationsRef.current.forEach(animation => animation.stop())
+		animationsRef.current = []
+
 		if (isLoading) {
 			// Fade in and slide up when shown
-			Animated.parallel([
+			const fadeInAnimation = Animated.parallel([
 				Animated.timing(fadeAnim, {
 					toValue: 1,
 					duration: 500,
@@ -85,59 +92,75 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 					duration: 500,
 					useNativeDriver: true,
 				}),
-			]).start()
+			])
 
 			// Start spinner rotation animation
-			Animated.loop(
+			const spinnerAnimation = Animated.loop(
 				Animated.timing(loadingSpinnerAnim, {
 					toValue: 1,
 					duration: 1500,
 					easing: Easing.linear,
 					useNativeDriver: true,
 				})
-			).start()
+			)
 
 			// Animate glowing border
-			Animated.loop(
+			const borderAnimation = Animated.loop(
 				Animated.timing(borderAnim, {
 					toValue: 1,
 					duration: 2000,
 					easing: Easing.linear,
 					useNativeDriver: false,
 				})
-			).start()
+			)
 
 			// Start continuous text sliding animation
-			// This is how Grok AI's thinking mode works
-			const startScrollAnimation = () => {
-				scrollAnim.setValue(0)
-				Animated.loop(
-					Animated.timing(scrollAnim, {
-						toValue: 1,
-						duration: 15000, // 15 seconds for one complete scroll
-						easing: Easing.linear,
-						useNativeDriver: true,
-					})
-				).start()
-			}
+			const scrollAnimation = Animated.loop(
+				Animated.timing(scrollAnim, {
+					toValue: 1,
+					duration: 15000, // 15 seconds for one complete scroll
+					easing: Easing.linear,
+					useNativeDriver: true,
+				})
+			)
 
-			startScrollAnimation()
+			// Store animations for cleanup
+			animationsRef.current = [fadeInAnimation, spinnerAnimation, borderAnimation, scrollAnimation]
+
+			// Start all animations
+			fadeInAnimation.start()
+			spinnerAnimation.start()
+			borderAnimation.start()
+			scrollAnimation.start()
 		} else {
 			// Fade out when hidden
-			Animated.timing(fadeAnim, {
+			const fadeOutAnimation = Animated.timing(fadeAnim, {
 				toValue: 0,
 				duration: 300,
 				useNativeDriver: true,
-			}).start()
+			})
+			fadeOutAnimation.start()
 		}
 
 		return () => {
-			// Reset animations when component unmounts
+			// Cleanup animations on effect cleanup
+			animationsRef.current.forEach(animation => animation.stop())
+		}
+	}, [isLoading, fadeAnim, slideAnim, loadingSpinnerAnim, borderAnim, scrollAnim])
+
+	// Cleanup on unmount
+	useEffect(() => {
+		return () => {
+			// Stop all animations and reset values when component unmounts
+			animationsRef.current.forEach(animation => animation.stop())
 			scrollAnim.setValue(0)
 			loadingSpinnerAnim.setValue(0)
 			borderAnim.setValue(0)
+			fadeAnim.setValue(0)
+			slideAnim.setValue(20)
+			pulseAnim.setValue(1)
 		}
-	}, [isLoading])
+	}, [])
 
 	// Calculate scroll position based on text length
 	const getScrollTransform = () => {
@@ -215,7 +238,7 @@ const ThinkingCard: React.FC<ThinkingCardProps> = ({
 			>
 				{/* Glass card with blur effect */}
 				<LinearGradient
-					colors={['rgba(220, 240, 255, 0.8)', 'rgba(180, 225, 255, 0.7)']}
+					colors={['rgba(220, 240, 255, 0.95)', 'rgba(180, 225, 255, 0.90)']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
 					style={styles.glassCard}
@@ -350,8 +373,8 @@ const styles = StyleSheet.create({
 		padding: 20,
 		borderRadius: 18,
 		overflow: 'hidden',
-		backgroundColor: 'rgba(255, 255, 255, 0.7)',
-		backdropFilter: 'blur(10px)',
+		// Removed unsupported backdropFilter for React Native
+		// Instead using higher opacity gradients for better glass effect
 	},
 	cornerIndicators: {
 		position: 'absolute',
@@ -359,40 +382,37 @@ const styles = StyleSheet.create({
 		left: 0,
 		right: 0,
 		bottom: 0,
+		pointerEvents: 'none',
 	},
 	corner: {
 		position: 'absolute',
-		width: 16,
-		height: 16,
+		width: 12,
+		height: 12,
 		borderColor: 'rgba(74, 144, 226, 0.8)',
 	},
 	topLeft: {
-		top: 0,
-		left: 0,
+		top: 8,
+		left: 8,
 		borderTopWidth: 2,
 		borderLeftWidth: 2,
-		borderTopLeftRadius: 2,
 	},
 	topRight: {
-		top: 0,
-		right: 0,
+		top: 8,
+		right: 8,
 		borderTopWidth: 2,
 		borderRightWidth: 2,
-		borderTopRightRadius: 2,
 	},
 	bottomLeft: {
-		bottom: 0,
-		left: 0,
+		bottom: 8,
+		left: 8,
 		borderBottomWidth: 2,
 		borderLeftWidth: 2,
-		borderBottomLeftRadius: 2,
 	},
 	bottomRight: {
-		bottom: 0,
-		right: 0,
+		bottom: 8,
+		right: 8,
 		borderBottomWidth: 2,
 		borderRightWidth: 2,
-		borderBottomRightRadius: 2,
 	},
 	headerContainer: {
 		marginBottom: 15,
