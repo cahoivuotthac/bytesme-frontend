@@ -15,6 +15,7 @@ import { useTranslation } from '@/providers/locale'
 import { cartAPI } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import QuantityControl from '../ui/QuantityControl'
 
 // Get screen dimensions for responsive sizing
@@ -49,6 +50,7 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 	const [addingToCart, setAddingToCart] = useState(false)
 	const { locale, t } = useTranslation()
 	const { showError, showSuccess } = useAlert()
+	const { incrementCartItemCount } = useBottomBarControl()
 
 	// Parse the sizes_prices JSON string
 	const parseSizesAndPrices = () => {
@@ -128,6 +130,7 @@ const RAGProductCard: React.FC<RAGProductCardProps> = ({ product }) => {
 			)
 			showSuccess(t('productAddedToCart'))
 			setSelectedQuantity(1) // Reset quantity after adding
+			incrementCartItemCount() // Increment cart item count badge
 		} catch (error) {
 			console.error('Error adding to cart:', error)
 			showError(t('errorAddingToCart'))

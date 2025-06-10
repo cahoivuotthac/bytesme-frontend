@@ -53,7 +53,7 @@ interface OnlinePaymentNotificationData {
 export default function NotificationsScreen() {
 	const { t, locale } = useTranslation()
 	const { AlertComponent, showError, showSuccess } = useAlert()
-	const { setUnreadNotificationCount, unreadNotificationCount } =
+	const { setUnreadNotificationCount } =
 		useBottomBarControl()
 
 	const [notifications, setNotifications] = useState<BaseNotification[]>([])

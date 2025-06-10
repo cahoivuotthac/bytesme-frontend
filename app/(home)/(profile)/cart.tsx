@@ -25,7 +25,7 @@ import QuantityControl from '@/components/ui/QuantityControl'
 import Checkbox from '@/components/ui/Checkbox'
 
 // Get screen dimensions
-const { width, height } = Dimensions.get('window')
+const { width } = Dimensions.get('window')
 const ITEM_WIDTH = width - 32
 
 // Example cart item interface
