@@ -8,7 +8,7 @@ import {
 	ActivityIndicator,
 } from 'react-native'
 import { useAuth } from '@/providers/auth'
-import { cartAPI, notificationAPI, userAPI } from '@/utils/api'
+import { cartAPI, notificationAPI } from '@/utils/api'
 import { PushNotificationService } from '@/services/PushNotificationService'
 import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import BottomBar from '@/components/shared/BottomBar'
