@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { Stack, usePathname, useSegments, router, Redirect } from 'expo-router'
+import React, { useCallback, useEffect } from 'react'
+import { Stack, usePathname, Redirect } from 'expo-router'
 import {
 	View,
 	StyleSheet,
@@ -8,12 +8,10 @@ import {
 	ActivityIndicator,
 } from 'react-native'
 import { useAuth } from '@/providers/auth'
-import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
-import BottomBar from '@/components/shared/BottomBar'
-import * as Notifications from 'expo-notifications'
-import Constants from 'expo-constants'
-import { userAPI } from '@/utils/api'
+import { cartAPI, notificationAPI, userAPI } from '@/utils/api'
 import { PushNotificationService } from '@/services/PushNotificationService'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
+import BottomBar from '@/components/shared/BottomBar'
 
 /**
  * Layout for all authenticated screens in the app
@@ -21,17 +19,45 @@ import { PushNotificationService } from '@/services/PushNotificationService'
  */
 export default function HomeLayout() {
 	const { authState, isAuthenticated } = useAuth()
+	const {
+		setUnreadNotificationCount,
+		incrementNotificationCount,
+		setCartItemCount,
+	} = useBottomBarControl()
 	const pathname = usePathname()
-	// const { isVisible } = useBottomBarVisibility()
 
+	// Function to initialize app data like unread notifications and cart item count
+	const initializeAppData = useCallback(async () => {
+		if (!authState.authToken) {
+			return
+		}
+
+		try {
+			const { unread_count } = (await notificationAPI.getUnreadCount()).data
+			const { cart_item_count } = (await cartAPI.getCartItemCount()).data
+			console.log(
+				`Unread notifications: ${unread_count}, Cart items: ${cart_item_count}`
+			)
+			setUnreadNotificationCount(unread_count)
+			setCartItemCount(cart_item_count)
+		} catch (err) {
+			console.log('Error initializing app data:', err)
+		}
+	}, [authState.authToken])
+
+	// useEffect to handle initial app setup
 	useEffect(() => {
 		if (!authState.authToken) {
 			return
 		}
 
+		// Fetch & set initial app data
+		initializeAppData()
+
 		const pushNotificationService = new PushNotificationService()
 		// Get push token
 		pushNotificationService.registerForPushNotifications()
+		pushNotificationService.setNotiReceivedCallback(incrementNotificationCount)
 
 		// Setup listener
 		const subscriptions = pushNotificationService.setupNotificationListeners()

@@ -190,7 +190,7 @@ export default function OrderTrackingScreen() {
 					showSuccess(t('orderCancelledSuccess'))
 				}
 			} catch (error: any) {
-				console.error('Error cancelling order:', error)
+				console.log('Error cancelling order:', error)
 				// Handle specific error cases
 				if (error?.response?.data?.code === 'REFUND_FAILED') {
 					showError(t('refundFailedError'))

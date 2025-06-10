@@ -30,7 +30,7 @@ import {
 } from '@/utils/input-validation'
 import { AxiosError } from 'axios'
 import BottomSpacer from '@/components/shared/BottomSpacer'
-import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 
 interface UserAddress {
 	user_address_id: number
@@ -53,7 +53,7 @@ export default function EditProfileScreen() {
 	const { authState, refreshUser } = useAuth()
 	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
 		useAlert()
-	const { show, hide } = useBottomBarVisibility()
+	const { show, hide } = useBottomBarControl()
 
 	console.log('Auth state:', authState)
 	console.log('Current user:', authState?.user)

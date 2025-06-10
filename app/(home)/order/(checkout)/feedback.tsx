@@ -23,7 +23,7 @@ import { CheckoutContext } from './_layout'
 import { useAuth } from '@/providers/auth'
 import { useMemo } from 'react'
 import { useEffect } from 'react'
-import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import * as ImagePicker from 'expo-image-picker'
 import BottomSpacer from '@/components/shared/BottomSpacer'
 import LinearGradientButton from '@/components/ui/LinearGradientButton'
@@ -42,7 +42,7 @@ export default function FeedbackScreen() {
 	const [isAnonymous, setIsAnonymous] = useState(false)
 	const [isBottomContainerVisible, setIsBottomContainerVisible] = useState(true)
 	const { authState } = useAuth()
-	const { show: showBottomBar, hide: hideBottomBar } = useBottomBarVisibility()
+	const { show: showBottomBar, hide: hideBottomBar } = useBottomBarControl()
 
 	const params = useLocalSearchParams()
 	const navigateBackToPath = params.navigateBackToPath || '/(home)/product'

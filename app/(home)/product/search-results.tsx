@@ -136,6 +136,49 @@ interface ConversationMessage {
 	products?: RAGProductData['data'][]
 }
 
+const ProductWithAnimation = React.memo(
+	({ product, index, messageId }: { product: any; index: number; messageId: string }) => {
+		const fadeAnim = useRef(new Animated.Value(0)).current
+		const slideAnim = useRef(new Animated.Value(30)).current
+
+		useEffect(() => {
+			// Start animation after a delay based on index
+			const timer = setTimeout(() => {
+				Animated.parallel([
+					Animated.timing(fadeAnim, {
+						toValue: 1,
+						duration: 500,
+						useNativeDriver: true,
+						easing: Easing.out(Easing.quad),
+					}),
+					Animated.timing(slideAnim, {
+						toValue: 0,
+						duration: 500,
+						useNativeDriver: true,
+						easing: Easing.out(Easing.quad),
+					}),
+				]).start()
+			}, 1500 + index * 300) // Start after 1.5 seconds, then stagger by 300ms
+
+			return () => clearTimeout(timer)
+		}, [messageId, index])
+
+		return (
+			<Animated.View
+				style={[
+					{ marginBottom: 12 },
+					{
+						opacity: fadeAnim,
+						transform: [{ translateY: slideAnim }],
+					},
+				]}
+			>
+				<RAGProductCard product={product} />
+			</Animated.View>
+		)
+	}
+)
+
 export default function SearchResultsScreen() {
 	// Params
 	const params = useLocalSearchParams()
@@ -899,7 +942,7 @@ export default function SearchResultsScreen() {
 	}
 
 	// Add this function to debounce scroll position checks with improved stability
-	const debouncedScrollCheck = (nativeEvent) => {
+	const debouncedScrollCheck = (nativeEvent: any) => {
 		// If a check is already scheduled, do nothing
 		if (isCheckingScroll.current) return
 
@@ -935,7 +978,7 @@ export default function SearchResultsScreen() {
 	}
 
 	// Use the improved scroll position checker
-	const checkScrollPosition = ({ nativeEvent }) => {
+	const checkScrollPosition = ({ nativeEvent }: { nativeEvent: any }) => {
 		debouncedScrollCheck(nativeEvent)
 	}
 
@@ -1004,6 +1047,13 @@ export default function SearchResultsScreen() {
 		const shouldAnimate = animatedMessageIds.has(message.id)
 		const isCurrentStreaming = currentStreamingMessageId === message.id
 
+		console.log('=== renderConversationMessage ===')
+		console.log('message.id:', message.id)
+		console.log('shouldAnimate:', shouldAnimate)
+		console.log('isCurrentStreaming:', isCurrentStreaming)
+		console.log('animatedMessageIds:', Array.from(animatedMessageIds))
+		console.log('currentStreamingMessageId:', currentStreamingMessageId)
+
 		if (message.type === 'user') {
 			return (
 				<View key={message.id} style={styles.userMessageContainer}>
@@ -1020,19 +1070,32 @@ export default function SearchResultsScreen() {
 						<RAGResponseBubble
 							text={message.content}
 							isLoading={false}
-							shouldAnimate={shouldAnimate && !isCurrentStreaming}
+							shouldAnimate={shouldAnimate}
 							messageId={message.id}
+							onAnimationComplete={removeFromAnimationTracking}
 						/>
 					)}
-					{message.products &&
-						message.products.map((product, productIndex) => (
-							<View
-								key={`${message.id}-product-${productIndex}`}
-								style={{ marginBottom: 12 }}
-							>
-								<RAGProductCard product={product} />
-							</View>
-						))}
+					{message.products && message.products.length > 0 && (
+						<View style={styles.productContainer}>
+							{message.products.map((product, productIndex) =>
+								shouldAnimate ? (
+									<ProductWithAnimation
+										key={`${message.id}-product-${productIndex}`}
+										product={product}
+										index={productIndex}
+										messageId={message.id}
+									/>
+								) : (
+									<View
+										key={`${message.id}-product-${productIndex}`}
+										style={{ marginBottom: 12 }}
+									>
+										<RAGProductCard product={product} />
+									</View>
+								)
+							)}
+						</View>
+					)}
 				</View>
 			)
 		}
@@ -1040,16 +1103,33 @@ export default function SearchResultsScreen() {
 
 	// Clean up animation tracking after animations complete - use useCallback to prevent re-renders
 	const cleanupAnimationTracking = useCallback(() => {
-		if (!animatingProducts && animatedMessageIds.size > 0) {
-			setTimeout(() => {
-				setAnimatedMessageIds(new Set())
-			}, 2000)
-		}
-	}, [animatingProducts, animatedMessageIds.size])
+		// REMOVED: Automatic timeout-based cleanup
+		// The RAGResponseBubble component will handle its own animation lifecycle
+		// We only cleanup when explicitly needed (e.g., on unmount or new search)
+	}, [])
 
+	// Only cleanup on component unmount or when starting a new search
 	useEffect(() => {
-		cleanupAnimationTracking()
-	}, [cleanupAnimationTracking])
+		return () => {
+			// Cleanup on unmount
+			setAnimatedMessageIds(new Set())
+		}
+	}, [])
+
+	// Cleanup animation tracking when starting a new search
+	const resetAnimationState = useCallback(() => {
+		setAnimatedMessageIds(new Set())
+		setCurrentStreamingMessageId(null)
+	}, [])
+
+	// Add a function to remove specific message IDs from animation tracking (called by RAGResponseBubble when animation completes)
+	const removeFromAnimationTracking = useCallback((messageId: string) => {
+		setAnimatedMessageIds(prev => {
+			const newSet = new Set(prev)
+			newSet.delete(messageId)
+			return newSet
+		})
+	}, [])
 
 	// Remove the problematic product animation effects that were causing re-renders
 	// Keep only essential animation logic
@@ -1153,8 +1233,8 @@ export default function SearchResultsScreen() {
 							onScroll={checkScrollPosition}
 							scrollEventThrottle={500}
 							removeClippedSubviews={true}
-							maxToRenderPerBatch={5}
-							windowSize={10}
+							// maxToRenderPerBatch={5}
+							// windowSize={10}
 						>
 							{/* ONLY conversation history - renderConversationMessage handles ALL display logic */}
 							{conversationHistory.map((message, index) =>
@@ -1180,6 +1260,7 @@ export default function SearchResultsScreen() {
 											isLoading={isStreaming && ragAnswer === ''}
 											shouldAnimate={true}
 											messageId={currentStreamingMessageId}
+											onAnimationComplete={removeFromAnimationTracking}
 										/>
 									)}
 
@@ -1857,5 +1938,8 @@ const styles = StyleSheet.create({
 	},
 	assistantMessageContainer: {
 		marginBottom: 16,
+	},
+	productContainer: {
+		marginTop: 8,
 	},
 })

@@ -82,6 +82,10 @@ export const cartAPI = {
 		});
 	},
 
+	getCartItemCount: async () => {
+		return await APIClient.get("/user/cart/item-count");
+	},
+
 	getCartItems: async () => {
 		return await APIClient.get("/user/cart");
 	},

@@ -15,7 +15,7 @@ import { orderAPI } from '@/utils/api'
 import { formatPrice, formatDateTime } from '@/utils/display'
 import { useTranslation } from '@/providers/locale'
 import { useAlert } from '@/hooks/useAlert'
-import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 
 // Order status configuration with aesthetic colors
 const ORDER_STATUS_DISPLAY = {
@@ -91,7 +91,7 @@ export default function OrderDetailsScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>()
 	const { t, locale } = useTranslation()
 	const { showError } = useAlert()
-	const { hide, show } = useBottomBarVisibility()
+	const { hide, show } = useBottomBarControl()
 
 	const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null)
 	const [isLoading, setIsLoading] = useState(true)

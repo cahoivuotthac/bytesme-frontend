@@ -19,6 +19,10 @@ interface RAGResponseBubbleProps {
 	 * Unique identifier for this message to prevent re-animation
 	 */
 	messageId?: string
+	/**
+	 * Callback function called when animation completes
+	 */
+	onAnimationComplete?: (messageId: string) => void
 }
 
 /**
@@ -73,14 +77,15 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 	isLoading = false,
 	shouldAnimate = true,
 	messageId,
+	onAnimationComplete,
 }) => {
 	const [displayedText, setDisplayedText] = useState('')
 	const [wordIndex, setWordIndex] = useState(0)
 	const [formattedSegments, setFormattedSegments] = useState<
 		Array<{ type: string; content: string }>
 	>([])
-	const [hasAnimated, setHasAnimated] = useState(false)
-	const [isAnimationComplete, setIsAnimationComplete] = useState(false)
+	const [isAnimating, setIsAnimating] = useState(false)
+	const animationCompleteRef = useRef(false)
 
 	// Animation refs
 	const fadeAnim = useRef(new Animated.Value(0)).current
@@ -115,23 +120,52 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 				useNativeDriver: false,
 			})
 		).start()
-	}, []) // Empty dependency array - only run once
+	}, [])
 
-	// Optimize word-by-word animation with better control
+	// CRITICAL FIX: Reset animation when messageId changes (new message)
 	useEffect(() => {
-		if (words.length === 0 || isAnimationComplete) return
-
-		// If this message shouldn't animate or has already animated, show all text immediately
-		if (!shouldAnimate || hasAnimated) {
+		console.log('=== RAGResponseBubble useEffect ===')
+		console.log('MessageId:', messageId)
+		console.log('shouldAnimate:', shouldAnimate)
+		console.log('text length:', text.length)
+		console.log('text preview:', text.substring(0, 50) + '...')
+		
+		// Reset ALL animation state for new message
+		setDisplayedText('')
+		setWordIndex(0)
+		setFormattedSegments([])
+		setIsAnimating(false)
+		animationCompleteRef.current = false
+		
+		// For non-animated messages, show immediately
+		if (!shouldAnimate) {
+			console.log('Non-animated message, showing immediately')
 			setDisplayedText(text)
 			setFormattedSegments(parseFormattedText(text))
 			setWordIndex(words.length)
-			setIsAnimationComplete(true)
+			animationCompleteRef.current = true
+		} else if (text.trim()) {
+			// Only start animation if there's actual text content
+			console.log('Starting animation for messageId:', messageId, 'with', words.length, 'words')
+			setIsAnimating(true)
+		} else {
+			console.log('No text content to animate')
+		}
+	}, [messageId, shouldAnimate, text, words.length]) // Added text and words.length as dependencies
+
+	// Word-by-word streaming animation
+	useEffect(() => {
+		if (!shouldAnimate || !isAnimating || animationCompleteRef.current || words.length === 0) {
 			return
 		}
 
 		// Only animate if we haven't reached the end
 		if (wordIndex < words.length) {
+			// Much faster animation timing - especially for follow-up messages
+			// Base speed: 25-35ms per word (was 60-100ms)
+			const baseDelay = 25
+			const randomDelay = Math.random() * 10
+			
 			const timer = setTimeout(() => {
 				setDisplayedText((prev) => {
 					const newText = prev + (prev ? ' ' : '') + words[wordIndex]
@@ -141,37 +175,35 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 				setWordIndex((prev) => {
 					const newIndex = prev + 1
 					if (newIndex >= words.length) {
-						setHasAnimated(true)
-						setIsAnimationComplete(true)
+						setIsAnimating(false)
+						animationCompleteRef.current = true
+						console.log('Animation complete for message:', messageId)
+						// Notify parent that animation is complete
+						if (onAnimationComplete && messageId) {
+							onAnimationComplete(messageId)
+						}
 					}
 					return newIndex
 				})
-			}, 50 + Math.random() * 30)
+			}, baseDelay + randomDelay) // Much faster: 25-35ms per word
 
 			return () => clearTimeout(timer)
 		}
-	}, [wordIndex, words.length, shouldAnimate, hasAnimated, isAnimationComplete])
+	}, [wordIndex, words.length, shouldAnimate, isAnimating, messageId, onAnimationComplete])
 
-	// Reset animation when messageId changes (new message)
+	// Show complete text immediately for non-animated messages
 	useEffect(() => {
-		if (shouldAnimate && !isAnimationComplete) {
-			setDisplayedText('')
-			setWordIndex(0)
-			setFormattedSegments([])
-			setHasAnimated(false)
-			setIsAnimationComplete(false)
-		} else if (!shouldAnimate) {
-			// Show immediately if not animating
+		if (!shouldAnimate && !animationCompleteRef.current) {
 			setDisplayedText(text)
 			setFormattedSegments(parseFormattedText(text))
 			setWordIndex(words.length)
-			setIsAnimationComplete(true)
+			animationCompleteRef.current = true
 		}
-	}, [messageId]) // Only depend on messageId
+	}, [shouldAnimate, text, words.length])
 
-	// Optimize cursor animation
+	// Cursor animation
 	useEffect(() => {
-		if ((isLoading || (wordIndex < words.length && shouldAnimate && !isAnimationComplete))) {
+		if (isLoading || (shouldAnimate && isAnimating && !animationCompleteRef.current)) {
 			const animation = Animated.loop(
 				Animated.sequence([
 					Animated.timing(cursorOpacity, {
@@ -197,7 +229,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 				useNativeDriver: true,
 			}).start()
 		}
-	}, [isLoading, wordIndex, words.length, shouldAnimate, isAnimationComplete])
+	}, [isLoading, shouldAnimate, isAnimating, animationCompleteRef.current])
 
 	// Memoize animated values to prevent recalculation
 	const borderColor = useMemo(() => borderAnim.interpolate({
@@ -227,7 +259,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 					</Text>
 				))}
 
-				{(isLoading || (wordIndex < words.length && shouldAnimate && !isAnimationComplete)) && (
+				{(isLoading || (shouldAnimate && isAnimating && !animationCompleteRef.current)) && (
 					<Animated.Text
 						style={[
 							styles.cursor,
@@ -241,7 +273,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 				)}
 			</Text>
 		)
-	}, [formattedSegments, isLoading, wordIndex, words.length, shouldAnimate, isAnimationComplete, cursorOpacity])
+	}, [formattedSegments, isLoading, shouldAnimate, isAnimating, animationCompleteRef.current, cursorOpacity])
 
 	return (
 		<Animated.View
@@ -289,7 +321,7 @@ const RAGResponseBubble: React.FC<RAGResponseBubbleProps> = React.memo(({
 								},
 							]}
 						/>
-						<Text style={styles.aiLabel}>AI</Text>
+						<Text style={styles.aiLabel}>Bytesme AI</Text>
 					</View>
 
 					{/* Streaming text with formatting */}

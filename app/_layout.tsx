@@ -1,18 +1,12 @@
 import React, { useEffect } from 'react'
-import { Stack, Slot } from 'expo-router'
-import { useColorScheme, ActivityIndicator, View } from 'react-native'
+import { Slot } from 'expo-router'
 import { useFonts } from 'expo-font'
 import FontAwesome from '@expo/vector-icons/FontAwesome'
-import {
-	ThemeProvider,
-	DarkTheme,
-	DefaultTheme,
-} from '@react-navigation/native'
-import { AuthProvider, useAuth } from '@/providers/auth'
+import { AuthProvider } from '@/providers/auth'
 import { LocaleProvider } from '@/providers/locale'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { EchoProvider } from '@/providers/EchoProvider'
-import { BottomBarVisibilityProvider } from '@/providers/BottomBarVisibilityProvider'
+import { BottomBarControlProvider } from '@/providers/BottomBarControlProvider'
 
 export default function RootLayout() {
 	const [fontsLoaded, error] = useFonts({
@@ -39,9 +33,9 @@ export default function RootLayout() {
 			<LocaleProvider>
 				<AuthProvider>
 					<EchoProvider>
-						<BottomBarVisibilityProvider>
+						<BottomBarControlProvider>
 							<Slot />
-						</BottomBarVisibilityProvider>
+						</BottomBarControlProvider>
 					</EchoProvider>
 				</AuthProvider>
 			</LocaleProvider>

@@ -11,7 +11,7 @@ import {
 } from 'react-native'
 import { router, usePathname } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
-import { useBottomBarVisibility } from '@/providers/BottomBarVisibilityProvider'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 
 const { width } = Dimensions.get('window')
 
@@ -61,7 +61,8 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 	const [pulseAnimation] = useState(new Animated.Value(1))
 	const [activeTabIndex, setActiveTabIndex] = useState(0)
 	const { t } = useTranslation()
-	const { isVisible } = useBottomBarVisibility()
+	const { isVisible } = useBottomBarControl()
+	const { unreadNotificationCount, cartItemCount } = useBottomBarControl()
 	const fadeAnim = useRef(new Animated.Value(1)).current
 
 	// Start the pulse animation when component mounts
@@ -105,6 +106,19 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 		router.push('/(home)/product/promotions')
 	}
 
+	// Function to render badge for notification/cart counts
+	const renderBadge = (count: number) => {
+		if (count <= 0) return null
+
+		return (
+			<View style={styles.badge}>
+				<Text style={styles.badgeText}>
+					{count > 99 ? '99+' : count.toString()}
+				</Text>
+			</View>
+		)
+	}
+
 	return (
 		<Animated.View
 			style={[
@@ -118,15 +132,17 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 			]}
 			pointerEvents={isVisible ? 'auto' : 'none'}
 		>
-			{/* <View style={[styles.outerContainer, style]}> */}
 			<View style={[styles.innerClippingContainer, style]}>
-				{/* Container for shadow effect */}
-				{/* <View style={styles.shadowContainer} /> */}
-
-				{/* Container for the actual content */}
 				<View style={styles.mainContainer}>
 					{TABS.map((tab, tabIndex) => {
 						const isActive = tabIndex === activeTabIndex
+						const showBadge =
+							(tab.name === 'notifications' && unreadNotificationCount >= 0) ||
+							(tab.name === 'cart' && cartItemCount >= 0)
+						const badgeCount =
+							tab.name === 'notifications'
+								? unreadNotificationCount
+								: cartItemCount
 
 						return (
 							<TouchableOpacity
@@ -139,15 +155,18 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 								onPress={() => handleTabPressed(tabIndex)}
 								activeOpacity={1.0}
 							>
-								<Image
-									source={isActive ? tab.activeIcon : tab.icon}
-									style={{
-										width: 24,
-										height: 24,
-										tintColor: '#DF7A82',
-										opacity: isActive ? 1.0 : 0.4,
-									}}
-								/>
+								<View style={styles.iconContainer}>
+									<Image
+										source={isActive ? tab.activeIcon : tab.icon}
+										style={{
+											width: 24,
+											height: 24,
+											tintColor: '#DF7A82',
+											opacity: isActive ? 1.0 : 0.4,
+										}}
+									/>
+									{showBadge && renderBadge(badgeCount)}
+								</View>
 
 								<Text
 									style={[
@@ -181,7 +200,6 @@ const BottomBar: React.FC<BottomBarProps> = ({ style }) => {
 				{/* iOS safe area padding */}
 				{Platform.OS === 'ios' && <View style={styles.iosSafeArea} />}
 			</View>
-			{/* </View> */}
 		</Animated.View>
 	)
 }
@@ -276,6 +294,32 @@ const styles = StyleSheet.create({
 	iosSafeArea: {
 		height: 20,
 		backgroundColor: '#FFFFFF',
+	},
+	iconContainer: {
+		position: 'relative',
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	badge: {
+		position: 'absolute',
+		top: -6,
+		right: -8,
+		backgroundColor: '#FF4757',
+		borderRadius: 10,
+		minWidth: 18,
+		height: 18,
+		justifyContent: 'center',
+		alignItems: 'center',
+		borderWidth: 2,
+		borderColor: '#FFFFFF',
+		paddingHorizontal: 4,
+	},
+	badgeText: {
+		color: '#FFFFFF',
+		fontSize: 10,
+		fontFamily: 'Inter-Bold',
+		textAlign: 'center',
+		lineHeight: 12,
 	},
 })
 

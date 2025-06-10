@@ -3,19 +3,21 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { notificationAPI } from "@/utils/api";
 import { router } from "expo-router";
+import { useBottomBarControl } from "@/providers/BottomBarControlProvider";
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
 	handleNotification: async () => ({
 		shouldShowAlert: true,
 		shouldPlaySound: true,
-		shouldSetBadge: false,
+		shouldSetBadge: true,
 	}),
 });
 
 export class PushNotificationService {
 	private static instance: PushNotificationService;
 	private expoPushToken: string | null = null;
+	private notiReceivedCallback: () => void = () => {};
 
 	static getInstance(): PushNotificationService {
 		if (!PushNotificationService.instance) {
@@ -83,12 +85,9 @@ export class PushNotificationService {
 	setupNotificationListeners() {
 		// Handle notification received while app is in foreground
 		const foregroundSubscription =
-			Notifications.addNotificationReceivedListener((notification) => {
-				console.log(
-					"Notification received in foreground:",
-					notification
-				);
-			});
+			Notifications.addNotificationReceivedListener(
+				this.handleNotificationReceived
+			);
 
 		// Handle notification tapped/clicked
 		const responseSubscription =
@@ -103,6 +102,15 @@ export class PushNotificationService {
 			foregroundSubscription,
 			responseSubscription,
 		};
+	}
+
+	/**
+	 * Handle notification received in foreground
+	 */
+	private handleNotificationReceived(notification: any) {
+		console.log("Fuck you:", notification);
+
+		this.notiReceivedCallback();
 	}
 
 	/**
@@ -164,6 +172,10 @@ export class PushNotificationService {
 	 */
 	getCurrentToken(): string | null {
 		return this.expoPushToken;
+	}
+
+	setNotiReceivedCallback(callback: () => void): void {
+		this.notiReceivedCallback = callback;
 	}
 
 	/**
