@@ -3,9 +3,7 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	ScrollView,
 	SafeAreaView,
-	Image,
 	FlatList,
 	TouchableOpacity,
 	Dimensions,
@@ -14,16 +12,17 @@ import {
 import { AntDesign, Feather, Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 import { useTranslation } from '@/providers/locale'
-import Button from '@/components/ui/Button'
-import QuantityControl from '@/components/ui/QuantityControl'
-import Checkbox from '@/components/ui/Checkbox'
 import { useAlert } from '@/hooks/useAlert'
 import { cartAPI, addToWishlist, removeFromWishlist } from '@/utils/api'
+import { formatPrice } from '@/utils/display'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import DishDecoration from '@/components/shared/DishDecoration'
 import BottomSpacer from '@/components/shared/BottomSpacer'
 import DashedLine from 'react-native-dashed-line'
-import { formatPrice } from '@/utils/display'
+import Button from '@/components/ui/Button'
+import QuantityControl from '@/components/ui/QuantityControl'
+import Checkbox from '@/components/ui/Checkbox'
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window')
@@ -75,6 +74,7 @@ export default function CartScreen() {
 		[]
 	)
 	const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+	const { decrementCartItemCount } = useBottomBarControl()
 
 	// New state to store stable suggestion data
 	const [stableSuggestions, setStableSuggestions] = useState<
@@ -389,6 +389,7 @@ export default function CartScreen() {
 			setCartItems((prevItems) =>
 				prevItems.filter((item) => item.productId !== productId)
 			)
+			decrementCartItemCount()
 		} catch (error) {
 			console.error('Failed to remove item from cart:', error)
 			showError(t('errorRemovingFromCart') || 'Failed to remove item from cart')

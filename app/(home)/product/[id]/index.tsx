@@ -14,15 +14,14 @@ import {
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons, AntDesign, Feather, MaterialIcons } from '@expo/vector-icons'
-import NavButton from '@/components/shared/NavButton'
-import Button from '@/components/ui/Button'
-import RegularProductCard from '@/components/product/RegularProductCard'
 import { useTranslation } from '@/providers/locale'
-import ImageCarousel from '@/components/shared/ImageCarousel'
 import { APIClient, cartAPI, productAPI } from '@/utils/api'
 import { useAlert } from '@/hooks/useAlert'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import QuantityControl from '@/components/ui/QuantityControl'
-import BottomSpacer from '@/components/shared/BottomSpacer'
+import NavButton from '@/components/shared/NavButton'
+import Button from '@/components/ui/Button'
+import ImageCarousel from '@/components/shared/ImageCarousel'
 
 const { width, height } = Dimensions.get('window')
 
@@ -49,13 +48,15 @@ export default function ProductDetailScreen() {
 	const [sizeDropdownVisible, setSizeDropdownVisible] = useState(false)
 	const [reviewsModalVisible, setReviewsModalVisible] = useState(false)
 	const [selectedReviewImage, setSelectedReviewImage] = useState('')
-	const [feedbackPageNum, setFeedbackPageNum] = useState(1)
+	// const [feedbackPageNum, setFeedbackPageNum] = useState(1)
 	const [feedbacks, setFeedbacks] = useState<any[]>([])
 	const [feedbackLoading, setFeedbackLoading] = useState(false)
 	const [feedbackHasMore, setFeedbackHasMore] = useState(true)
 	const FEEDBACK_PAGE_SIZE = 10
 	const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([])
 	const [loadingRelatedProducts, setLoadingRelatedProducts] = useState(false)
+	const { incrementCartItemCount, decrementCartItemCount } =
+		useBottomBarControl()
 	const RELATED_PRODUCTS_LIMIT = 7
 
 	const { AlertComponent, showError, showInfo } = useAlert()
@@ -209,6 +210,7 @@ export default function ProductDetailScreen() {
 			await cartAPI.addItemToCart(productId, quantity, selectedSize)
 			showInfo(t('addedToCart'))
 			setQuantity(1) // Reset quantity
+			incrementCartItemCount() // Increment cart item count badge
 		} catch (err) {
 			console.error('Error adding to cart:', err)
 			showError(t('errorAddingToCart'))

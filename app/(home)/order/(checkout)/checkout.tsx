@@ -17,10 +17,12 @@ import { useAlert } from '@/hooks/useAlert'
 import { addressAPI, voucherAPI, orderAPI } from '@/utils/api'
 import { CheckoutContext, Voucher } from './_layout'
 import { formatPrice } from '@/utils/display'
+import { AxiosError } from 'axios'
+import { useBottomBarControl } from '@/providers/BottomBarControlProvider'
 import NavButton from '@/components/shared/NavButton'
 import VoucherSection from '@/components/shared/VoucherSection'
 import Button from '@/components/ui/Button'
-import { AxiosError } from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 interface UserAddress {
 	userAddressId: number
@@ -78,6 +80,7 @@ export default function CheckoutScreen() {
 	const { t, locale } = useTranslation()
 	const { AlertComponent, showInfo, showError, showSuccess, showConfirm } =
 		useAlert()
+	const { cartItemCount, setCartItemCount } = useBottomBarControl()
 	const params = useLocalSearchParams()
 
 	// Get state from shared context
@@ -395,6 +398,7 @@ export default function CheckoutScreen() {
 			setIsLoading(false)
 			showError(t('orderFailed'))
 		}
+
 		switch (selectedPaymentMethodId) {
 			case 'cod':
 				await orderAPI.placeOrder({
@@ -436,6 +440,19 @@ export default function CheckoutScreen() {
 					},
 				})
 				break
+		}
+
+		if (process.env.NODE_ENV === 'production') {
+			// Clear checkout items after successful order placement
+			await AsyncStorage.removeItem('checkoutItems')
+
+			// Clear selected items from AsyncStorage
+			params.selected_item_ids.forEach(async (itemId) => {
+				await AsyncStorage.removeItem(`cartItemsSelected/${itemId}`)
+			})
+
+			// Update cart item count badge in bottom bar
+			setCartItemCount(cartItemCount - params.selected_item_ids.length)
 		}
 	}
 
