@@ -56,8 +56,8 @@ export default function HomeLayout() {
 
 		const pushNotificationService = new PushNotificationService()
 		// Get push token
-		pushNotificationService.registerForPushNotifications()
 		pushNotificationService.setNotiReceivedCallback(incrementNotificationCount)
+		pushNotificationService.registerForPushNotifications()
 
 		// Setup listener
 		const subscriptions = pushNotificationService.setupNotificationListeners()

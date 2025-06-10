@@ -19,6 +19,11 @@ export class PushNotificationService {
 	private expoPushToken: string | null = null;
 	private notiReceivedCallback: () => void = () => {};
 
+	constructor() {
+		this.handleNotificationReceived =
+			this.handleNotificationReceived.bind(this);
+	}
+
 	static getInstance(): PushNotificationService {
 		if (!PushNotificationService.instance) {
 			PushNotificationService.instance = new PushNotificationService();
@@ -108,9 +113,15 @@ export class PushNotificationService {
 	 * Handle notification received in foreground
 	 */
 	private handleNotificationReceived(notification: any) {
-		console.log("Fuck you:", notification);
+		console.log("Received notification:", notification);
 
-		this.notiReceivedCallback();
+		if (this.notiReceivedCallback) {
+			this.notiReceivedCallback();
+		} else {
+			console.warn(
+				"No notification received callback set. Please set it using setNotiReceivedCallback."
+			);
+		}
 	}
 
 	/**
